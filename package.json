@@ -19,5 +19,13 @@
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "nodemon": "^3.1.10"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/therohitsaini/MVC-sainiWeb-Agora-Backend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/therohitsaini/MVC-sainiWeb-Agora-Backend/issues"
+  },
+  "homepage": "https://github.com/therohitsaini/MVC-sainiWeb-Agora-Backend#readme"
 }
