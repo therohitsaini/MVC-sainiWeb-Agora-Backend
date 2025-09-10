@@ -18,7 +18,6 @@ app.use(bodyParser.json());
 app.use("/api/video-call", videoCallRouter);
 
 
-
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

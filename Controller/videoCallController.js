@@ -13,7 +13,6 @@ const generateToken = async (req, res) => {
          });
       }
 
-
       if (!process.env.AGORA_APP_ID || !process.env.AGORA_APP_CERTIFICATE) {
          return res.status(500).json({
             error: "Agora credentials not configured. Please check your .env file."
@@ -44,4 +43,64 @@ const generateToken = async (req, res) => {
 }
 
 
-module.exports = { generateToken };
+const generateVoiceToken = async (req, res) => {
+   try {
+      const { channelName, uid } = req.body;
+
+      console.log("Voice token request:", { channelName, uid });
+
+      // Validate required fields
+      if (!channelName || !uid) {
+         return res.status(400).json({
+            error: "channelName and uid are required"
+         });
+      }
+
+      // Check environment variables
+      const appId = process.env.AGORA_APP_ID;
+      const appCertificate = process.env.AGORA_APP_CERTIFICATE;
+
+      console.log("Environment check:", {
+         appId: appId ? "Set" : "Missing",
+         appCertificate: appCertificate ? "Set" : "Missing"
+      });
+
+      if (!appId || !appCertificate) {
+         return res.status(500).json({
+            error: "Agora credentials not configured. Please check your environment variables.",
+            details: {
+               appId: appId ? "Set" : "Missing",
+               appCertificate: appCertificate ? "Set" : "Missing"
+            }
+         });
+      }
+
+      // Generate token
+      const token = RtcTokenBuilder.buildTokenWithUid(
+         appId,
+         appCertificate,
+         channelName,
+         uid,
+         RtcRole.PUBLISHER,
+         0
+      );
+
+      console.log("Token generated successfully for:", { channelName, uid });
+
+      res.json({
+         token,
+         appId: appId,
+         channelName,
+         uid,
+         callType: "voice"
+      });
+   } catch (error) {
+      console.error("Error generating voice token:", error);
+      res.status(500).json({
+         error: "Failed to generate voice token",
+         details: error.message
+      });
+   }
+}
+
+module.exports = { generateToken, generateVoiceToken };
