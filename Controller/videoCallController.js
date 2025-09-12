@@ -5,8 +5,7 @@ const { RtcTokenBuilder, RtcRole } = require("agora-access-token");
 const generateToken = async (req, res) => {
    try {
       const { channelName, uid } = req.body;
-
-      // Validate required fields
+      
       if (!channelName || !uid) {
          return res.status(400).json({
             error: "channelName and uid are required"
@@ -18,7 +17,6 @@ const generateToken = async (req, res) => {
             error: "Agora credentials not configured. Please check your .env file."
          });
       }
-
       const token = RtcTokenBuilder.buildTokenWithUid(
          process.env.AGORA_APP_ID,
          process.env.AGORA_APP_CERTIFICATE,
@@ -49,14 +47,13 @@ const generateVoiceToken = async (req, res) => {
 
       console.log("Voice token request:", { channelName, uid });
 
-      // Validate required fields
       if (!channelName || !uid) {
          return res.status(400).json({
             error: "channelName and uid are required"
          });
       }
 
-      // Check environment variables
+    
       const appId = process.env.AGORA_APP_ID;
       const appCertificate = process.env.AGORA_APP_CERTIFICATE;
 
@@ -75,7 +72,7 @@ const generateVoiceToken = async (req, res) => {
          });
       }
 
-      // Generate token
+    
       const token = RtcTokenBuilder.buildTokenWithUid(
          appId,
          appCertificate,
