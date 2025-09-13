@@ -8,4 +8,5 @@ userDetailsRouter.get("/user-details", getAllUsers);
 // GET user by ID
 userDetailsRouter.get("/:id", getUserById);
 
+
 module.exports = { userDetailsRouter };

@@ -5,7 +5,7 @@ const getAllUsers = async (req, res) => {
         // Get all users from database
         const users = await User.find()// Exclude password field
         
-        console.log(`Found ${users.length} users in database`);
+        // console.log(`Found ${users.length} users in database`);
         
         res.status(200).json({
             success: true,
