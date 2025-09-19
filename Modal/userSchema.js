@@ -22,12 +22,19 @@ const userSchema = new mongoose.Schema({
         required: [true, "Password is required"],
         minlength: [6, "Password must be at least 6 characters long"]
     },
-    agoraUid: { type: Number, unique: true },
+    agoraUid: {
+        type: Number,
+        unique: true
+    },
+    walletBalance: {
+        type: Number,
+        default: 100
+    }
 }, {
     timestamps: true // Adds createdAt and updatedAt fields
 });
 
 // Create and export the User model
-const User = mongoose.model("Users", userSchema);
+const User = mongoose.model("ragisterUser", userSchema);
 
 module.exports = User;
