@@ -2,11 +2,7 @@ const User = require("../Modal/userSchema");
 
 const getAllUsers = async (req, res) => {
     try {
-        // Get all users from database
-        const users = await User.find()// Exclude password field
-        
-        // console.log(`Found ${users.length} users in database`);
-        
+        const users = await User.find()
         res.status(200).json({
             success: true,
             message: "Users retrieved successfully",
@@ -28,9 +24,7 @@ const getUserById = async (req, res) => {
     try {
         const { id } = req.params;
         
-        // Find user by ID
-        const user = await User.findById(id).select('-password'); // Exclude password field
-        
+        const user = await User.findById(id)
         if (!user) {
             return res.status(404).json({
                 success: false,
