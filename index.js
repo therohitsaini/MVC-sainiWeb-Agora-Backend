@@ -13,21 +13,26 @@ const PORT = process.env.PORT || process.env.MVC_BACKEND_PORT || 3001;
 const server = http.createServer(app);
 const { ioServer } = require("./server-io");
 const { razerPayRoute } = require("./Routes/razerPayRoute");
-// Middlewares
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// Routers
+
 const videoCallRouter = require("./Routes/videoCallRotes");
 const { signinSignupRouter } = require("./Routes/signin-signupRoute");
 const { userDetailsRouter } = require("./Routes/userDetailsRoutes");
+const bookAppointmentRoute = require("./Routes/bookAppointmentRoute");
+
+
+
 
 app.use("/api/video-call", videoCallRouter);
 app.use("/api/auth", signinSignupRouter);
 app.use("/api/users", userDetailsRouter);
 app.use("/api/razerpay-create-order", razerPayRoute)
+app.use("/api-consltor", bookAppointmentRoute)
 
 
 ioServer(server);
