@@ -133,6 +133,10 @@ const ioServer = (server) => {
 
         socket.on("disconnect", async () => {
             for (let uid in onlineUsers) {
+                if (!mongoose.Types.ObjectId.isValid(uid)) {
+                    console.log(" Invalid uid received:", uid);
+                    return;
+                }
                 if (onlineUsers[uid] === socket.id) {
                     delete onlineUsers[uid];
                     console.log(" User disconnected:", uid);
