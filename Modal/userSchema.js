@@ -29,6 +29,10 @@ const userSchema = new mongoose.Schema({
     walletBalance: {
         type: Number,
         default: 100
+    },
+    isActive: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true // Adds createdAt and updatedAt fields

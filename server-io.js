@@ -1,5 +1,6 @@
 const { Server } = require("socket.io");
 const User = require("./Modal/userSchema");
+const { default: mongoose } = require("mongoose");
 
 
 const ioServer = (server) => {
@@ -15,8 +16,17 @@ const ioServer = (server) => {
 
     io.on("connection", (socket) => {
 
-        socket.on("register", (userId) => {
+        socket.on("register", async (userId) => {
+            if (!mongoose.Types.ObjectId.isValid(userId)) {
+                console.log("❌ Invalid userId received:", userId);
+                return;
+            }
             onlineUsers[userId] = socket.id;
+            try {
+                await User.findByIdAndUpdate(userId, { isActive: true });
+            } catch (err) {
+                console.error("Error updating user active status:", err);
+            }
         });
 
         socket.on("call-user", async ({ toUid, fromUid, type, channelName }) => {
@@ -59,12 +69,11 @@ const ioServer = (server) => {
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit("call-accepted", { fromUid, type, channelName });
             }
-
             const rate = type === "video" ? 2 : 1;
 
             const intervalId = setInterval(async () => {
                 try {
-              
+
                     const updatedCaller = await User.findOneAndUpdate(
                         { _id: fromUid, walletBalance: { $gte: rate } },
                         { $inc: { walletBalance: -rate } },
@@ -90,7 +99,6 @@ const ioServer = (server) => {
                         return;
                     }
 
-                  
                 } catch (err) {
                     console.error("Error deducting balance:", err);
                     clearInterval(intervalId);
@@ -123,12 +131,17 @@ const ioServer = (server) => {
         });
 
 
-        socket.on("disconnect", () => {
+        socket.on("disconnect", async () => {
             for (let uid in onlineUsers) {
                 if (onlineUsers[uid] === socket.id) {
                     delete onlineUsers[uid];
                     console.log(" User disconnected:", uid);
                     console.log(" Remaining online users:", Object.keys(onlineUsers));
+                    try {
+                        await User.findByIdAndUpdate(uid, { isActive: false });
+                    } catch (err) {
+                        console.error("Error updating user inactive status:", err);
+                    }
                 }
             }
         });

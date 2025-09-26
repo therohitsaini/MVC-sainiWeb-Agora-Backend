@@ -24,6 +24,7 @@ const videoCallRouter = require("./Routes/videoCallRotes");
 const { signinSignupRouter } = require("./Routes/signin-signupRoute");
 const { userDetailsRouter } = require("./Routes/userDetailsRoutes");
 const bookAppointmentRoute = require("./Routes/bookAppointmentRoute");
+const { consultantRoute } = require("./Routes/consultantRoute");
 
 
 
@@ -33,6 +34,7 @@ app.use("/api/auth", signinSignupRouter);
 app.use("/api/users", userDetailsRouter);
 app.use("/api/razerpay-create-order", razerPayRoute)
 app.use("/api-consltor", bookAppointmentRoute)
+app.use("/api-consultant", consultantRoute)
 
 
 ioServer(server);
