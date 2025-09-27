@@ -50,6 +50,11 @@ const consultantSchema = new mongoose.Schema(
             trim: true,
             maxlength: 1000, // optional limit
         },
+        consultantStatus: {
+            type: Boolean,
+            default: true
+        }
+
     },
     { timestamps: true }
 );

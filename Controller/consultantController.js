@@ -1,10 +1,13 @@
-const { consultantSchemaExport } = require("../Modal/consultantSchema")
+const { consultantSchemaExport } = require("../Modal/consultantSchema");
+const User = require("../Modal/userSchema");
+const { find } = require("../Modal/userSchema");
 
 
 const consultantController = async (req, res) => {
+    console.log(req.body)
     try {
         const { fullName, email, phone, profession, specialization, licenseNo, experience, fees, bio } = req.body;
-      
+
 
         if (!fullName || fullName.trim() === "") {
             return res.status(400).json({ success: false, message: "Full name is required" });
@@ -58,4 +61,33 @@ const consultantController = async (req, res) => {
     }
 };
 
-module.exports = { consultantController }
+const getConsultant = async (req, res) => {
+    try {
+        const findConsultant = await consultantSchemaExport.find()
+        if (!findConsultant) {
+            return res.status(400).send({ message: "Consultant is undifind..??" })
+        }
+        return res.status(200).send({ success: true, findConsultant })
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+const updateConsultantStatus = async (request, response) => {
+    try {
+        const { id } = request.params;
+        const { status } = request.body
+        console.log(id, status)
+
+
+        const updateConsultantStatus = await consultantSchemaExport.findByIdAndUpdate(id, { consultantStatus: status });
+        return response.status(200).send({ success: "true", updateConsultantStatus })
+
+    } catch (error) {
+
+        console.error(error);
+        return response.status(500).json({ message: 'Server error' });
+    }
+}
+
+module.exports = { consultantController, getConsultant, updateConsultantStatus }

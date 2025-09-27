@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: false
+    },
+    consultantStatus: {
+        type: Boolean,
+        default: true
     }
 }, {
     timestamps: true // Adds createdAt and updatedAt fields

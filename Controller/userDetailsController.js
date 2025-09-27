@@ -9,7 +9,7 @@ const getAllUsers = async (req, res) => {
             count: users.length,
             data: users
         });
-        
+
     } catch (error) {
         console.error("Error fetching users:", error);
         res.status(500).json({
@@ -24,20 +24,20 @@ const getUserById = async (req, res) => {
     try {
         const { id } = req.params;
         const user = await User.findById(id)
-        
+
         if (!user) {
             return res.status(404).json({
                 success: false,
                 message: "User not found"
             });
         }
-        
+
         res.status(200).json({
             success: true,
             message: "User retrieved successfully",
             data: user
         });
-        
+
     } catch (error) {
         console.error("Error fetching user:", error);
         res.status(500).json({
