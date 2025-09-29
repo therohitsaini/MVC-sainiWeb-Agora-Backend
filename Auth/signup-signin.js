@@ -1,6 +1,7 @@
 const User = require("../Modal/userSchema")
 const bcrypt = require("bcrypt")
-const JWT = require("jsonwebtoken")
+const JWT = require("jsonwebtoken");
+const { verify_Token } = require("./auth");
 const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff"
 
 
@@ -9,7 +10,7 @@ const signUp = async (request, response) => {
 
    try {
       const body = request.body
-      // console.log("SignUp body", body)
+
       const password = body.password
 
       const findEmail = await User.findOne({ email: body.email })
@@ -19,8 +20,6 @@ const signUp = async (request, response) => {
       if (obj_Length.length == 0) {
          return response.status(400).send({ massage: "Empty ...!" })
       }
-
-
 
       const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
       if (!emailRegex.test(body.email)) {
@@ -67,6 +66,7 @@ const signUp = async (request, response) => {
 const signIn = async (request, response) => {
    try {
       const body = request.body
+      console.log(body)
       const find_User = await User.findOne({ email: body.email })
 
 
@@ -89,4 +89,35 @@ const signIn = async (request, response) => {
    }
 }
 
-module.exports = { signUp, signIn }
+const tokenVerify = async (request, response) => {
+   try {
+      const verify = await verify_Token(request)
+      console.log(verify)
+      if (!verify) {
+         return response.status(401).send({ message: "Token is not verified" })
+      } else {
+         return response.status(200).send({ message: "Token verified successfully", user: verify })
+      }
+   } catch (err) {
+      console.log("Token verification error:", err)
+      return response.status(401).send({ message: "Token is not found or invalid" })
+   }
+}
+
+// Middleware function to protect routes
+const authenticateToken = async (request, response, next) => {
+   try {
+      const verify = await verify_Token(request)
+      if (!verify) {
+         return response.status(401).send({ message: "Access denied. Token is not verified" })
+      }
+      // Add user info to request object for use in protected routes
+      request.user = verify
+      next()
+   } catch (err) {
+      console.log("Authentication error:", err)
+      return response.status(401).send({ message: "Access denied. Invalid token" })
+   }
+}
+
+module.exports = { signUp, signIn, tokenVerify, authenticateToken }
