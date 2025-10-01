@@ -14,6 +14,11 @@ const consultantSchema = new mongoose.Schema(
             lowercase: true,
             trim: true,
         },
+        password: {
+            type: String,
+            required: true,
+            trim: true,
+        },
         phone: {
             type: String,
             required: true,
@@ -48,13 +53,16 @@ const consultantSchema = new mongoose.Schema(
         bio: {
             type: String,
             trim: true,
-            maxlength: 1000, // optional limit
+            maxlength: 1000,
         },
         consultantStatus: {
             type: Boolean,
             default: true
+        },
+        role: {
+            type: String,
+            default: "consultant"
         }
-
     },
     { timestamps: true }
 );

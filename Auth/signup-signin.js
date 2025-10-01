@@ -1,4 +1,5 @@
 const User = require("../Modal/userSchema")
+const { consultantSchemaExport } = require("../Modal/consultantSchema")
 const bcrypt = require("bcrypt")
 const JWT = require("jsonwebtoken");
 const { verify_Token } = require("./auth");
@@ -45,15 +46,11 @@ const signUp = async (request, response) => {
       const agoraUid = generateAgoraUid();
       const object = new User({
 
-         fullname
-            : body.fullname,
+         fullname: body.fullname,
          email: body.email,
          password: hashPassword,
          agoraUid: agoraUid
-
-
       })
-
       await object.save()
       return response.status(201).send({ massage: "sign up sucessfully ...!" })
 
@@ -67,9 +64,12 @@ const signIn = async (request, response) => {
    try {
       const body = request.body
       console.log(body)
-      const find_User = await User.findOne({ email: body.email })
 
+      let find_User = await User.findOne({ email: body.email })
 
+      if (!find_User) {
+         find_User = await consultantSchemaExport.findOne({ email: body.email })
+      }
       if (!find_User) {
          return response.status(400).send({ massage: "Incrrect Details ...!" })
       }
@@ -111,7 +111,6 @@ const authenticateToken = async (request, response, next) => {
       if (!verify) {
          return response.status(401).send({ message: "Access denied. Token is not verified" })
       }
-      // Add user info to request object for use in protected routes
       request.user = verify
       next()
    } catch (err) {

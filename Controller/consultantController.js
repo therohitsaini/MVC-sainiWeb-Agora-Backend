@@ -1,12 +1,13 @@
 const { consultantSchemaExport } = require("../Modal/consultantSchema");
 const User = require("../Modal/userSchema");
 const { find } = require("../Modal/userSchema");
+const bcrypt = require("bcrypt");
 
 
 const consultantController = async (req, res) => {
-    console.log(req.body)
+
     try {
-        const { fullName, email, phone, profession, specialization, licenseNo, experience, fees, bio } = req.body;
+        const { fullName, email, phone, profession, specialization, licenseNo, experience, fees, bio, password } = req.body;
 
 
         if (!fullName || fullName.trim() === "") {
@@ -15,6 +16,9 @@ const consultantController = async (req, res) => {
 
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             return res.status(400).json({ success: false, message: "Valid email is required" });
+        }
+        if (!password || password.trim() === "") {
+            return res.status(400).json({ success: false, message: "Password is required" });
         }
 
         if (!phone || !/^\d{10,15}$/.test(phone)) {
@@ -40,11 +44,12 @@ const consultantController = async (req, res) => {
         if (fees === undefined || isNaN(fees) || fees < 0) {
             return res.status(400).json({ success: false, message: "Valid fees (>=0) is required" });
         }
-
+        const hashPassword = await bcrypt.hash(password, 10)
         const consultantDetails = new consultantSchemaExport({
             fullName,
             email,
             phone,
+            password: hashPassword,
             profession,
             specialization,
             licenseNo,
@@ -90,4 +95,23 @@ const updateConsultantStatus = async (request, response) => {
     }
 }
 
-module.exports = { consultantController, getConsultant, updateConsultantStatus }
+const getConsultantById = async (request, response) => {
+    try {
+        const { id } = request.params;
+        console.log("id", id)
+        if (mongoose.Types.ObjectId.isValid(id)) {
+            return response.status(400).json({ message: 'Invalid consultant ID' });
+        }
+        if (!id) {
+            return response.status(400).json({ message: 'Consultant ID is required' });
+        }
+        const consultant = await consultantSchemaExport.findById(id);
+        return response.status(200).send({ success: true, consultant });
+    } catch (error) {
+        console.error(error);
+        return response.status(500).json({ message: 'Server error' });
+    }
+}
+
+
+module.exports = { consultantController, getConsultant, updateConsultantStatus, getConsultantById }
