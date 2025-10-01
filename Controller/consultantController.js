@@ -2,6 +2,7 @@ const { consultantSchemaExport } = require("../Modal/consultantSchema");
 const User = require("../Modal/userSchema");
 const { find } = require("../Modal/userSchema");
 const bcrypt = require("bcrypt");
+const mongoose = require("mongoose");
 
 
 const consultantController = async (req, res) => {
@@ -83,13 +84,10 @@ const updateConsultantStatus = async (request, response) => {
         const { id } = request.params;
         const { status } = request.body
         console.log(id, status)
-
-
         const updateConsultantStatus = await consultantSchemaExport.findByIdAndUpdate(id, { consultantStatus: status });
         return response.status(200).send({ success: "true", updateConsultantStatus })
 
     } catch (error) {
-
         console.error(error);
         return response.status(500).json({ message: 'Server error' });
     }
@@ -98,14 +96,13 @@ const updateConsultantStatus = async (request, response) => {
 const getConsultantById = async (request, response) => {
     try {
         const { id } = request.params;
-        console.log("id", id)
-        if (mongoose.Types.ObjectId.isValid(id)) {
+        if (!mongoose.Types.ObjectId.isValid(id)) {
             return response.status(400).json({ message: 'Invalid consultant ID' });
         }
         if (!id) {
             return response.status(400).json({ message: 'Consultant ID is required' });
         }
-        const consultant = await consultantSchemaExport.findById(id);
+        const consultant = await consultantSchemaExport.findById(id).select("-password");
         return response.status(200).send({ success: true, consultant });
     } catch (error) {
         console.error(error);
