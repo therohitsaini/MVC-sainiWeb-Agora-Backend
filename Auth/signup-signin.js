@@ -63,8 +63,7 @@ const signUp = async (request, response) => {
 const signIn = async (request, response) => {
    try {
       const body = request.body
-      console.log(body)
-
+    
       let find_User = await User.findOne({ email: body.email })
 
       if (!find_User) {
@@ -73,7 +72,12 @@ const signIn = async (request, response) => {
       if (!find_User) {
          return response.status(400).send({ massage: "Incrrect Details ...!" })
       }
-
+      
+      // Check if consultant account is blocked
+      if (find_User.consultantStatus === false) {
+         return response.status(403).send({ massage: "Your account is blocked. Please contact administrator." })
+      }
+      
       const compairPassword = await bcrypt.compare(body.password, find_User.password)
 
       if (!compairPassword) {

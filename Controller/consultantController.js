@@ -8,7 +8,7 @@ const mongoose = require("mongoose");
 const consultantController = async (req, res) => {
 
     try {
-        const { fullName, email, phone, profession, specialization, licenseNo, experience, fees, bio, password } = req.body;
+        const { fullName, email, phone, profession, specialization, licenseNo, experience, fees, bio, password, language } = req.body;
 
 
         if (!fullName || fullName.trim() === "") {
@@ -57,6 +57,7 @@ const consultantController = async (req, res) => {
             experience,
             fees,
             bio,
+            language,
         });
 
         await consultantDetails.save();

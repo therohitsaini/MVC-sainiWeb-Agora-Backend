@@ -62,6 +62,11 @@ const consultantSchema = new mongoose.Schema(
         role: {
             type: String,
             default: "consultant"
+        },
+        language: {
+            type: Array,
+            required: true,
+            trim: true,
         }
     },
     { timestamps: true }
