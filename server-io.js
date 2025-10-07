@@ -34,7 +34,7 @@ const ioServer = (server) => {
             let callCost = 1
             try {
                 const caller = await User.findById(fromUid).select("walletBalance").lean();
-                console.log("caller__ROHIT", caller);
+              
                 if (!caller || Number(caller.walletBalance) < callCost) {
                     console.log(" Insufficient balance, blocking call.");
                     socket.emit("call-failed", { message: "Insufficient balance. Call cannot be connected." });
@@ -64,8 +64,7 @@ const ioServer = (server) => {
             console.log("fromUid type:", typeof fromUid, "value:", fromUid);
             const callerSocketId = onlineUsers[fromUid];
             const receiverSocketId = onlineUsers[toUid];
-            console.log("fromUid____R", fromUid);
-            console.log("toUid____R", toUid);
+         
 
             if (callerSocketId) {
                 io.to(callerSocketId).emit("call-accepted", { toUid, type, channelName });
