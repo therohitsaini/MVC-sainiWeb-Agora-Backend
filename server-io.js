@@ -1,6 +1,7 @@
 const { Server } = require("socket.io");
 const User = require("./Modal/userSchema");
 const { default: mongoose } = require("mongoose");
+const { consultantSchemaExport } = require("./Modal/consultantSchema");
 
 
 const ioServer = (server) => {
@@ -32,12 +33,13 @@ const ioServer = (server) => {
         socket.on("call-user", async ({ toUid, fromUid, type, channelName }) => {
             let callCost = 1
             try {
-                // const caller = await User.findById(fromUid).select("walletBalance").lean();
-                // if (!caller || Number(caller.walletBalance) < callCost) {
-                //     console.log(" Insufficient balance, blocking call.");
-                //     socket.emit("call-failed", { message: "Insufficient balance. Call cannot be connected." });
-                //     return;
-                // }
+                const caller = await User.findById(fromUid).select("walletBalance").lean();
+                console.log("caller__ROHIT", caller);
+                if (!caller || Number(caller.walletBalance) < callCost) {
+                    console.log(" Insufficient balance, blocking call.");
+                    socket.emit("call-failed", { message: "Insufficient balance. Call cannot be connected." });
+                    return;
+                }
 
                 const receiverSocketId = onlineUsers[toUid];
 
@@ -58,10 +60,12 @@ const ioServer = (server) => {
 
 
         socket.on("call-accepted", async ({ toUid, fromUid, type, channelName }) => {
-            console.log("fromUid", fromUid, "toUid", toUid);
-
+            console.log("call-accepted received:", { fromUid, toUid, type, channelName });
+            console.log("fromUid type:", typeof fromUid, "value:", fromUid);
             const callerSocketId = onlineUsers[fromUid];
             const receiverSocketId = onlineUsers[toUid];
+            console.log("fromUid____R", fromUid);
+            console.log("toUid____R", toUid);
 
             if (callerSocketId) {
                 io.to(callerSocketId).emit("call-accepted", { toUid, type, channelName });
@@ -69,43 +73,82 @@ const ioServer = (server) => {
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit("call-accepted", { fromUid, type, channelName });
             }
-            const rate = type === "video" ? 2 : 1;
 
-            // const intervalId = setInterval(async () => {
-            //     try {
+            let chargePerMinute = await consultantSchemaExport.findById(fromUid).select("fees").lean();
+            const rate = chargePerMinute.fees;
+            // type === "video" ? 2 : 1;
+            console.log("chargePerMinute", chargePerMinute);
+            console.log("rate", rate);
+            const intervalId = setInterval(async () => {
+                try {
 
-            //         // const updatedCaller = await User.findOneAndUpdate(
-            //         //     { _id: fromUid, walletBalance: { $gte: rate } },
-            //         //     { $inc: { walletBalance: -rate } },
-            //         //     { new: true }
-            //         // );
+                    let fromObjectId;
+                    try {
+                        fromObjectId = new mongoose.Types.ObjectId(toUid);
+                    } catch (e) {
+                        console.error("Invalid fromUid ObjectId:", toUid);
+                        clearInterval(intervalId);
+                        if (callerSocketId) {
+                            io.to(callerSocketId).emit("call-ended", { reason: "Invalid caller ID" });
+                        }
+                        return;
+                    }
+                    console.log("fromObjectId", fromObjectId);
+                    const currentUser = await User.findById(fromObjectId).select("walletBalance").lean();
+                    const numericBalance = Number(currentUser && currentUser.walletBalance);
+                    console.log("Current user balance:", numericBalance, "Rate:", rate);
 
-            //         // const updatedReceiver = await User.findOneAndUpdate(
-            //         //     { _id: toUid, walletBalance: { $gte: rate } },
-            //         //     { $inc: { walletBalance: -rate } },
-            //         //     { new: true }
-            //         // );
+                    if (!currentUser || Number.isNaN(numericBalance)) {
+                        console.log("Caller not found or walletBalance not numeric");
+                        clearInterval(intervalId);
+                        if (callerSocketId) {
+                            io.to(callerSocketId).emit("call-ended", { reason: "Caller not found" });
+                        }
+                        return;
+                    }
 
-            //         // if (!updatedCaller || !updatedReceiver) {
-            //         //     clearInterval(intervalId);
+                    if (numericBalance < Number(rate)) {
+                        clearInterval(intervalId);
+                        if (callerSocketId) {
+                            io.to(callerSocketId).emit("call-ended", { reason: "Insufficient balance" });
+                        }
+                        // if (receiverSocketId) {
+                        //     io.to(receiverSocketId).emit("call-ended", { reason: "Insufficient balance" });
+                        // }
+                        return;
+                    }
 
-            //         //     if (callerSocketId) {
-            //         //         io.to(callerSocketId).emit("call-ended", { reason: "Insufficient balance" });
-            //         //     }
-            //         //     if (receiverSocketId) {
-            //         //         io.to(receiverSocketId).emit("call-ended", { reason: "Insufficient balance" });
-            //         //     }
+                    const updatedCaller = await User.findByIdAndUpdate(
+                        fromObjectId,
+                        { $inc: { walletBalance: -Number(rate) } },
+                        { new: true }
+                    ).lean();
 
-            //         //     return;
-            //         // }
+                    // const updatedReceiver = await User.findOneAndUpdate(
+                    //     { _id: toUid, walletBalance: { $gte: rate } },
+                    //     { $inc: { walletBalance: -rate } },
+                    //     { new: true }
+                    // );
+                    console.log("updatedCaller", updatedCaller);
 
-            //     } catch (err) {
-            //         console.error("Error deducting balance:", err);
-            //         // clearInterval(intervalId);
-            //     }
-            // }, 60 * 1000);
+                    if (!updatedCaller) {
+                        clearInterval(intervalId);
+                        if (callerSocketId) {
+                            io.to(callerSocketId).emit("call-ended", { reason: "Insufficient balance" });
+                        }
+                        // if (receiverSocketId) {
+                        //     io.to(receiverSocketId).emit("call-ended", { reason: "Insufficient balance" });
+                        // }
+                        return;
+                    }
 
-            // socket.callIntervalId = intervalId;
+                } catch (err) {
+                    console.error("Error deducting balance:", err);
+                    clearInterval(intervalId);
+                }
+            }, 60 * 1000);
+
+            socket.callIntervalId = intervalId;
         });
 
         socket.on("call-rejected", ({ toUid, fromUid }) => {
