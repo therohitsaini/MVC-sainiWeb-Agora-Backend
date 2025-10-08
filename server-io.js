@@ -24,7 +24,7 @@ const ioServer = (server) => {
             }
 
             onlineUsers[userId] = socket.id;
-          
+
             try {
                 await User.findByIdAndUpdate(userId, { isActive: true });
                 await consultantSchemaExport.findByIdAndUpdate(userId, { isActive: true });
@@ -34,12 +34,16 @@ const ioServer = (server) => {
         });
 
         socket.on("call-user", async ({ toUid, fromUid, type, channelName }) => {
-            let callCost = 1
+
+            console.log("call-user received:CURRENT ONLINE USERS", fromUid);
             try {
                 const caller = await User.findById(fromUid).select("walletBalance").lean();
-
+                const callerConsultant = await consultantSchemaExport.findById(toUid).select("fees").lean();
+                
+                const callCost = callerConsultant.fees;
+                console.log("callCost", callCost);
                 if (!caller || Number(caller.walletBalance) < callCost) {
-                    console.log(" Insufficient balance, blocking call.");
+                    console.log(" Insufficient balance, Please recharge your wallet.");
                     socket.emit("call-failed", { message: "Insufficient balance. Call cannot be connected." });
                     return;
                 }
