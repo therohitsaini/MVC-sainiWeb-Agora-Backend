@@ -34,8 +34,6 @@ const ioServer = (server) => {
         });
 
         socket.on("call-user", async ({ toUid, fromUid, type, channelName }) => {
-
-            console.log("call-user received:CURRENT ONLINE USERS", fromUid);
             try {
                 const caller = await User.findById(fromUid).select("walletBalance").lean();
                 const callerConsultant = await consultantSchemaExport.findById(toUid).select("fees").lean();
@@ -65,14 +63,11 @@ const ioServer = (server) => {
             }
         });
 
-
         socket.on("call-accepted", async ({ toUid, fromUid, type, channelName }) => {
             console.log("call-accepted received:", { fromUid, toUid, type, channelName });
             console.log("fromUid type:", typeof fromUid, "value:", fromUid);
             const callerSocketId = onlineUsers[fromUid];
             const receiverSocketId = onlineUsers[toUid];
-
-
             if (callerSocketId) {
                 io.to(callerSocketId).emit("call-accepted", { toUid, type, channelName });
             }

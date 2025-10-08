@@ -21,8 +21,8 @@ const ConversationSchema = new mongoose.Schema(
          ref: "User",
          required: true,
       },
-      userSnapshot: SnapshotSchema, // user details at the time of call
-      consultantSnapshot: SnapshotSchema, // consultant details at the time of call
+      userSnapshot: SnapshotSchema,
+      consultantSnapshot: SnapshotSchema, 
       type: {
          type: String,
          enum: ["audio", "video", "chat"],
@@ -33,10 +33,7 @@ const ConversationSchema = new mongoose.Schema(
       durationSeconds: { type: Number, default: 0 },
       transcript: { type: String },
       recordingUrl: { type: String },
-      rating: {
-         score: { type: Number, min: 1, max: 5 },
-         feedback: String,
-      },
+     
       createdAt: { type: Date, default: Date.now },
       updatedAt: { type: Date, default: Date.now },
    },
