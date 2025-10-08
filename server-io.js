@@ -22,9 +22,12 @@ const ioServer = (server) => {
                 console.log("❌ Invalid userId received:", userId);
                 return;
             }
+
             onlineUsers[userId] = socket.id;
+          
             try {
                 await User.findByIdAndUpdate(userId, { isActive: true });
+                await consultantSchemaExport.findByIdAndUpdate(userId, { isActive: true });
             } catch (err) {
                 console.error("Error updating user active status:", err);
             }
@@ -34,7 +37,7 @@ const ioServer = (server) => {
             let callCost = 1
             try {
                 const caller = await User.findById(fromUid).select("walletBalance").lean();
-              
+
                 if (!caller || Number(caller.walletBalance) < callCost) {
                     console.log(" Insufficient balance, blocking call.");
                     socket.emit("call-failed", { message: "Insufficient balance. Call cannot be connected." });
@@ -64,7 +67,7 @@ const ioServer = (server) => {
             console.log("fromUid type:", typeof fromUid, "value:", fromUid);
             const callerSocketId = onlineUsers[fromUid];
             const receiverSocketId = onlineUsers[toUid];
-         
+
 
             if (callerSocketId) {
                 io.to(callerSocketId).emit("call-accepted", { toUid, type, channelName });
@@ -185,6 +188,7 @@ const ioServer = (server) => {
                     console.log(" Remaining online users:", Object.keys(onlineUsers));
                     try {
                         await User.findByIdAndUpdate(uid, { isActive: false });
+                        await consultantSchemaExport.findByIdAndUpdate(uid, { isActive: false });
                     } catch (err) {
                         console.error("Error updating user inactive status:", err);
                     }
