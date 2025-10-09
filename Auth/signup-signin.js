@@ -11,13 +11,9 @@ const signUp = async (request, response) => {
 
    try {
       const body = request.body
-
       const password = body.password
-
       const findEmail = await User.findOne({ email: body.email })
-
       const obj_Length = Object.keys(body)
-
       if (obj_Length.length == 0) {
          return response.status(400).send({ massage: "Empty ...!" })
       }
@@ -73,7 +69,6 @@ const signIn = async (request, response) => {
          return response.status(400).send({ massage: "Incrrect Details ...!" })
       }
       
-      // Check if consultant account is blocked
       if (find_User.consultantStatus === false) {
          return response.status(403).send({ massage: "Your account is blocked. Please contact administrator." })
       }
@@ -83,7 +78,7 @@ const signIn = async (request, response) => {
       if (!compairPassword) {
          return response.status(400).send({ massage: "Incrrect password ... ! " })
       }
-      const Token = JWT.sign(body, JWT_SRCURITE_KEY, { expiresIn: "1h" })
+      const Token = JWT.sign(body, JWT_SRCURITE_KEY, { expiresIn: '10h' })
 
       return response.send({ massage: "Sign in successfully ", data: Token, userData: find_User })
 
@@ -108,7 +103,7 @@ const tokenVerify = async (request, response) => {
    }
 }
 
-// Middleware function to protect routes
+
 const authenticateToken = async (request, response, next) => {
    try {
       const verify = await verify_Token(request)

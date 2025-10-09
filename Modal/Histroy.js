@@ -2,9 +2,9 @@ const mongoose = require("mongoose");
 
 const SnapshotSchema = new mongoose.Schema(
    {
-      name: String,
+      fullName: String,
       email: String,
-      phone: String,
+      contactNumber: String,
    },
    { _id: false }
 );

@@ -1,4 +1,5 @@
 const { consultantSchemaExport } = require("../Modal/consultantSchema");
+const { Conversation } = require("../Modal/Histroy");
 const User = require("../Modal/userSchema");
 const { find } = require("../Modal/userSchema");
 const bcrypt = require("bcrypt");
@@ -111,5 +112,43 @@ const getConsultantById = async (request, response) => {
     }
 }
 
+const getConsultantHistory = async (request, response) => {
+    try {
+        const { id } = request.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return response.status(400).json({ message: 'Invalid consultant ID' });
+        }
+        if (!id) {
+            return response.status(400).json({ message: 'Consultant ID is required' });
+        }
+        const history = await Conversation.find({ consultantId: id });
+        const userHistory = [];
+        for (const item of history) {
+            userHistory.push(
+                {
+                    userId: item.userId,
+                    user: item.userSnapshot,
+                    type: item.type,
+                    startTime: item.startTime,
+                    endTime: item.endTime,
+                    durationSeconds: item.durationSeconds
+                }
+            )
+        }
+        return response.status(200).send({ success: true, userHistory });
 
-module.exports = { consultantController, getConsultant, updateConsultantStatus, getConsultantById }
+    } catch (error) {
+        console.error(error);
+        return response.status(500).json({ message: 'Server error' });
+    }
+}
+
+
+
+module.exports = {
+    consultantController,
+    getConsultant,
+    updateConsultantStatus,
+    getConsultantById,
+    getConsultantHistory
+}

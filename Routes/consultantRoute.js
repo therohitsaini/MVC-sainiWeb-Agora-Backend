@@ -1,5 +1,10 @@
 const express = require("express")
-const { consultantController, getConsultant, updateConsultantStatus, getConsultantById } = require("../Controller/consultantController")
+const { consultantController,
+   getConsultant,
+   updateConsultantStatus,
+   getConsultantById,
+   getConsultantHistory
+} = require("../Controller/consultantController")
 const consultantRoute = express.Router()
 
 
@@ -8,5 +13,6 @@ consultantRoute.post("/add-consultant", consultantController)
 consultantRoute.get("/api-find-consultant", getConsultant)
 consultantRoute.put("/api-consultant-update-status/:id", updateConsultantStatus)
 consultantRoute.get("/consultantid/:id", getConsultantById)
+consultantRoute.get("/consultant-history/:id", getConsultantHistory)
 
 module.exports = { consultantRoute }

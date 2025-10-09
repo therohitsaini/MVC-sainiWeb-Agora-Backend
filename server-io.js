@@ -2,6 +2,8 @@ const { Server } = require("socket.io");
 const User = require("./Modal/userSchema");
 const { default: mongoose } = require("mongoose");
 const { consultantSchemaExport } = require("./Modal/consultantSchema");
+const { Conversation } = require("./Modal/Histroy");
+const { HistroyMW } = require("./Socket-Io-MiddleWare/HistroyMW");
 
 
 const ioServer = (server) => {
@@ -19,7 +21,7 @@ const ioServer = (server) => {
 
         socket.on("register", async (userId) => {
             if (!mongoose.Types.ObjectId.isValid(userId)) {
-                console.log("❌ Invalid userId received:", userId);
+                console.log(" Invalid userId received:", userId);
                 return;
             }
 
@@ -37,7 +39,7 @@ const ioServer = (server) => {
             try {
                 const caller = await User.findById(fromUid).select("walletBalance").lean();
                 const callerConsultant = await consultantSchemaExport.findById(toUid).select("fees").lean();
-                
+
                 const callCost = callerConsultant.fees;
                 console.log("callCost", callCost);
                 if (!caller || Number(caller.walletBalance) < callCost) {
@@ -65,7 +67,13 @@ const ioServer = (server) => {
 
         socket.on("call-accepted", async ({ toUid, fromUid, type, channelName }) => {
             console.log("call-accepted received:", { fromUid, toUid, type, channelName });
-            console.log("fromUid type:", typeof fromUid, "value:", fromUid);
+
+            try {
+                await HistroyMW(toUid, fromUid, type);
+            } catch (error) {
+                console.error("Error in call-accepted:", error);
+            }
+
             const callerSocketId = onlineUsers[fromUid];
             const receiverSocketId = onlineUsers[toUid];
             if (callerSocketId) {
@@ -77,12 +85,8 @@ const ioServer = (server) => {
 
             let chargePerMinute = await consultantSchemaExport.findById(fromUid).select("fees").lean();
             const rate = chargePerMinute.fees;
-            // type === "video" ? 2 : 1;
-            console.log("chargePerMinute", chargePerMinute);
-            console.log("rate", rate);
             const intervalId = setInterval(async () => {
                 try {
-
                     let fromObjectId;
                     try {
                         fromObjectId = new mongoose.Types.ObjectId(toUid);
@@ -166,14 +170,40 @@ const ioServer = (server) => {
                 console.log(` Caller ${toUid} is offline`);
             }
         });
-        socket.on("call-ended", ({ fromUid, toUid }) => {
+
+        socket.on("call-ended", async ({ fromUid, toUid }) => {
+          
+            try {
+           
+                const conversation = await Conversation.findOne({ 
+                    consultantId: fromUid, 
+                    userId: toUid,
+                    endTime: { $exists: false } 
+                });
+                
+                if (conversation) {
+                    const endTime = new Date();
+                    const durationSeconds = Math.floor((endTime - conversation.startTime) / 1000);
+                    
+                    await Conversation.findByIdAndUpdate(conversation._id, {
+                        endTime: endTime,
+                        durationSeconds: durationSeconds
+                    });
+                    
+                    console.log(` Conversation ended: Duration ${durationSeconds} seconds`);
+                } else {
+                    console.log(" No active conversation found to end");
+                }
+            } catch (error) {
+                console.error(" Error updating conversation:", error);
+            }
+            
             // clearInterval(socket.callIntervalId);
             const receiverSocketId = onlineUsers[toUid];
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit("call-ended", { fromUid });
             }
         });
-
 
         socket.on("disconnect", async () => {
             for (let uid in onlineUsers) {
