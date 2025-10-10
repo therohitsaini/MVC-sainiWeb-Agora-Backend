@@ -78,3 +78,4 @@ const consultantSchema = new mongoose.Schema(
 const consultantSchemaExport = mongoose.model("consultant", consultantSchema);
 
 module.exports = { consultantSchemaExport }
+ 

@@ -4,6 +4,7 @@ const { default: mongoose } = require("mongoose");
 const { consultantSchemaExport } = require("./Modal/consultantSchema");
 const { Conversation } = require("./Modal/Histroy");
 const { HistroyMW } = require("./Socket-Io-MiddleWare/HistroyMW");
+const { Message } = require("./Modal/messageSchema");
 
 
 const ioServer = (server) => {
@@ -202,6 +203,166 @@ const ioServer = (server) => {
             const receiverSocketId = onlineUsers[toUid];
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit("call-ended", { fromUid });
+            }
+        });
+
+        // ------------------------- CHAT EVENTS -------------------------
+        // Start a chat conversation (consultant -> user)
+        socket.on("chat-start", async ({ toUid, fromUid }) => {
+            console.log("chat-start received:", { toUid, fromUid });
+            try {
+                await HistroyMW(toUid, fromUid, "chat");
+
+                const activeConversation = await Conversation.findOne({
+                    consultantId: fromUid,
+                    userId: toUid,
+                })
+                .sort({ createdAt: -1 })
+                .lean();
+
+                if (activeConversation) {
+                    const callerSocketId = onlineUsers[fromUid];
+                    const receiverSocketId = onlineUsers[toUid];
+                    const payload = { conversationId: activeConversation._id.toString() };
+                    if (callerSocketId) io.to(callerSocketId).emit("chat-started", payload);
+                    if (receiverSocketId) io.to(receiverSocketId).emit("chat-incoming", { fromUid, ...payload });
+                }
+            } catch (error) {
+                console.error("Error in chat-start:", error);
+                socket.emit("chat-error", { message: "Unable to start chat" });
+            }
+        });
+
+        // Join a chat room using conversationId
+        socket.on("chat-join", async ({ conversationId, userId }) => {
+            try {
+                if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+                    return socket.emit("chat-error", { message: "Invalid conversationId" });
+                }
+                const conversation = await Conversation.findById(conversationId).lean();
+                if (!conversation) {
+                    return socket.emit("chat-error", { message: "Conversation not found" });
+                }
+                const room = `conv:${conversationId}`;
+                socket.join(room);
+                socket.emit("chat-joined", { conversationId });
+            } catch (error) {
+                console.error("Error in chat-join:", error);
+                socket.emit("chat-error", { message: "Unable to join chat" });
+            }
+        });
+
+        // Send a chat message
+        socket.on("chat-send", async ({ conversationId, fromUid, toUid, type = "text", content = "" }) => {
+            try {
+                if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+                    return socket.emit("chat-error", { message: "Invalid conversationId" });
+                }
+                const conversation = await Conversation.findById(conversationId).lean();
+                if (!conversation) {
+                    return socket.emit("chat-error", { message: "Conversation not found" });
+                }
+                const message = await Message.create({
+                    conversationId,
+                    senderId: fromUid,
+                    receiverId: toUid,
+                    type,
+                    content
+                });
+                const room = `conv:${conversationId}`;
+                io.to(room).emit("chat-message", {
+                    _id: message._id,
+                    conversationId,
+                    fromUid,
+                    toUid,
+                    type: message.type,
+                    content: message.content,
+                    createdAt: message.createdAt
+                });
+
+                // Fallback direct emit if receiver not in room
+                const receiverSocketId = onlineUsers[toUid];
+                if (receiverSocketId) {
+                    io.to(receiverSocketId).emit("chat-message", {
+                        _id: message._id,
+                        conversationId,
+                        fromUid,
+                        toUid,
+                        type: message.type,
+                        content: message.content,
+                        createdAt: message.createdAt
+                    });
+                }
+            } catch (error) {
+                console.error("Error in chat-send:", error);
+                socket.emit("chat-error", { message: "Unable to send message" });
+            }
+        });
+
+        // Load chat history
+        socket.on("chat-history", async ({ conversationId, limit = 50, before }) => {
+            try {
+                if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+                    return socket.emit("chat-error", { message: "Invalid conversationId" });
+                }
+                const query = { conversationId };
+                if (before) {
+                    query.createdAt = { $lt: new Date(before) };
+                }
+                const messages = await Message.find(query)
+                    .sort({ createdAt: -1 })
+                    .limit(Math.min(Number(limit) || 50, 200))
+                    .lean();
+                socket.emit("chat-history", { conversationId, messages: messages.reverse() });
+            } catch (error) {
+                console.error("Error in chat-history:", error);
+                socket.emit("chat-error", { message: "Unable to fetch history" });
+            }
+        });
+
+        // Typing indicator
+        socket.on("chat-typing", ({ conversationId, userId, isTyping }) => {
+            const room = `conv:${conversationId}`;
+            socket.to(room).emit("chat-typing", { conversationId, userId, isTyping: !!isTyping });
+        });
+
+        // Mark messages as read
+        socket.on("chat-read", async ({ conversationId, readerId, senderId }) => {
+            try {
+                if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+                    return socket.emit("chat-error", { message: "Invalid conversationId" });
+                }
+                const result = await Message.updateMany(
+                    { conversationId, receiverId: readerId, senderId, status: { $ne: "read" } },
+                    { $set: { status: "read", readAt: new Date() } }
+                );
+                const room = `conv:${conversationId}`;
+                io.to(room).emit("chat-read", { conversationId, readerId, senderId, count: result.modifiedCount || 0 });
+            } catch (error) {
+                console.error("Error in chat-read:", error);
+                socket.emit("chat-error", { message: "Unable to mark read" });
+            }
+        });
+
+        // End chat conversation explicitly
+        socket.on("chat-end", async ({ conversationId }) => {
+            try {
+                if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+                    return socket.emit("chat-error", { message: "Invalid conversationId" });
+                }
+                const conversation = await Conversation.findById(conversationId);
+                if (!conversation) return;
+                if (!conversation.endTime) {
+                    const endTime = new Date();
+                    conversation.endTime = endTime;
+                    conversation.durationSeconds = Math.floor((endTime - conversation.startTime) / 1000);
+                    await conversation.save();
+                }
+                const room = `conv:${conversationId}`;
+                io.to(room).emit("chat-ended", { conversationId });
+            } catch (error) {
+                console.error("Error in chat-end:", error);
+                socket.emit("chat-error", { message: "Unable to end chat" });
             }
         });
 

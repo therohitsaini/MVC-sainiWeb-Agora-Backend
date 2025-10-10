@@ -143,6 +143,41 @@ const getConsultantHistory = async (request, response) => {
     }
 }
 
+const getConsultantAllUser = async (request, response) => {
+    try {
+        const { id } = request.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return response.status(400).json({ message: 'Invalid consultant ID' });
+        }
+        if (!id) {
+            return response.status(400).json({ message: 'Consultant ID is required' });
+        }
+        const consultantUser = await Conversation.find({ consultantId: id });
+        const userData = [];
+        for (const item of consultantUser) {
+            userData.push(
+                {
+                    userId: item.userId,
+                    user: item.userSnapshot,
+                    type: item.type,
+                    startTime: item.startTime,
+                    endTime: item.endTime,
+                    durationSeconds: item.durationSeconds
+                }
+            )
+        }
+        console.log(consultantUser)
+        if (!consultantUser) {
+            return response.status(400).json({ message: 'Consultant user not found' });
+        }
+        return response.status(200).send({ success: true, userData });
+    } catch (error) {
+        console.error(error);
+        return response.status(500).json({ message: 'Server error' });
+    }
+}
+
+
 
 
 module.exports = {
@@ -150,5 +185,6 @@ module.exports = {
     getConsultant,
     updateConsultantStatus,
     getConsultantById,
-    getConsultantHistory
+    getConsultantHistory,
+    getConsultantAllUser
 }
