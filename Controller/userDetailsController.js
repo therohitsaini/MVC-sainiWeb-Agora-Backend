@@ -2,7 +2,7 @@ const User = require("../Modal/userSchema");
 
 const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find()
+        const users = await User.find({ role: "user" })
         res.status(200).json({
             success: true,
             message: "Users retrieved successfully",

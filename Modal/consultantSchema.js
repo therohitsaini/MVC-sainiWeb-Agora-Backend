@@ -75,7 +75,7 @@ const consultantSchema = new mongoose.Schema(
     },
     { timestamps: true }
 );
-const consultantSchemaExport = mongoose.model("consultant", consultantSchema);
+const consultantSchemaExport = mongoose.model("ragisterUser", consultantSchema);
 
 module.exports = { consultantSchemaExport }
  

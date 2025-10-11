@@ -1,4 +1,4 @@
-const { consultantSchemaExport } = require("../Modal/consultantSchema");
+
 const { Conversation } = require("../Modal/Histroy");
 const User = require("../Modal/userSchema");
 const { find } = require("../Modal/userSchema");
@@ -47,8 +47,8 @@ const consultantController = async (req, res) => {
             return res.status(400).json({ success: false, message: "Valid fees (>=0) is required" });
         }
         const hashPassword = await bcrypt.hash(password, 10)
-        const consultantDetails = new consultantSchemaExport({
-            fullName,
+        const consultantDetails = new User({
+            fullname: fullName,
             email,
             phone,
             password: hashPassword,
@@ -58,6 +58,7 @@ const consultantController = async (req, res) => {
             experience,
             fees,
             bio,
+            role: "consultant",
             language,
         });
 
@@ -71,7 +72,7 @@ const consultantController = async (req, res) => {
 
 const getConsultant = async (req, res) => {
     try {
-        const findConsultant = await consultantSchemaExport.find()
+        const findConsultant = await User.find({ role: "consultant" })
         if (!findConsultant) {
             return res.status(400).send({ message: "Consultant is undifind..??" })
         }
@@ -86,7 +87,7 @@ const updateConsultantStatus = async (request, response) => {
         const { id } = request.params;
         const { status } = request.body
         console.log(id, status)
-        const updateConsultantStatus = await consultantSchemaExport.findByIdAndUpdate(id, { consultantStatus: status });
+        const updateConsultantStatus = await User.findByIdAndUpdate(id, { consultantStatus: status });
         return response.status(200).send({ success: "true", updateConsultantStatus })
 
     } catch (error) {
@@ -104,7 +105,7 @@ const getConsultantById = async (request, response) => {
         if (!id) {
             return response.status(400).json({ message: 'Consultant ID is required' });
         }
-        const consultant = await consultantSchemaExport.findById(id).select("-password");
+        const consultant = await User.findById(id).select("-password");
         return response.status(200).send({ success: true, consultant });
     } catch (error) {
         console.error(error);

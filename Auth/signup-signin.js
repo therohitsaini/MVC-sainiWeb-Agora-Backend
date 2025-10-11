@@ -45,7 +45,8 @@ const signUp = async (request, response) => {
          fullname: body.fullname,
          email: body.email,
          password: hashPassword,
-         agoraUid: agoraUid
+         agoraUid: agoraUid,
+         walletBalance: 100,
       })
       await object.save()
       return response.status(201).send({ massage: "sign up sucessfully ...!" })
