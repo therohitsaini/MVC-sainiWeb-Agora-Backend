@@ -1,4 +1,4 @@
-const { consultantSchemaExport } = require("../Modal/consultantSchema");
+
 const { Conversation } = require("../Modal/Histroy");
 const User = require("../Modal/userSchema");
 
@@ -10,7 +10,7 @@ const HistroyMW = async (toUid, fromUid, type) => {
       }
       
       const user = await User.findById(toUid);
-      const consultant = await consultantSchemaExport.findById(fromUid);
+      const consultant = await User.findById(fromUid);
       console.log("user", user);
       console.log("consultant", consultant);
 
@@ -23,12 +23,12 @@ const HistroyMW = async (toUid, fromUid, type) => {
             consultantId: fromUid,
             userId: toUid,
             consultantSnapshot: {
-               fullName: consultant.fullName,
+               fullname: consultant.fullname,
                email: consultant.email,
                contactNumber: consultant.phone
             },
             userSnapshot: {
-               fullName: user.fullname,
+               fullname: user.fullname,
                email: user.email,
                contactNumber: user.contactNumber || null
             },
@@ -37,7 +37,7 @@ const HistroyMW = async (toUid, fromUid, type) => {
          });
          
          await conversation.save();
-         console.log(`✅ Conversation created: Consultant ${consultant.fullName} talking to User ${user.fullname}`);
+         console.log(`✅ Conversation created: Consultant ${consultant.fullname} talking to User ${user.fullname}`);
       }
 
    } catch (error) {
