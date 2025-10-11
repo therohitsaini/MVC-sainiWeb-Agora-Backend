@@ -45,7 +45,4 @@ const HistroyMW = async (toUid, fromUid, type) => {
    }
 }
 
-
-
-
 module.exports = { HistroyMW };

@@ -4,7 +4,8 @@ const { consultantController,
    updateConsultantStatus,
    getConsultantById,
    getConsultantHistory,
-   getConsultantAllUser
+   getConsultantAllUser,
+   getConsultantAllUserHistory
 } = require("../Controller/consultantController")
 const consultantRoute = express.Router()
 
@@ -16,5 +17,7 @@ consultantRoute.put("/api-consultant-update-status/:id", updateConsultantStatus)
 consultantRoute.get("/consultantid/:id", getConsultantById)
 consultantRoute.get("/consultant-history/:id", getConsultantHistory)
 consultantRoute.get("/consultant-all-user/:id", getConsultantAllUser)
+consultantRoute.get("/consultant-all-user-history/:id", getConsultantAllUserHistory)
 
 module.exports = { consultantRoute }
+

@@ -178,7 +178,18 @@ const getConsultantAllUser = async (request, response) => {
     }
 }
 
-
+const getConsultantAllUserHistory = async (request, response) => {
+    try {
+        const historyConsultantUser = await Conversation.find();
+        if (!historyConsultantUser) {
+            return response.status(400).json({ message: 'History consultant user not found' });
+        }
+        return response.status(200).send({ success: true, historyConsultantUser });
+    } catch (error) {
+        console.error(error);
+        return response.status(500).json({ message: 'Server error' });
+    }
+}
 
 
 module.exports = {
@@ -187,5 +198,6 @@ module.exports = {
     updateConsultantStatus,
     getConsultantById,
     getConsultantHistory,
-    getConsultantAllUser
+    getConsultantAllUser,
+    getConsultantAllUserHistory
 }

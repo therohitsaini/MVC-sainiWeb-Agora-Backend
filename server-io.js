@@ -204,6 +204,8 @@ const ioServer = (server) => {
 
         
         socket.on("disconnect", async () => {
+
+            
             for (let uid in onlineUsers) {
                 if (!mongoose.Types.ObjectId.isValid(uid)) {
                     console.log(" Invalid uid received:", uid);
