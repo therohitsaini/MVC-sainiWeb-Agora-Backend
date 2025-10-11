@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const SnapshotSchema = new mongoose.Schema(
    {
-      fullName: String,
+      fullname: String,
       email: String,
       contactNumber: String,
    },
