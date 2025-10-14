@@ -17,7 +17,7 @@ consultantRoute.put("/api-consultant-update-status/:id", updateConsultantStatus)
 consultantRoute.get("/consultantid/:id", getConsultantById)
 consultantRoute.get("/consultant-history/:id", getConsultantHistory)
 consultantRoute.get("/consultant-all-user/:id", getConsultantAllUser)
-consultantRoute.get("/consultant-all-user-history/:id", getConsultantAllUserHistory)
+consultantRoute.get("/consultant-all-user-history", getConsultantAllUserHistory)
 
 module.exports = { consultantRoute }
 

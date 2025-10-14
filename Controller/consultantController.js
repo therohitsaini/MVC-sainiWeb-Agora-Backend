@@ -86,7 +86,12 @@ const updateConsultantStatus = async (request, response) => {
     try {
         const { id } = request.params;
         const { status } = request.body
-        console.log(id, status)
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return response.status(400).json({ message: 'Invalid consultant ID' });
+        }
+        if (!id) {
+            return response.status(400).json({ message: 'Consultant ID is required' });
+        }
         const updateConsultantStatus = await User.findByIdAndUpdate(id, { consultantStatus: status });
         return response.status(200).send({ success: "true", updateConsultantStatus })
 
@@ -167,7 +172,7 @@ const getConsultantAllUser = async (request, response) => {
                 }
             )
         }
-        console.log(consultantUser)
+
         if (!consultantUser) {
             return response.status(400).json({ message: 'Consultant user not found' });
         }
