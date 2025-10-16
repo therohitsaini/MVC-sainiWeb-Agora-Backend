@@ -92,7 +92,7 @@ const signIn = async (request, response) => {
 const tokenVerify = async (request, response) => {
    try {
       const verify = await verify_Token(request)
-      console.log(verify)
+    
       if (!verify) {
          return response.status(401).send({ message: "Token is not verified" })
       } else {

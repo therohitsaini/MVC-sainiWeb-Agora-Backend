@@ -25,8 +25,8 @@ const ConversationSchema = new mongoose.Schema(
       consultantSnapshot: SnapshotSchema, 
       type: {
          type: String,
-         enum: ["audio", "video", "chat"],
-         default: "audio",
+         enum: ["voice", "video", "chat"],
+         default: "voice",
       },
       startTime: { type: Date, required: true },
       endTime: { type: Date },
