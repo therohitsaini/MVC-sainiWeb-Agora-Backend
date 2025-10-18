@@ -80,7 +80,6 @@ const registerUserSchema = new mongoose.Schema(
         },
         role: {
             type: String,
-            enum: ["user", "consultant"],
             default: "user",
         },
 
@@ -134,6 +133,35 @@ const registerUserSchema = new mongoose.Schema(
             type: Boolean,
             default: true,
         },
+
+        // EMPLOYEE-SPECIFIC FIELDS
+        address: {
+            type: String,
+            trim: true,
+        },
+        city: {
+            type: String,
+            trim: true,
+        },
+        state: {
+            type: String,
+            trim: true,
+        },
+        zip: {
+            type: String,
+            trim: true,
+        },
+        country: {
+            type: String,
+            trim: true,
+        },
+        dateOfBirth: {
+            type: Date,
+            trim: true,
+        },
+        userType:{
+            type: String,
+        }
     },
     { timestamps: true }
 );
