@@ -1,48 +1,58 @@
-const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const http = require("http");
-const bodyParser = require("body-parser");
-const { Server } = require("socket.io");
-const { connectDB } = require("./Utils/db");
-dotenv.config();
-connectDB();
+    const express = require("express");
+    const cors = require("cors");
+    const dotenv = require("dotenv");
+    const http = require("http");
+    const bodyParser = require("body-parser");
+    const { Server } = require("socket.io");
+    const { connectDB } = require("./Utils/db");
+    dotenv.config();
+    connectDB();
 
-const app = express();
-const PORT = process.env.PORT || process.env.MVC_BACKEND_PORT || 3001;
-const server = http.createServer(app);
-const { ioServer } = require("./server-io");
-const { razerPayRoute } = require("./Routes/razerPayRoute");
+    const app = express();
+    const PORT = process.env.PORT || process.env.MVC_BACKEND_PORT || 3001;
+    const server = http.createServer(app);
+    const { ioServer } = require("./server-io");
+    const { razerPayRoute } = require("./Routes/razerPayRoute");
+    const shopifyRoute = require("./Routes/shopifyRoute");
 
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+    app.use(cors());
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    app.use(bodyParser.json());
 
-
-const videoCallRouter = require("./Routes/videoCallRotes");
-const { signinSignupRouter } = require("./Routes/signin-signupRoute");
-const { userDetailsRouter } = require("./Routes/userDetailsRoutes");
-const bookAppointmentRoute = require("./Routes/bookAppointmentRoute");
-const { consultantRoute } = require("./Routes/consultantRoute");
-const { employRoute } = require("./Routes/employRutes");
-const shopifyRoute = require("./Shopify/shopifyRoute");
-const shopifyController = require("./Shopify/shopifyController");
-
-
+    // Shopify CSP headers to allow embedding in admin dashboard
+    // app.use((req, res, next) => {
+    //     res.setHeader("Content-Security-Policy", "frame-ancestors https://admin.shopify.com https://*.myshopify.com;");
+    //     res.setHeader("X-Frame-Options", "ALLOWALL");
+    //     res.setHeader("X-Content-Type-Options", "nosniff");
+    //     res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    //     next();
+    // });
 
 
-app.use("/api/video-call", videoCallRouter);
-app.use("/api/auth", signinSignupRouter);
-app.use("/api/users", userDetailsRouter);
-app.use("/api/razerpay-create-order", razerPayRoute)
-app.use("/api-consltor", bookAppointmentRoute)
-app.use("/api-consultant", consultantRoute)
-app.use("/api-employee", employRoute)
-app.use("/app/install", shopifyController.createOrder);
+    const videoCallRouter = require("./Routes/videoCallRotes");
+    const { signinSignupRouter } = require("./Routes/signin-signupRoute");
+    const { userDetailsRouter } = require("./Routes/userDetailsRoutes");
+    const bookAppointmentRoute = require("./Routes/bookAppointmentRoute");
+    const { consultantRoute } = require("./Routes/consultantRoute");
+    const { employRoute } = require("./Routes/employRutes");
 
-ioServer(server);
 
-server.listen(PORT, () => {
-    console.log(` Server running on port ${PORT}`);
-});
+
+
+
+    app.use("/api/video-call", videoCallRouter);
+    app.use("/api/auth", signinSignupRouter);
+    app.use("/api/users", userDetailsRouter);
+    app.use("/api/razerpay-create-order", razerPayRoute)
+    app.use("/api-consltor", bookAppointmentRoute)
+    app.use("/api-consultant", consultantRoute)
+    app.use("/api-employee", employRoute)
+    app.use("/app", shopifyRoute);
+    // app.use("/app/install", shopifyController.createOrder)
+
+    ioServer(server);
+
+    server.listen(PORT, () => {
+        console.log(` Server running on port ${PORT}`);
+    });

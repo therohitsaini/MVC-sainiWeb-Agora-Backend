@@ -1,4 +1,4 @@
-const User = require("../Modal/userSchema")
+const { User } = require("../Modal/userSchema")
 const { consultantSchemaExport } = require("../Modal/consultantSchema")
 const bcrypt = require("bcrypt")
 const JWT = require("jsonwebtoken");
@@ -60,7 +60,9 @@ const signUp = async (request, response) => {
 const signIn = async (request, response) => {
    try {
       const body = request.body
-    
+
+      console.log(body);
+
       let find_User = await User.findOne({ email: body.email })
 
       if (!find_User) {
@@ -69,11 +71,11 @@ const signIn = async (request, response) => {
       if (!find_User) {
          return response.status(400).send({ massage: "Incrrect Details ...!" })
       }
-      
+
       if (find_User.consultantStatus === false) {
          return response.status(403).send({ massage: "Your account is blocked. Please contact administrator." })
       }
-      
+
       const compairPassword = await bcrypt.compare(body.password, find_User.password)
 
       if (!compairPassword) {
@@ -92,7 +94,7 @@ const signIn = async (request, response) => {
 const tokenVerify = async (request, response) => {
    try {
       const verify = await verify_Token(request)
-    
+
       if (!verify) {
          return response.status(401).send({ message: "Token is not verified" })
       } else {

@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const User = require("../Modal/userSchema");
+const {User} = require("../Modal/userSchema");
 const bcrypt = require("bcrypt");
 
 const employController = async (req, res) => {

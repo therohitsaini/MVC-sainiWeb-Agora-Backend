@@ -1,5 +1,5 @@
 const { Server } = require("socket.io");
-const User = require("./Modal/userSchema");
+const {User} = require("./Modal/userSchema");
 const { default: mongoose } = require("mongoose");
 
 const { Conversation } = require("./Modal/Histroy");

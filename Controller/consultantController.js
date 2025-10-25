@@ -1,6 +1,6 @@
 
 const { Conversation } = require("../Modal/Histroy");
-const User = require("../Modal/userSchema");
+const {User} = require("../Modal/userSchema");
 const { find } = require("../Modal/userSchema");
 const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");

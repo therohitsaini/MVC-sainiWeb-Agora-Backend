@@ -91,7 +91,7 @@ const registerUserSchema = new mongoose.Schema(
         },
         walletBalance: {
             type: Number,
-            
+
         },
 
         // CONSULTANT-SPECIFIC FIELDS
@@ -159,7 +159,7 @@ const registerUserSchema = new mongoose.Schema(
             type: Date,
             trim: true,
         },
-        userType:{
+        userType: {
             type: String,
         }
     },
@@ -168,5 +168,9 @@ const registerUserSchema = new mongoose.Schema(
 
 const User = mongoose.model("newUser", registerUserSchema);
 
-module.exports = User;
 
+
+
+
+
+module.exports = { User }
