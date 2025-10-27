@@ -70,7 +70,19 @@ const authCallback = async (req, res) => {
 
 };
 
-module.exports = {
-    installShopifyApp,
-    authCallback
-}   
+const getProducts = async (req, res) => {
+    try {
+        return res.status(200).send(`
+       <html>
+        <body>
+            <h1>Products Card</h1>
+        </body>
+       </html>
+       `);
+    } catch (err) {
+        console.error(err.response?.data || err.message);
+        res.status(500).send("Failed to get products");
+    }
+}
+
+module.exports = { installShopifyApp, authCallback, getProducts }
