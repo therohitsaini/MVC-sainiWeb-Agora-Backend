@@ -50,12 +50,12 @@
     app.use("/api-employee", employRoute)
     // app.use("/apps", shopifyRoute);
 
-    app.get("/apps/agora", (req, res) => {
+    app.get("apps/agora-call", (req, res) => {
         // Shopify adds shop and other params automatically
         const shop = req.query.shop;
         res.send("Hello from Shopify proxy! Shop: " + shop);
       });
-      
+
     // app.use("/app/install", shopifyController.createOrder)
 
     ioServer(server);
