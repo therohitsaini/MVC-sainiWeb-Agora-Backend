@@ -93,7 +93,13 @@ const getProducts = async (req, res) => {
 
 const redirectToAgora = async (req, res) => {
     try {
-        res.redirect("https://agora-ui-v2.netlify.app/home");
+        return res.status(200).send(`
+       <html>
+        <body>
+            <h1>Redirecting to Agora</h1>
+        </body>
+       </html>
+       `);
     } catch (err) {
         console.error(err.response?.data || err.message);
         res.status(500).send("Failed to test Shopify");
