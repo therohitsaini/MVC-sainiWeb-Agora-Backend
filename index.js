@@ -48,7 +48,14 @@
     app.use("/api-consltor", bookAppointmentRoute)
     app.use("/api-consultant", consultantRoute)
     app.use("/api-employee", employRoute)
-    app.use("/apps", shopifyRoute);
+    // app.use("/apps", shopifyRoute);
+
+    app.get("/apps/agora", (req, res) => {
+        // Shopify adds shop and other params automatically
+        const shop = req.query.shop;
+        res.send("Hello from Shopify proxy! Shop: " + shop);
+      });
+      
     // app.use("/app/install", shopifyController.createOrder)
 
     ioServer(server);

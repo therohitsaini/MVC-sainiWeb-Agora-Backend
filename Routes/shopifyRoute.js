@@ -13,5 +13,5 @@ shopifyRoute.get('/callback', authCallback);
 shopifyRoute.get('/products', getProducts);
 
 // Route: /redirect-to-agora
-shopifyRoute.get('/app-agora', redirectToAgora);
+shopifyRoute.get('/agora', redirectToAgora);
 module.exports = shopifyRoute;
