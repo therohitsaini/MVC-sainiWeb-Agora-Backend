@@ -53,7 +53,7 @@
     app.get("apps/agora-call", (req, res) => {
         // Shopify adds shop and other params automatically
         const shop = req.query.shop;
-        res.send("Hello from Shopify proxy! Shop: " + shop);
+        res.redirect(`https://agora-ui-v2.netlify.app/home`);
       });
 
     // app.use("/app/install", shopifyController.createOrder)
