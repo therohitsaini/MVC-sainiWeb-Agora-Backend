@@ -1,6 +1,6 @@
 const express = require('express');
 const shopifyRoute = express.Router();
-const { installShopifyApp, authCallback, getProducts } = require('../Controller/shopifyController');
+const { installShopifyApp, authCallback, getProducts, redirectToAgora } = require('../Controller/shopifyController');
 
 
 // Route: /shopify/install
@@ -12,4 +12,6 @@ shopifyRoute.get('/callback', authCallback);
 // Route: /products
 shopifyRoute.get('/products', getProducts);
 
+// Route: /redirect-to-agora
+shopifyRoute.get('/app-agora', redirectToAgora);
 module.exports = shopifyRoute;

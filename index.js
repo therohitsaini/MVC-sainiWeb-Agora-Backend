@@ -48,7 +48,7 @@
     app.use("/api-consltor", bookAppointmentRoute)
     app.use("/api-consultant", consultantRoute)
     app.use("/api-employee", employRoute)
-    app.use("/app", shopifyRoute);
+    app.use("/apps", shopifyRoute);
     // app.use("/app/install", shopifyController.createOrder)
 
     ioServer(server);

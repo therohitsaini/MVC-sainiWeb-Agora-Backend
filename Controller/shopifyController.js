@@ -72,6 +72,8 @@ const authCallback = async (req, res) => {
 
 const getProducts = async (req, res) => {
     try {
+
+  
         return res.status(200).send(`
        <html>
         <body>
@@ -79,10 +81,23 @@ const getProducts = async (req, res) => {
         </body>
        </html>
        `);
+
+    //    https://rohit-12345839.myshopify.com/apps/pages-vcccc
+        
     } catch (err) {
         console.error(err.response?.data || err.message);
         res.status(500).send("Failed to get products");
     }
 }
 
-module.exports = { installShopifyApp, authCallback, getProducts }
+
+const redirectToAgora = async (req, res) => {
+    try {
+        res.redirect("https://agora-ui-v2.netlify.app/home");
+    } catch (err) {
+        console.error(err.response?.data || err.message);
+        res.status(500).send("Failed to test Shopify");
+    }
+}
+
+module.exports = { installShopifyApp, authCallback, getProducts, redirectToAgora }
