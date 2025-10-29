@@ -50,7 +50,7 @@
     app.use("/api-employee", employRoute)
     // app.use("/apps", shopifyRoute);
 
-    app.get("apps/agora-call", (req, res) => {
+    app.get("/apps/agora-call", (req, res) => {
         // Shopify adds shop and other params automatically
         const shop = req.query.shop;
         res.redirect(`https://agora-ui-v2.netlify.app/home`);
