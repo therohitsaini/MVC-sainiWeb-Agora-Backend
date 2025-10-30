@@ -18,6 +18,7 @@ use_legacy_install_flow = false
 redirect_urls = [ "http://localhost:5001/app/callback" ]
 
 [app_proxy]
-url = "https://sainiweb-agora-backend.onrender.com/apps/agora"
-subpath = "agora"
+url = "https://sainiweb-agora-backend.onrender.com"
+subpath = "agora2"
 prefix = "apps"
+
