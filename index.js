@@ -63,7 +63,7 @@ app.get("/apps/agora", (req, res) => {
         <body style="margin:0;padding:0;">
           <iframe 
             src="https://agora-ui-v2.netlify.app/home" 
-            style="border:none;width:100%;height:100%;"
+            style="border:none;width:100%;height:100vh;"
           ></iframe>
         </body>
       </html>
