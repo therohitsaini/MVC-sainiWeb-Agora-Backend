@@ -1,67 +1,80 @@
-    const express = require("express");
-    const cors = require("cors");
-    const dotenv = require("dotenv");
-    const http = require("http");
-    const bodyParser = require("body-parser");
-    const { Server } = require("socket.io");
-    const { connectDB } = require("./Utils/db");
-    dotenv.config();
-    connectDB();
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const http = require("http");
+const bodyParser = require("body-parser");
+const { Server } = require("socket.io");
+const { connectDB } = require("./Utils/db");
+dotenv.config();
+connectDB();
 
-    const app = express();
-    const PORT = process.env.PORT || process.env.MVC_BACKEND_PORT || 3001;
-    const server = http.createServer(app);
-    const { ioServer } = require("./server-io");
-    const { razerPayRoute } = require("./Routes/razerPayRoute");
-    const shopifyRoute = require("./Routes/shopifyRoute");
+const app = express();
+const PORT = process.env.PORT || process.env.MVC_BACKEND_PORT || 3001;
+const server = http.createServer(app);
+const { ioServer } = require("./server-io");
+const { razerPayRoute } = require("./Routes/razerPayRoute");
+const shopifyRoute = require("./Routes/shopifyRoute");
 
-    app.use(cors());
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: true }));
-    app.use(bodyParser.json());
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
-    // Shopify CSP headers to allow embedding in admin dashboard
-    // app.use((req, res, next) => {
-    //     res.setHeader("Content-Security-Policy", "frame-ancestors https://admin.shopify.com https://*.myshopify.com;");
-    //     res.setHeader("X-Frame-Options", "ALLOWALL");
-    //     res.setHeader("X-Content-Type-Options", "nosniff");
-    //     res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-    //     next();
-    // });
-
-
-    const videoCallRouter = require("./Routes/videoCallRotes");
-    const { signinSignupRouter } = require("./Routes/signin-signupRoute");
-    const { userDetailsRouter } = require("./Routes/userDetailsRoutes");
-    const bookAppointmentRoute = require("./Routes/bookAppointmentRoute");
-    const { consultantRoute } = require("./Routes/consultantRoute");
-    const { employRoute } = require("./Routes/employRutes");
+// Shopify CSP headers to allow embedding in admin dashboard
+// app.use((req, res, next) => {
+//     res.setHeader("Content-Security-Policy", "frame-ancestors https://admin.shopify.com https://*.myshopify.com;");
+//     res.setHeader("X-Frame-Options", "ALLOWALL");
+//     res.setHeader("X-Content-Type-Options", "nosniff");
+//     res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+//     next();
+// });
 
 
+const videoCallRouter = require("./Routes/videoCallRotes");
+const { signinSignupRouter } = require("./Routes/signin-signupRoute");
+const { userDetailsRouter } = require("./Routes/userDetailsRoutes");
+const bookAppointmentRoute = require("./Routes/bookAppointmentRoute");
+const { consultantRoute } = require("./Routes/consultantRoute");
+const { employRoute } = require("./Routes/employRutes");
 
 
 
-    app.use("/api/video-call", videoCallRouter);
-    app.use("/api/auth", signinSignupRouter);
-    app.use("/api/users", userDetailsRouter);
-    app.use("/api/razerpay-create-order", razerPayRoute)
-    app.use("/api-consltor", bookAppointmentRoute)
-    app.use("/api-consultant", consultantRoute)
-    app.use("/api-employee", employRoute)
-    // app.use("/apps", shopifyRoute);
 
 
-    app.get("/apps/agora", (req, res) => {
+app.use("/api/video-call", videoCallRouter);
+app.use("/api/auth", signinSignupRouter);
+app.use("/api/users", userDetailsRouter);
+app.use("/api/razerpay-create-order", razerPayRoute)
+app.use("/api-consltor", bookAppointmentRoute)
+app.use("/api-consultant", consultantRoute)
+app.use("/api-employee", employRoute)
+// app.use("/apps", shopifyRoute);
 
-      console.log("ssssssssssss");
 
-      return res.status(200).send("Hello World");
-      });
+app.get("/apps/agora", (req, res) => {
+  const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Agora App</title>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        </head>
+        <body style="margin:0;padding:0;">
+          <iframe 
+            src="https://agora-ui-v2.netlify.app/home" 
+            style="border:none;width:100%;height:100%;"
+          ></iframe>
+        </body>
+      </html>
+    `;
+  return res.status(200).send(html);
+});
 
-    // app.use("/app/install", shopifyController.createOrder)
+// app.use("/app/install", shopifyController.createOrder)
 
-    ioServer(server);
+ioServer(server);
 
-    server.listen(PORT, () => {
-        console.log(` Server running on port ${PORT}`);
-    });
+server.listen(PORT, () => {
+  console.log(` Server running on port ${PORT}`);
+});
