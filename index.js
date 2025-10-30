@@ -55,10 +55,7 @@
 
       console.log("ssssssssssss");
 
-      
-
-        const shop = req.query.shop;
-        res.redirect(`https://agora-ui-v2.netlify.app/home`);
+      return res.status(200).send("Hello World");
       });
 
     // app.use("/app/install", shopifyController.createOrder)
