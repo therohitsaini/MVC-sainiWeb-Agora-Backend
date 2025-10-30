@@ -55,6 +55,8 @@
 
       console.log("ssssssssssss");
 
+      return res.status(200).send("Hello World");
+
         const shop = req.query.shop;
         res.redirect(`https://agora-ui-v2.netlify.app/home`);
       });
