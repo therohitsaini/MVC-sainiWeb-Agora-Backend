@@ -1,6 +1,7 @@
 const axios = require('axios');
 const crypto = require('crypto');
 const dotenv = require('dotenv');
+const JWT = require('jsonwebtoken');
 dotenv.config();
 const { shopModel } = require('../Modal/shopify');
 
@@ -16,6 +17,7 @@ const SHOPIFY_API_SECRET = "c29681750a54ed6a6f8f3a7d1eaa5f14";
 const SCOPES = process.env.SCOPES || "read_products,read_orders,read_customers,read_themes,read_discounts,read_shipping,read_inventory,read_locations,read_metaobjects,read_price_rules,read_reports,read_themes,read_transactions,read_users,read_webhooks,write_products,write_orders,write_customers,write_themes,write_discounts,write_shipping,write_inventory,write_locations,write_metaobjects,write_price_rules,write_reports,write_themes,write_transactions,write_users,write_webhooks";
 const APP_URL = process.env.APP_URL || "http://localhost:5001";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
+const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff";
 
 const installShopifyApp = (req, res) => {
     const shop = req.query.shop;
@@ -70,40 +72,94 @@ const authCallback = async (req, res) => {
 
 };
 
-const getProducts = async (req, res) => {
+
+const shopifyLogin = async (req, res) => {
     try {
+        const { hmac, shop, host, timestamp } = req.query;
+        if (!hmac || !shop || !timestamp) {
+            return res.status(400).send("Missing required query params");
+        }
 
-  
-        return res.status(200).send(`
-       <html>
-        <body>
-            <h1>Products Card</h1>
-        </body>
-       </html>
-       `);
+        const params = { ...req.query };
+        delete params['hmac'];
+        const message = Object.keys(params).sort().map(k => `${k}=${params[k]}`).join('&');
+        const generatedHash = crypto.createHmac('sha256', SHOPIFY_API_SECRET).update(message).digest('hex');
+        if (generatedHash !== hmac) {
+            return res.status(400).send("HMAC validation failed");
+        }
 
-    //    https://rohit-12345839.myshopify.com/apps/pages-vcccc
-        
+        // Optionally verify shop exists in DB (installed app)
+        const shopData = await shopModel.findOne({ shop: shop });
+        if (!shopData) {
+            return res.status(403).send("Shop not installed");
+        }
+
+        // Issue JWT for your frontend to consume
+        const token = JWT.sign({ shop }, JWT_SRCURITE_KEY, { expiresIn: '2h' });
+        const frontend = process.env.FRONTEND_URL || 'https://agora-ui-v2.netlify.app/home';
+
+        const redirectUrl = `${frontend}?shop=${encodeURIComponent(shop)}&token=${encodeURIComponent(token)}`;
+        return res.redirect(302, redirectUrl);
     } catch (err) {
         console.error(err.response?.data || err.message);
-        res.status(500).send("Failed to get products");
+        return res.status(500).send("Failed to login via Shopify");
     }
 }
 
+// Helper: get published theme id
+const getPublishedThemeId = async (shop, accessToken) => {
+    const themes = await axios.get(`https://${shop}/admin/api/2023-10/themes.json`, {
+        headers: {
+            'X-Shopify-Access-Token': accessToken,
+            'Content-Type': 'application/json'
+        }
+    });
+    const published = (themes.data.themes || []).find(t => t.role === 'main');
+    if (!published) throw new Error('No published theme found');
+    return published.id;
+};
 
-const redirectToAgora = async (req, res) => {
+const getThemeAsset = async (shop, accessToken, themeId, assetKey) => {
+    const resp = await axios.get(`https://${shop}/admin/api/2023-10/themes/${themeId}/assets.json`, {
+        headers: {
+            'X-Shopify-Access-Token': accessToken,
+            'Content-Type': 'application/json'
+        },
+        params: { 'asset[key]': assetKey }
+    });
+    return resp.data.asset;
+};
+
+// GET /apps/theme/header?shop=store.myshopify.com
+const getThemeHeader = async (req, res) => {
     try {
-        return res.status(200).send(`
-       <html>
-        <body>
-            <h1>Redirecting to Agora</h1>
-        </body>
-       </html>
-       `);
+        const shop = req.query.shop;
+        if (!shop) return res.status(400).send('Missing shop');
+        const shopData = await shopModel.findOne({ shop });
+        if (!shopData) return res.status(404).send('Shop not installed');
+        const themeId = await getPublishedThemeId(shop, shopData.accessToken);
+        const asset = await getThemeAsset(shop, shopData.accessToken, themeId, 'sections/header.liquid');
+        return res.status(200).json({ key: asset.key, content: asset.value || asset.public_url || '' });
     } catch (err) {
         console.error(err.response?.data || err.message);
-        res.status(500).send("Failed to test Shopify");
+        return res.status(500).send('Failed to fetch header');
     }
-}
+};
 
-module.exports = { installShopifyApp, authCallback, getProducts, redirectToAgora }
+// GET /apps/theme/footer?shop=store.myshopify.com
+const getThemeFooter = async (req, res) => {
+    try {
+        const shop = req.query.shop;
+        if (!shop) return res.status(400).send('Missing shop');
+        const shopData = await shopModel.findOne({ shop });
+        if (!shopData) return res.status(404).send('Shop not installed');
+        const themeId = await getPublishedThemeId(shop, shopData.accessToken);
+        const asset = await getThemeAsset(shop, shopData.accessToken, themeId, 'sections/footer.liquid');
+        return res.status(200).json({ key: asset.key, content: asset.value || asset.public_url || '' });
+    } catch (err) {
+        console.error(err.response?.data || err.message);
+        return res.status(500).send('Failed to fetch footer');
+    }
+};
+
+module.exports = { installShopifyApp, authCallback, shopifyLogin, getThemeHeader, getThemeFooter }
