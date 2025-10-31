@@ -52,30 +52,46 @@ app.use("/apps", shopifyRoute);
 
 
 app.get("/apps/agora", async (req, res) => {
+  try {
+    const shop = req.query.shop || "rohit-12345839.myshopify.com";
 
-  // // Shopify theme ke custom view (header.liquid aur footer.liquid)
-  // const header = await fetch("https://rohit-12345839.myshopify.com?view=header").then(r => r.text());
-  // const footer = await fetch("https://rohit-12345839.myshopify.com?view=footer").then(r => r.text());
-  // console.log(header, footer);
-  const html = `
+    // 1) Pull the storefront home page to capture <head> assets (CSS/JS)
+    const homeHtml = await fetch(`https://${shop}/`).then(r => r.text());
+    const headMatch = homeHtml.match(/<head[\s\S]*?<\/head>/i);
+    const headHtml = headMatch ? headMatch[0] : `
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Agora App</title>
+      </head>`;
+
+    // 2) Fetch real header/footer HTML via Section Rendering API
+    const [headerHtml, footerHtml] = await Promise.all([
+      fetch(`https://${shop}/?section_id=header`).then(r => r.text()),
+      fetch(`https://${shop}/?section_id=footer`).then(r => r.text())
+    ]);
+    console.log(headerHtml, footerHtml);
+    const pageHtml = `
       <!DOCTYPE html>
       <html>
-        <head>
-          <title>Agora App</title>
-          <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        </head>
+        ${headHtml}
         <body style="margin:0;padding:0;">
-      
-          <iframe 
-            src="https://agora-ui-v2.netlify.app/home" 
-            style="border:none;width:100%;height:100vh;"
-          ></iframe>
-          
-          </body>
-      </html>
-    `;
-  return res.status(200).send(html);
+          ${headerHtml}
+          <main style="min-height:70vh;">
+            <iframe 
+              src="https://agora-ui-v2.netlify.app/home" 
+              style="border:none;width:100%;height:100vh;display:block;"
+            ></iframe>
+          </main>
+          ${footerHtml}
+        </body>
+      </html>`;
+
+    return res.status(200).send(pageHtml);
+  } catch (e) {
+    console.error("/apps/agora error:", e);
+    return res.status(500).send("Failed to compose Shopify header/footer");
+  }
 });
 
 // app.use("/app/install", shopifyController.createOrder)

@@ -140,7 +140,7 @@ const getThemeHeader = async (req, res) => {
         const themeId = await getPublishedThemeId(shop, shopData.accessToken);
         const asset = await getThemeAsset(shop, shopData.accessToken, themeId, 'sections/header.liquid');
         return res.status(200).json({ key: asset.key, content: asset.value || asset.public_url || '' });
-    } catch (err) {
+    } catch (err) { 
         console.error(err.response?.data || err.message);
         return res.status(500).send('Failed to fetch header');
     }
