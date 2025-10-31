@@ -54,11 +54,23 @@ app.use("/apps", shopifyRoute);
 app.get("/apps/agora", async (req, res) => {
   try {
     const shop = req.query.shop || "rohit-12345839.myshopify.com";
+    const themeId = req.query.theme_id; // optional for draft theme preview
+
+    // Forward storefront/preview cookies so password/preview sessions work
+    const cookieHeader = req.headers.cookie || "";
+    const userAgent = req.headers["user-agent"] || "node";
+    const makeUrl = (base) => themeId ? `${base}${base.includes("?") ? "&" : "?"}theme_id=${themeId}` : base;
+    const fetchWithSession = (url) => fetch(url, { headers: { Cookie: cookieHeader, "User-Agent": userAgent }, redirect: "manual" });
 
     // 1) Pull the storefront home page to capture <head> assets (CSS/JS)
-    const homeHtml = await fetch(`https://${shop}/`).then(r => r.text());
+    const homeResp = await fetchWithSession(makeUrl(`https://${shop}/`));
+    if (homeResp.status >= 300 && homeResp.status < 400) {
+      return res.status(401).send("Storefront locked. Enter password or use preview.");
+    }
+    const homeHtml = await homeResp.text();
     const headMatch = homeHtml.match(/<head[\s\S]*?<\/head>/i);
     const headHtml = headMatch ? headMatch[0] : `
+
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -67,16 +79,17 @@ app.get("/apps/agora", async (req, res) => {
 
     // 2) Fetch real header/footer HTML via Section Rendering API
     const [headerHtml, footerHtml] = await Promise.all([
-      fetch(`https://${shop}/?section_id=header`).then(r => r.text()),
-      fetch(`https://${shop}/?section_id=footer`).then(r => r.text())
+      fetchWithSession(makeUrl(`https://${shop}/?section_id=header`)).then(r => r.text()),
+      fetchWithSession(makeUrl(`https://${shop}/?section_id=footer`)).then(r => r.text())
     ]);
-    console.log(headerHtml);
+
     const pageHtml = `
       <!DOCTYPE html>
       <html>
         ${headHtml}
         <body style="margin:0;padding:0;">
           ${headerHtml}
+    
           <main style="min-height:70vh;">
             <iframe 
               src="https://agora-ui-v2.netlify.app/home" 
