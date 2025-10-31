@@ -66,11 +66,11 @@ app.get("/apps/agora", async (req, res) => {
       </head>`;
 
     // 2) Fetch real header/footer HTML via Section Rendering API
-    const [headerHtml, footerHtml] = await Promise.all([
+    const [headerHtml] = await Promise.all([
       fetch(`https://${shop}/?section_id=header`).then(r => r.text()),
       fetch(`https://${shop}/?section_id=footer`).then(r => r.text())
     ]);
-    console.log(headerHtml, footerHtml);
+    console.log(headerHtml,);
     const pageHtml = `
       <!DOCTYPE html>
       <html>
@@ -83,7 +83,7 @@ app.get("/apps/agora", async (req, res) => {
               style="border:none;width:100%;height:100vh;display:block;"
             ></iframe>
           </main>
-          ${footerHtml}
+
         </body>
       </html>`;
 
