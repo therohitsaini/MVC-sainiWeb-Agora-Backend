@@ -53,10 +53,10 @@ app.use("/apps", shopifyRoute);
 
 app.get("/apps/agora", async (req, res) => {
 
-  // Shopify theme ke custom view (header.liquid aur footer.liquid)
-  const header = await fetch("https://rohit-12345839.myshopify.com?view=header").then(r => r.text());
-  const footer = await fetch("https://rohit-12345839.myshopify.com?view=footer").then(r => r.text());
-  console.log(header, footer);
+  // // Shopify theme ke custom view (header.liquid aur footer.liquid)
+  // const header = await fetch("https://rohit-12345839.myshopify.com?view=header").then(r => r.text());
+  // const footer = await fetch("https://rohit-12345839.myshopify.com?view=footer").then(r => r.text());
+  // console.log(header, footer);
   const html = `
       <!DOCTYPE html>
       <html>
@@ -66,12 +66,12 @@ app.get("/apps/agora", async (req, res) => {
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         </head>
         <body style="margin:0;padding:0;">
-          ${header}
+      
           <iframe 
             src="https://agora-ui-v2.netlify.app/home" 
             style="border:none;width:100%;height:100vh;"
           ></iframe>
-          ${footer}
+          
           </body>
       </html>
     `;

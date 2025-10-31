@@ -1,6 +1,6 @@
 const express = require('express');
 const shopifyRoute = express.Router();
-const { installShopifyApp, authCallback, shopifyLogin, getThemeHeader, getThemeFooter } = require('../Controller/shopifyController');
+const { installShopifyApp, authCallback, shopifyLogin,} = require('../Controller/shopifyController');
 
 
 // Route: /shopify/install
@@ -18,7 +18,5 @@ shopifyRoute.get('/callback', authCallback);
 // Route: /login (validate Shopify signed params, issue JWT, redirect)
 shopifyRoute.get('/login', shopifyLogin);
 
-// Theme assets: header/footer
-shopifyRoute.get('/theme/header', getThemeHeader);
-shopifyRoute.get('/theme/footer', getThemeFooter);
+
 module.exports = shopifyRoute;
