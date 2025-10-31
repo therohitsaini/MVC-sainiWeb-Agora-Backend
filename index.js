@@ -70,6 +70,7 @@ app.get("/apps/agora", async (req, res) => {
       fetch(`https://${shop}/?section_id=header`).then(r => r.text()),
       fetch(`https://${shop}/?section_id=footer`).then(r => r.text())
     ]);
+    console.log(headerHtml);
     const pageHtml = `
       <!DOCTYPE html>
       <html>
