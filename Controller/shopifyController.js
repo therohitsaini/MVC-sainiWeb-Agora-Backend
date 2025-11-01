@@ -1,16 +1,18 @@
-const axios = require('axios');
 const crypto = require('crypto');
 const dotenv = require('dotenv');
 const JWT = require('jsonwebtoken');
 dotenv.config();
 const { shopModel } = require('../Modal/shopify');
+let axios, wrapper, CookieJar;
+try {
+    axios = require("axios");
+    wrapper = require("axios-cookiejar-support").wrapper;
+    CookieJar = require("tough-cookie").CookieJar;
+} catch (e) {
+    // Optional deps not installed; auto-login will be disabled
+}
 
-// const {
-//     SHOPIFY_API_KEY,
-//     SHOPIFY_API_SECRET,
-//     SCOPES,
-//     APP_URL = "http://localhost:3001"
-// } = process.env;
+
 
 const SHOPIFY_API_KEY = "9670f701d5332dc0e886440fd2277221";
 const SHOPIFY_API_SECRET = "c29681750a54ed6a6f8f3a7d1eaa5f14";
@@ -106,60 +108,101 @@ const shopifyLogin = async (req, res) => {
     }
 }
 
-// Helper: get published theme id
-const getPublishedThemeId = async (shop, accessToken) => {
-    const themes = await axios.get(`https://${shop}/admin/api/2023-10/themes.json`, {
-        headers: {
-            'X-Shopify-Access-Token': accessToken,
-            'Content-Type': 'application/json'
+
+
+
+
+
+
+
+/** Proxy for Shopify Theme Assets 
+ * 1. GET /apps/theme/header?shop=store.myshopify.com
+ * 2. GET /apps/theme/footer?shop=store.myshopify.com
+*/
+
+const proxyThemeAssetsController = async (req, res) => {
+    try {
+
+        const shop = req.query.shop || "rohit-12345839.myshopify.com";
+        const themeId = req.query.theme_id; // optional for draft theme preview
+
+        // Forward storefront/preview cookies so password/preview sessions work
+        const cookieHeader = req.headers.cookie || "";
+        const userAgent = req.headers["user-agent"] || "node";
+        const makeUrl = (base) => themeId ? `${base}${base.includes("?") ? "&" : "?"}theme_id=${themeId}` : base;
+        const fetchWithSession = (url) => fetch(url, { headers: { Cookie: cookieHeader, "User-Agent": userAgent }, redirect: "manual" });
+
+        // 1) Pull the storefront home page to capture <head> assets (CSS/JS)
+        let homeResp = await fetchWithSession(makeUrl(`https://${shop}/`));
+
+        // If storefront is locked and we have a password, auto-login (dev/testing)
+        if (homeResp.status >= 300 && homeResp.status < 400) {
+            const storefrontPassword = process.env.STOREFRONT_PASSWORD || 1;
+            if (storefrontPassword && wrapper && CookieJar && axios) {
+                const jar = new CookieJar();
+                const client = wrapper(axios.create({ jar, withCredentials: true, headers: { "User-Agent": userAgent } }));
+                // visit password page to establish cookies
+                await client.get(`https://${shop}/password`).catch(() => { });
+                // submit password form
+                await client.post(`https://${shop}/password`, new URLSearchParams({ password: storefrontPassword }).toString(), {
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    maxRedirects: 0, validateStatus: () => true
+                });
+                // re-fetch home with authenticated jar
+                homeResp = await client.get(makeUrl(`https://${shop}/`));
+                // helper to fetch sections with jar
+                var jarFetch = async (url) => (await client.get(url)).data;
+            } else {
+                return res.status(401).send("Storefront locked. Enter password or use preview.");
+            }
         }
-    });
-    const published = (themes.data.themes || []).find(t => t.role === 'main');
-    if (!published) throw new Error('No published theme found');
-    return published.id;
-};
+        const homeHtml = typeof homeResp.data === "string" ? homeResp.data : (await homeResp.text());
+        const headMatch = homeHtml.match(/<head[\s\S]*?<\/head>/i);
+        const headHtml = headMatch ? headMatch[0] : `
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>Agora App</title>
+          </head>`;
 
-const getThemeAsset = async (shop, accessToken, themeId, assetKey) => {
-    const resp = await axios.get(`https://${shop}/admin/api/2023-10/themes/${themeId}/assets.json`, {
-        headers: {
-            'X-Shopify-Access-Token': accessToken,
-            'Content-Type': 'application/json'
-        },
-        params: { 'asset[key]': assetKey }
-    });
-    return resp.data.asset;
-};
+        // 2) Fetch real header/footer HTML via Section Rendering API
+        const sectionFetch = typeof jarFetch === "function"
+            ? (url) => jarFetch(url)
+            : (url) => fetchWithSession(url).then(r => r.text());
 
-// GET /apps/theme/header?shop=store.myshopify.com
-const getThemeHeader = async (req, res) => {
-    try {
-        const shop = req.query.shop;
-        if (!shop) return res.status(400).send('Missing shop');
-        const shopData = await shopModel.findOne({ shop });
-        if (!shopData) return res.status(404).send('Shop not installed');
-        const themeId = await getPublishedThemeId(shop, shopData.accessToken);
-        const asset = await getThemeAsset(shop, shopData.accessToken, themeId, 'sections/header.liquid');
-        return res.status(200).json({ key: asset.key, content: asset.value || asset.public_url || '' });
-    } catch (err) { 
-        console.error(err.response?.data || err.message);
-        return res.status(500).send('Failed to fetch header');
+        const [headerHtml, footerHtml] = await Promise.all([
+            sectionFetch(makeUrl(`https://${shop}/?section_id=header`)),
+            sectionFetch(makeUrl(`https://${shop}/?section_id=footer`))
+        ]);
+        const pageHtml = `
+          <!DOCTYPE html>
+          <html>
+            ${headHtml}
+            <body style="margin:0;padding:0;">
+              ${headerHtml}
+              <main style="min-height:70vh;">
+                <iframe 
+                  src="https://agora-ui-v2.netlify.app/home" 
+                  style="border:none;width:100%;height:100vh;display:block;"
+                ></iframe>
+              </main>
+              ${footerHtml}
+            </body>
+          </html>`;
+        return res.status(200).send(pageHtml);
     }
-};
 
-// GET /apps/theme/footer?shop=store.myshopify.com
-const getThemeFooter = async (req, res) => {
-    try {
-        const shop = req.query.shop;
-        if (!shop) return res.status(400).send('Missing shop');
-        const shopData = await shopModel.findOne({ shop });
-        if (!shopData) return res.status(404).send('Shop not installed');
-        const themeId = await getPublishedThemeId(shop, shopData.accessToken);
-        const asset = await getThemeAsset(shop, shopData.accessToken, themeId, 'sections/footer.liquid');
-        return res.status(200).json({ key: asset.key, content: asset.value || asset.public_url || '' });
-    } catch (err) {
-        console.error(err.response?.data || err.message);
-        return res.status(500).send('Failed to fetch footer');
+    catch (e) {
+        console.error("/apps/agora error:", e);
+        return res.status(500).send("Failed to compose Shopify header/footer");
     }
-};
+}
 
-module.exports = { installShopifyApp, authCallback, shopifyLogin, getThemeHeader, getThemeFooter }
+
+
+module.exports = {
+    installShopifyApp,
+    authCallback,
+    shopifyLogin,
+    proxyThemeAssetsController
+}
