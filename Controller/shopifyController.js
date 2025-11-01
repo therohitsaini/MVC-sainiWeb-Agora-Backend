@@ -110,11 +110,6 @@ const shopifyLogin = async (req, res) => {
 
 
 
-
-
-
-
-
 /** Proxy for Shopify Theme Assets 
  * 1. GET /apps/theme/header?shop=store.myshopify.com
  * 2. GET /apps/theme/footer?shop=store.myshopify.com
@@ -198,11 +193,29 @@ const proxyThemeAssetsController = async (req, res) => {
     }
 }
 
+const proxyShopifyConsultantPage = async (req, res) => {
+    try {
+        const shop = req.query.shop || "rohit-12345839.myshopify.com";
+        const themeId = req.query.theme_id;
+        const cookieHeader = req.headers.cookie || "";
+        const userAgent = req.headers["user-agent"] || "node";
+        const url = "https://agora-ui-v2.netlify.app/consultant-registration";
+        const title = "Agora Home";
+        const pageHtml = await renderShopifyPage(shop, themeId, cookieHeader, userAgent, url, title);
+        return res.status(200).send(pageHtml);
+    }
+    catch (e) {
+        console.error("/apps/agora error:", e);
+        return res.status(500).send("Failed to compose Shopify header/footer");
+    }
+}
+
 
 
 module.exports = {
     installShopifyApp,
     authCallback,
     shopifyLogin,
-    proxyThemeAssetsController
+    proxyThemeAssetsController,
+    proxyShopifyConsultantPage
 }
