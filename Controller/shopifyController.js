@@ -171,8 +171,8 @@ const proxyThemeAssetsController = async (req, res) => {
             : (url) => fetchWithSession(url).then(r => r.text());
 
         const [headerHtml, footerHtml] = await Promise.all([
-            sectionFetch(makeUrl(`https://${shop}/`)),
-            sectionFetch(makeUrl(`https://${shop}/`))
+            sectionFetch(makeUrl(`https://${shop}/?section_id=header`)),
+            sectionFetch(makeUrl(`https://${shop}/?section_id=footer`))
         ]);
         console.log("headerHtml on theme assets page", headerHtml);
         const pageHtml = `
