@@ -254,8 +254,8 @@ const proxyShopifyConsultantPage = async (req, res) => {
             : (url) => fetchWithSession(url).then(r => r.text());
 
         const [headerHtml, footerHtml] = await Promise.all([
-            sectionFetch(makeUrl(`https://${shop}/?section_id=header`)),
-            sectionFetch(makeUrl(`https://${shop}/?section_id=footer`))
+            sectionFetch(makeUrl(`https://${shop}`)),
+            sectionFetch(makeUrl(`https://${shop}`))
         ]);
         console.log("headerHtml on consultant registration page", headerHtml);
         const pageHtml = `
