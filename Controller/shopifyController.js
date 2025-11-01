@@ -119,7 +119,9 @@ const proxyThemeAssetsController = async (req, res) => {
     try {
 
         const shop = req.query.shop || "rohit-12345839.myshopify.com";
-        const themeId = req.query.theme_id; // optional for draft theme preview
+        const themeId = req.query.theme_id;
+        
+        // optional for draft theme preview
 
         // Forward storefront/preview cookies so password/preview sessions work
         const cookieHeader = req.headers.cookie || "";
@@ -169,6 +171,7 @@ const proxyThemeAssetsController = async (req, res) => {
             sectionFetch(makeUrl(`https://${shop}/?section_id=header`)),
             sectionFetch(makeUrl(`https://${shop}/?section_id=footer`))
         ]);
+        console.log("headerHtml on theme assets page", headerHtml);
         const pageHtml = `
           <!DOCTYPE html>
           <html>
@@ -193,12 +196,16 @@ const proxyThemeAssetsController = async (req, res) => {
     }
 }
 
+/** Proxy for Shopify Consultant Registration Page 
+ * 1. GET /apps/agora/consultant-registration?shop=store.myshopify.com
+ * 2. GET /apps/agora/consultant-registration?shop=store.myshopify.com&theme_id=1234567890
+*/
 const proxyShopifyConsultantPage = async (req, res) => {
     try {
 
         const shop = req.query.shop || "rohit-12345839.myshopify.com";
-        const themeId = req.query.theme_id; // optional for draft theme preview
 
+        const themeId = req.query.theme_id; // optional for draft theme preview
         // Forward storefront/preview cookies so password/preview sessions work
         const cookieHeader = req.headers.cookie || "";
         const userAgent = req.headers["user-agent"] || "node";
@@ -247,6 +254,7 @@ const proxyShopifyConsultantPage = async (req, res) => {
             sectionFetch(makeUrl(`https://${shop}/?section_id=header`)),
             sectionFetch(makeUrl(`https://${shop}/?section_id=footer`))
         ]);
+        console.log("headerHtml on consultant registration page", headerHtml);
         const pageHtml = `
           <!DOCTYPE html>
           <html>
