@@ -305,7 +305,7 @@ const shopifyUserRegistrationController = async (req, res) => {
         const payload = JSON.parse(req.body.toString('utf8'));
         console.log('New customer registered:', payload.email);
     } catch {
-        console.error("User registration error:", e);
+        console.error("User registration error:", );
         return res.status(500).send("Failed to register user");
     }
 }
