@@ -1,6 +1,6 @@
 const express = require('express');
 const shopifyRoute = express.Router();
-const { installShopifyApp, authCallback, shopifyLogin, proxyThemeAssetsController, proxyShopifyConsultantPage,} = require('../Controller/shopifyController');
+const { installShopifyApp, authCallback, shopifyLogin, proxyThemeAssetsController, proxyShopifyConsultantPage, shopifyUserRegistrationController,} = require('../Controller/shopifyController');
 
 
 // Route: /shopify/install
@@ -13,5 +13,6 @@ shopifyRoute.get('/login', shopifyLogin);
 shopifyRoute.get('/agora', proxyThemeAssetsController);
 // Route: /consultant-registration
 shopifyRoute.get('/agora/consultant-registration', proxyShopifyConsultantPage);
+shopifyRoute.post('/webhooks/customers/create', shopifyUserRegistrationController);
 
 module.exports = shopifyRoute;

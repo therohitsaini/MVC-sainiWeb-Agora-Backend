@@ -2,13 +2,12 @@
 const mongoose = require("mongoose")
 require("dotenv").config()
 
-const url = process.env.MONGO_DB_URL || process.env.MONGO_DB_URL_ // db server uri
+const url = process.env.MONGO_DB_URL 
 const connectDB = () => {
    if (!url) {
       console.error("MongoDB URL not found in environment variables");
       return;
    }
-   
    return mongoose.connect(url)
       .then(() => {
          console.log("MongoDB connected successfully");

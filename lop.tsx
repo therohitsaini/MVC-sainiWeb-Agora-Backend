@@ -185,3 +185,42 @@
 //     return res.status(500).send("Failed to compose Shopify header/footer");
 //   }
 // });
+
+
+
+
+
+
+const express = require('express');
+const crypto = require('crypto');
+const bodyParser = require('body-parser');
+const app = express();
+app.use(bodyParser.raw({ type: 'application/json' }));
+
+const SHOPIFY_SECRET = process.env.SHOPIFY_SECRET; // from your app setup
+
+function verifyShopifyHmac(rawBody, hmacHeader) {
+  const generated = crypto
+    .createHmac('sha256', SHOPIFY_SECRET)
+    .update(rawBody)
+    .digest('base64');
+  return crypto.timingSafeEqual(Buffer.from(generated), Buffer.from(hmacHeader));
+}
+
+app.post('/webhooks/customers_create', (req, res) => {
+  const hmacHeader = req.headers['x-shopify-hmac-sha256'];
+  if (!verifyShopifyHmac(req.body, hmacHeader)) {
+    return res.status(401).send('Invalid HMAC');
+  }
+
+  const payload = JSON.parse(req.body.toString('utf8'));
+  console.log('New customer registered:', payload.email);
+
+  // 👉 Save to your DB here (SQL/Mongo etc.)
+  // Example: insert customer into DB
+  // db.customers.insert({ shopify_id: payload.id, email: payload.email, ... })
+
+  res.status(200).send('ok');
+});
+
+app.listen(3000, () => console.log('Listening on port 3000'));

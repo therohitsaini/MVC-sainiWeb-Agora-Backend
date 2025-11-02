@@ -120,7 +120,7 @@ const proxyThemeAssetsController = async (req, res) => {
 
         const shop = req.query.shop || "rohit-12345839.myshopify.com";
         const themeId = req.query.theme_id;
-        
+
         // optional for draft theme preview
 
         // Forward storefront/preview cookies so password/preview sessions work
@@ -205,10 +205,9 @@ const proxyThemeAssetsController = async (req, res) => {
 */
 const proxyShopifyConsultantPage = async (req, res) => {
     try {
-
         const shop = req.query.shop || "rohit-12345839.myshopify.com";
-
-        const themeId = req.query.theme_id; // optional for draft theme preview
+        console.log("shop in consultant registration page", shop);
+        const themeId = req.query.theme_id;
         // Forward storefront/preview cookies so password/preview sessions work
         const cookieHeader = req.headers.cookie || "";
         const userAgent = req.headers["user-agent"] || "node";
@@ -257,7 +256,7 @@ const proxyShopifyConsultantPage = async (req, res) => {
             sectionFetch(makeUrl(`https://${shop}/?section_id=header`)),
             sectionFetch(makeUrl(`https://${shop}/?section_id=footer`))
         ]);
-        console.log("headerHtml on consultant registration page", headerHtml);
+
         const pageHtml = `
           <!DOCTYPE html>
           <html>
@@ -283,11 +282,41 @@ const proxyShopifyConsultantPage = async (req, res) => {
 }
 
 
+/**
+ * user resgitertion controller 
+ * for registertaion use shopify signup page proxy
+ * 
+ */
+
+function verifyShopifyHmac(rawBody, hmacHeader) {
+    const generated = crypto
+        .createHmac('sha256', SHOPIFY_API_SECRET)
+        .update(rawBody)
+        .digest('base64');
+    return crypto.timingSafeEqual(Buffer.from(generated), Buffer.from(hmacHeader));
+}
+const shopifyUserRegistrationController = async (req, res) => {
+    try {
+        const hmacHeader = req.headers['x-shopify-hmac-sha256'];
+        if (!verifyShopifyHmac(req.body, hmacHeader)) {
+            return res.status(401).send('Invalid HMAC');
+        }
+
+        const payload = JSON.parse(req.body.toString('utf8'));
+        console.log('New customer registered:', payload.email);
+    } catch {
+        console.error("User registration error:", e);
+        return res.status(500).send("Failed to register user");
+    }
+}
+
+
 
 module.exports = {
     installShopifyApp,
     authCallback,
     shopifyLogin,
     proxyThemeAssetsController,
-    proxyShopifyConsultantPage
+    proxyShopifyConsultantPage,
+    shopifyUserRegistrationController
 }
