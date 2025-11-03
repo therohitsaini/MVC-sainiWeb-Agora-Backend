@@ -426,6 +426,50 @@ const fetchCustomerViaGraphQL = async (shop, accessToken, customerId) => {
     }
 };
 
+/**
+ * Shopify user registration controller
+ * for registertaion use shopify signup page proxy
+ * 
+ */
+
+
+// Helper function - GraphQL se full customer detail
+const getCustomerDetail = async (customerId) => {
+    try {
+        const shop = "rohit-12345839.myshopify.com";
+        const accessToken = "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";
+
+        const query = `
+            {
+                customer(id: "gid://shopify/Customer/${customerId}") {
+                    id
+                    email
+                    firstName
+                    lastName
+                    phone
+                    createdAt
+                    verifiedEmail
+                }
+            }
+        `;
+
+        const res = await axios.post(
+        `https://${shop}/admin/api/2024-07/graphql.json`,
+        { query },
+        {
+            headers: {
+                "X-Shopify-Access-Token": accessToken,
+                "Content-Type": "application/json",
+            },
+        }
+    );
+
+        return res.data.data.customer;
+    } catch (error) {
+        console.error('Error fetching customer detail:', error.message);
+        return null;
+    }
+}
 const shopifyUserRegistrationController = async (req, res) => {
     try {
         const customer = req.body; // Shopify se new customer data
@@ -433,16 +477,17 @@ const shopifyUserRegistrationController = async (req, res) => {
 
         // GraphQL se aur detail le lo
         const data = await getCustomerDetail(customer.id);
-
+        console.log("data in shopify user registration controller", data);
         // MongoDB me save ya response bhej
         console.log("Full Customer:", data);
-
         res.status(200).send("Webhook received");
     } catch (err) {
         console.error("Webhook error:", err);
         res.sendStatus(500);
     }
 }
+
+
 
 
 
@@ -454,5 +499,5 @@ module.exports = {
     proxyThemeAssetsController,
     proxyShopifyConsultantPage,
     shopifyUserRegistrationController,
-    
+
 }
