@@ -198,18 +198,14 @@ const proxyThemeAssetsController = async (req, res) => {
 const proxyShopifyConsultantPage = async (req, res) => {
     try {
         const shop = req.query.shop
-        const { customerId } = req.body
-        console.log("customerId in consultant registration page", customerId);
         const themeId = req.query.theme_id;
         const cookieHeader = req.headers.cookie || "";
         const userAgent = req.headers["user-agent"] || "node";
         const makeUrl = (base) => themeId ? `${base}${base.includes("?") ? "&" : "?"}theme_id=${themeId}` : base;
         const fetchWithSession = (url) => fetch(url, { headers: { Cookie: cookieHeader, "User-Agent": userAgent }, redirect: "manual" });
 
-        // 1) Pull the storefront home page to capture <head> assets (CSS/JS)
         let homeResp = await fetchWithSession(makeUrl(`https://${shop}/`));
 
-        // If storefront is locked and we have a password, auto-login (dev/testing)
         if (homeResp.status >= 300 && homeResp.status < 400) {
             const storefrontPassword = process.env.STOREFRONT_PASSWORD || 1;
             if (storefrontPassword && wrapper && CookieJar && axios) {
@@ -222,9 +218,7 @@ const proxyShopifyConsultantPage = async (req, res) => {
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
                     maxRedirects: 0, validateStatus: () => true
                 });
-                // re-fetch home with authenticated jar
-                homeResp = await client.get(makeUrl(`https://${shop}/`));
-                // helper to fetch sections with jar
+                homeResp = await client.get(makeUrl(`https://${shop}/`));          
                 var jarFetch = async (url) => (await client.get(url)).data;
             } else {
                 return res.status(401).send("Storefront locked. Enter password or use preview.");
@@ -239,7 +233,6 @@ const proxyShopifyConsultantPage = async (req, res) => {
             <title>Agora App</title>
           </head>`;
 
-        // 2) Fetch real header/footer HTML via Section Rendering API
         const sectionFetch = typeof jarFetch === "function"
             ? (url) => jarFetch(url)
             : (url) => fetchWithSession(url).then(r => r.text());
@@ -358,7 +351,6 @@ const shopifyUserRegistrationController = async (req, res) => {
             console.log('User already exists, skipping create:', email);
             return res.status(200).json({ success: true, message: 'User already exists', userId: existingUser._id });
         }
-
         let enriched = null;
         try {
             enriched = await getCustomerDetail(req, customer.id);
