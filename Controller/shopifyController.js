@@ -289,6 +289,9 @@ const proxyShopifyConsultantPage = async (req, res) => {
  */
 
 function verifyShopifyHmac(rawBody, hmacHeader) {
+    if (!hmacHeader || !rawBody) {
+        return false;
+    }
     const generated = crypto
         .createHmac('sha256', SHOPIFY_API_SECRET)
         .update(rawBody)
@@ -298,14 +301,38 @@ function verifyShopifyHmac(rawBody, hmacHeader) {
 const shopifyUserRegistrationController = async (req, res) => {
     try {
         const hmacHeader = req.headers['x-shopify-hmac-sha256'];
-        if (!verifyShopifyHmac(req.body, hmacHeader)) {
+        
+        // Get raw body (should be a Buffer from rawBodyMiddleware)
+        // If it's already parsed as JSON, we need to reconstruct it for HMAC verification
+        let rawBody = req.body;
+        
+        // Ensure we have a Buffer for HMAC verification
+        if (Buffer.isBuffer(rawBody)) {
+            // Perfect - we have raw body
+        } else if (typeof rawBody === 'string') {
+            rawBody = Buffer.from(rawBody, 'utf8');
+        } else if (typeof rawBody === 'object') {
+            // Body was parsed as JSON - stringify it back (this may cause HMAC mismatch)
+            // This is a fallback, but ideally raw body should be used
+            rawBody = Buffer.from(JSON.stringify(rawBody), 'utf8');
+        } else {
+            return res.status(400).send('Invalid request body');
+        }
+        
+        // Verify HMAC
+        if (!hmacHeader || !verifyShopifyHmac(rawBody, hmacHeader)) {
             return res.status(401).send('Invalid HMAC');
         }
 
-        const payload = JSON.parse(req.body.toString('utf8'));
+        // Parse the JSON payload
+        const payload = JSON.parse(rawBody.toString('utf8'));
+            
         console.log('New customer registered:', payload.email);
-    } catch {
-        console.error("User registration error:", );
+        
+        // Return 200 OK to Shopify (required for webhook acknowledgment)
+        return res.status(200).json({ success: true, message: 'Webhook received' });
+    } catch (error) {
+        console.error("User registration error:", error.message || error);
         return res.status(500).send("Failed to register user");
     }
 }
