@@ -207,7 +207,7 @@ const proxyThemeAssetsController = async (req, res) => {
 */
 const proxyShopifyConsultantPage = async (req, res) => {
     try {
-        const shop = req.query.shop || "rohit-12345839.myshopify.com";
+        const shop = req.query.shop 
         console.log("shop in consultant registration page", shop);
         const themeId = req.query.theme_id;
         // Forward storefront/preview cookies so password/preview sessions work
