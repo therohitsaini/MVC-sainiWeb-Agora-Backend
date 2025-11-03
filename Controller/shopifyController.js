@@ -433,15 +433,31 @@ const fetchCustomerViaGraphQL = async (shop, accessToken, customerId) => {
  */
 
 
-// Helper function - GraphQL se full customer detail
-const getCustomerDetail = async (customerId) => {
+// Helper: fetch full customer detail via GraphQL using DB-stored access token
+const getCustomerDetail = async (req, customerId) => {
     try {
-        const shop = "rohit-12345839.myshopify.com";
-        const accessToken = "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";
+        // Resolve shop domain from webhook headers
+        const shopDomain = req.headers['x-shopify-shop-domain'];
+        if (!shopDomain) {
+            console.error('Missing x-shopify-shop-domain header');
+            return null;
+        }
+
+        // Find access token from DB
+        const shopDoc = await shopModel.findOne({ shop: shopDomain });
+        if (!shopDoc || !shopDoc.accessToken) {
+            console.error('Shop not found or access token missing for', shopDomain);
+            return null;
+        }
+
+        // Build ID in GID format if numeric
+        const gid = String(customerId).startsWith('gid://')
+            ? String(customerId)
+            : `gid://shopify/Customer/${customerId}`;
 
         const query = `
-            {
-                customer(id: "gid://shopify/Customer/${customerId}") {
+            query {
+                customer(id: "${gid}") {
                     id
                     email
                     firstName
@@ -454,17 +470,26 @@ const getCustomerDetail = async (customerId) => {
         `;
 
         const res = await axios.post(
-        `https://${shop}/admin/api/2024-07/graphql.json`,
-        { query },
-        {
-            headers: {
-                "X-Shopify-Access-Token": accessToken,
-                "Content-Type": "application/json",
-            },
-        }
-    );
+            `https://${shopDomain}/admin/api/2024-07/graphql.json`,
+            { query },
+            {
+                headers: {
+                    "X-Shopify-Access-Token": shopDoc.accessToken,
+                    "Content-Type": "application/json",
+                },
+                validateStatus: () => true,
+            }
+        );
 
-        return res.data.data.customer;
+        if (res.status === 401) {
+            console.error('GraphQL 401 Unauthorized for shop', shopDomain);
+            return null;
+        }
+        if (res.status >= 400) {
+            console.error('GraphQL error status:', res.status, res.data);
+            return null;
+        }
+        return res.data?.data?.customer || null;
     } catch (error) {
         console.error('Error fetching customer detail:', error.message);
         return null;
@@ -475,8 +500,35 @@ const shopifyUserRegistrationController = async (req, res) => {
         const customer = req.body; // Shopify se new customer data
         console.log("🟢 New customer registered:", customer.id);
 
-        // GraphQL se aur detail le lo
-        const data = await getCustomerDetail(customer.id);
+        // GraphQL se aur detail le lo (DB token use karke)
+        let data = await getCustomerDetail(req, customer.id);
+        // REST fallback if GraphQL failed
+        if (!data) {
+            try {
+                const shopDomain = req.headers['x-shopify-shop-domain'];
+                const shopDoc = await shopModel.findOne({ shop: shopDomain });
+                if (shopDomain && shopDoc?.accessToken) {
+                    const restRes = await axios.get(
+                        `https://${shopDomain}/admin/api/2024-07/customers/${customer.id}.json`,
+                        { headers: { "X-Shopify-Access-Token": shopDoc.accessToken } }
+                    );
+                    const c = restRes.data?.customer;
+                    if (c) {
+                        data = {
+                            id: c.id,
+                            email: c.email,
+                            firstName: c.first_name,
+                            lastName: c.last_name,
+                            phone: c.phone,
+                            createdAt: c.created_at,
+                            verifiedEmail: c.verified_email,
+                        };
+                    }
+                }
+            } catch (e) {
+                console.error('REST fallback failed:', e.message);
+            }
+        }
         console.log("data in shopify user registration controller", data);
         // MongoDB me save ya response bhej
         console.log("Full Customer:", data);
