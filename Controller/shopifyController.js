@@ -22,6 +22,7 @@ const SCOPES = process.env.SCOPES || "read_products,read_orders,read_customers,r
 const APP_URL = process.env.APP_URL || "http://localhost:5001";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
 const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff";
+const roundingNumber = process.env.PASSWORD_SECRECT_ROUNDING
 
 const installShopifyApp = (req, res) => {
     const shop = req.query.shop;
@@ -120,29 +121,22 @@ const shopifyLogin = async (req, res) => {
 const proxyThemeAssetsController = async (req, res) => {
     try {
 
-        const shop = req.query.shop || "rohit-12345839.myshopify.com";
+        const shop = req.headers['x-shopify-shop-domain']
         const themeId = req.query.theme_id;
 
-        // optional for draft theme preview
-
-        // Forward storefront/preview cookies so password/preview sessions work
+        console.log("shop in theme assets controller", shop);
         const cookieHeader = req.headers.cookie || "";
         const userAgent = req.headers["user-agent"] || "node";
         const makeUrl = (base) => themeId ? `${base}${base.includes("?") ? "&" : "?"}theme_id=${themeId}` : base;
         const fetchWithSession = (url) => fetch(url, { headers: { Cookie: cookieHeader, "User-Agent": userAgent }, redirect: "manual" });
-
-        // 1) Pull the storefront home page to capture <head> assets (CSS/JS)
         let homeResp = await fetchWithSession(makeUrl(`https://${shop}/`));
 
-        // If storefront is locked and we have a password, auto-login (dev/testing)
         if (homeResp.status >= 300 && homeResp.status < 400) {
             const storefrontPassword = process.env.STOREFRONT_PASSWORD || 1;
             if (storefrontPassword && wrapper && CookieJar && axios) {
                 const jar = new CookieJar();
                 const client = wrapper(axios.create({ jar, withCredentials: true, headers: { "User-Agent": userAgent } }));
-                // visit password page to establish cookies
                 await client.get(`https://${shop}/password`).catch(() => { });
-                // submit password form
                 await client.post(`https://${shop}/password`, new URLSearchParams({ password: storefrontPassword }).toString(), {
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
                     maxRedirects: 0, validateStatus: () => true
@@ -155,7 +149,6 @@ const proxyThemeAssetsController = async (req, res) => {
                 return res.status(401).send("Storefront locked. Enter password or use preview.");
             }
         }
-
 
         console.log("homeResp on theme assets page ssssssssssssssss", homeResp);
         const homeHtml = typeof homeResp.data === "string" ? homeResp.data : (await homeResp.text());
@@ -290,167 +283,21 @@ const proxyShopifyConsultantPage = async (req, res) => {
  * 
  */
 
-function verifyShopifyHmac(rawBody, hmacHeader) {
-    if (!hmacHeader || !rawBody) {
-        return false;
-    }
-    const generated = crypto
-        .createHmac('sha256', SHOPIFY_API_SECRET)
-        .update(rawBody)
-        .digest('base64');
-    return crypto.timingSafeEqual(Buffer.from(generated), Buffer.from(hmacHeader));
-}
-
-/**
- * GraphQL helper function to CREATE customer in Shopify
- */
-const createCustomerViaGraphQL = async (shop, accessToken, customerData) => {
-    try {
-        const mutation = `
-            mutation customerCreate($input: CustomerCreateInput!) {
-                customerCreate(input: $input) {
-                    customer {
-                        id
-                        firstName
-                        lastName
-                        email
-                        phone
-                        displayName
-                    }
-                    userErrors {
-                        field
-                        message
-                    }
-                }
-            }
-        `;
-
-        const variables = {
-            input: {
-                email: customerData.email,
-                firstName: customerData.firstName || '',
-                lastName: customerData.lastName || '',
-                phone: customerData.phone || null,
-                addresses: customerData.address ? [{
-                    address1: customerData.address.address1 || '',
-                    city: customerData.address.city || '',
-                    province: customerData.address.province || customerData.address.state || '',
-                    zip: customerData.address.zip || '',
-                    country: customerData.address.country || ''
-                }] : null
-            }
-        };
-
-        const response = await axios.post(
-            `https://${shop}/admin/api/2024-07/graphql.json`,
-            { query: mutation, variables },
-            {
-                headers: {
-                    'X-Shopify-Access-Token': accessToken,
-                    'Content-Type': 'application/json',
-                }
-            }
-        );
-
-        if (response.data.errors) {
-            console.error('GraphQL errors:', response.data.errors);
-            return { success: false, errors: response.data.errors };
-        }
-
-        if (response.data.data?.customerCreate?.userErrors?.length > 0) {
-            console.error('User errors:', response.data.data.customerCreate.userErrors);
-            return { success: false, errors: response.data.data.customerCreate.userErrors };
-        }
-
-        return {
-            success: true,
-            customer: response.data.data?.customerCreate?.customer
-        };
-    } catch (error) {
-        console.error('Error creating customer via GraphQL:', error.message);
-        return { success: false, error: error.message };
-    }
-};
-
-/**
- * GraphQL helper function to fetch customer details from Shopify
- */
-const fetchCustomerViaGraphQL = async (shop, accessToken, customerId) => {
-    try {
-        const query = `
-            query getCustomer($id: ID!) {
-                customer(id: $id) {
-                    id
-                    firstName
-                    lastName
-                    email
-                    phone
-                    displayName
-                    addresses {
-                        address1
-                        city
-                        province
-                        zip
-                        country
-                    }
-                    createdAt
-                    updatedAt
-                }
-            }
-        `;
-
-        const variables = {
-            id: `gid://shopify/Customer/${customerId}`
-        };
-
-        const response = await axios.post(
-            `https://${shop}/admin/api/2024-07/graphql.json`,
-            { query, variables },
-            {
-                headers: {
-                    'X-Shopify-Access-Token': accessToken,
-                    'Content-Type': 'application/json',
-                }
-            }
-        );
-
-        if (response.data.errors) {
-            console.error('GraphQL errors:', response.data.errors);
-            return null;
-        }
-
-        return response.data.data?.customer || null;
-    } catch (error) {
-        console.error('Error fetching customer via GraphQL:', error.message);
-        return null;
-    }
-};
-
-/**
- * Shopify user registration controller
- * for registertaion use shopify signup page proxy
- * 
- */
-
-
-// Helper: fetch full customer detail via GraphQL using DB-stored access token
 const getCustomerDetail = async (req, customerId) => {
     try {
-        // Resolve shop domain from webhook headers
+
         const shopDomain = req.headers['x-shopify-shop-domain'];
         if (!shopDomain) {
             console.error('Missing x-shopify-shop-domain header');
             return null;
         }
 
-        // Find access token from DB
         const shopDoc = await shopModel.findOne({ shop: shopDomain });
         if (!shopDoc || !shopDoc.accessToken) {
             console.error('Shop not found or access token missing for', shopDomain);
             return null;
         }
 
-        // Build ID in GID format if numeric
         const gid = String(customerId).startsWith('gid://')
             ? String(customerId)
             : `gid://shopify/Customer/${customerId}`;
@@ -495,13 +342,12 @@ const getCustomerDetail = async (req, customerId) => {
         return null;
     }
 }
+
 const shopifyUserRegistrationController = async (req, res) => {
     try {
-        const customer = req.body; // Shopify se new customer data (payload)
+        const customer = req.body;
         const shopDomain = req.headers['x-shopify-shop-domain'];
         console.log("🟢 New customer registered:", customer.id, "from shop:", shopDomain);
-
-        // 1) Payload se direct fields nikaal lo
         const email = (customer.email || '').toLowerCase();
         const firstName = customer.first_name || customer.firstName || '';
         const lastName = customer.last_name || customer.lastName || '';
@@ -510,30 +356,24 @@ const shopifyUserRegistrationController = async (req, res) => {
         const addr = customer.default_address || {};
         const addressString = addr.address1 ? `${addr.address1 || ''}, ${addr.city || ''}, ${addr.province || ''} ${addr.zip || ''}`.trim() : '';
 
-        // 2) Pehle se user hai to skip create
         const existingUser = email ? await User.findOne({ email }) : null;
         if (existingUser) {
             console.log('User already exists, skipping create:', email);
             return res.status(200).json({ success: true, message: 'User already exists', userId: existingUser._id });
         }
 
-        // 3) Optional enrichment (best-effort). Fail hone par bhi proceed karo
         let enriched = null;
         try {
             enriched = await getCustomerDetail(req, customer.id);
-        } catch {}
+        } catch { }
 
         const finalFirstName = enriched?.firstName || firstName;
         const finalLastName = enriched?.lastName || lastName;
         const finalFullname = `${finalFirstName} ${finalLastName}`.trim() || fullname;
         const finalEmail = (enriched?.email || email || '').toLowerCase();
         const finalPhone = enriched?.phone || phone || undefined;
-
-        // 4) Random password generate (Shopify password nahi deta)
         const randomPassword = crypto.randomBytes(16).toString('hex');
-        const hashedPassword = await bcrypt.hash(randomPassword, 10);
-
-        // 5) DB me save
+        const hashedPassword = await bcrypt.hash(randomPassword, roundingNumber);
         const newUser = new User({
             fullname: finalFullname,
             email: finalEmail,
@@ -553,17 +393,15 @@ const shopifyUserRegistrationController = async (req, res) => {
 
         await newUser.save();
         console.log('Customer saved to database:', { id: newUser._id, email: newUser.email });
-
-        // 6) Respond 200 to stop retries
         return res.status(200).json({ success: true, message: 'Webhook received and user saved', userId: newUser._id });
     } catch (err) {
-        // Duplicate key ya other errors: retry avoid karne ke liye 200 bhejo jab email duplicate ho
+
         if (err?.code === 11000) {
             console.log('Duplicate key on save, acknowledging webhook');
             return res.status(200).json({ success: true, message: 'User already exists' });
         }
         console.error("Webhook error:", err?.message || err);
-        return res.sendStatus(200); // Ack to prevent repeated retries
+        return res.sendStatus(200);
     }
 }
 
