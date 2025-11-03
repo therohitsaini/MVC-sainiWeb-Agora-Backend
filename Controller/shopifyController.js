@@ -198,7 +198,7 @@ const proxyThemeAssetsController = async (req, res) => {
 const proxyShopifyConsultantPage = async (req, res) => {
     try {
         const shop = req.query.shop
-        const customerId = req.params.customerId || req.query.customerId;
+        const { customerId } = req.body
         console.log("customerId in consultant registration page", customerId);
         const themeId = req.query.theme_id;
         const cookieHeader = req.headers.cookie || "";
