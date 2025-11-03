@@ -497,45 +497,73 @@ const getCustomerDetail = async (req, customerId) => {
 }
 const shopifyUserRegistrationController = async (req, res) => {
     try {
-        const customer = req.body; // Shopify se new customer data
-        console.log("🟢 New customer registered:", customer.id);
+        const customer = req.body; // Shopify se new customer data (payload)
+        const shopDomain = req.headers['x-shopify-shop-domain'];
+        console.log("🟢 New customer registered:", customer.id, "from shop:", shopDomain);
 
-        // GraphQL se aur detail le lo (DB token use karke)
-        let data = await getCustomerDetail(req, customer.id);
-        // REST fallback if GraphQL failed
-        if (!data) {
-            try {
-                const shopDomain = req.headers['x-shopify-shop-domain'];
-                const shopDoc = await shopModel.findOne({ shop: shopDomain });
-                if (shopDomain && shopDoc?.accessToken) {
-                    const restRes = await axios.get(
-                        `https://${shopDomain}/admin/api/2024-07/customers/${customer.id}.json`,
-                        { headers: { "X-Shopify-Access-Token": shopDoc.accessToken } }
-                    );
-                    const c = restRes.data?.customer;
-                    if (c) {
-                        data = {
-                            id: c.id,
-                            email: c.email,
-                            firstName: c.first_name,
-                            lastName: c.last_name,
-                            phone: c.phone,
-                            createdAt: c.created_at,
-                            verifiedEmail: c.verified_email,
-                        };
-                    }
-                }
-            } catch (e) {
-                console.error('REST fallback failed:', e.message);
-            }
+        // 1) Payload se direct fields nikaal lo
+        const email = (customer.email || '').toLowerCase();
+        const firstName = customer.first_name || customer.firstName || '';
+        const lastName = customer.last_name || customer.lastName || '';
+        const fullname = `${firstName} ${lastName}`.trim() || (email.split('@')[0] || 'Customer');
+        const phone = customer.phone || '';
+        const addr = customer.default_address || {};
+        const addressString = addr.address1 ? `${addr.address1 || ''}, ${addr.city || ''}, ${addr.province || ''} ${addr.zip || ''}`.trim() : '';
+
+        // 2) Pehle se user hai to skip create
+        const existingUser = email ? await User.findOne({ email }) : null;
+        if (existingUser) {
+            console.log('User already exists, skipping create:', email);
+            return res.status(200).json({ success: true, message: 'User already exists', userId: existingUser._id });
         }
-        console.log("data in shopify user registration controller", data);
-        // MongoDB me save ya response bhej
-        console.log("Full Customer:", data);
-        res.status(200).send("Webhook received");
+
+        // 3) Optional enrichment (best-effort). Fail hone par bhi proceed karo
+        let enriched = null;
+        try {
+            enriched = await getCustomerDetail(req, customer.id);
+        } catch {}
+
+        const finalFirstName = enriched?.firstName || firstName;
+        const finalLastName = enriched?.lastName || lastName;
+        const finalFullname = `${finalFirstName} ${finalLastName}`.trim() || fullname;
+        const finalEmail = (enriched?.email || email || '').toLowerCase();
+        const finalPhone = enriched?.phone || phone || undefined;
+
+        // 4) Random password generate (Shopify password nahi deta)
+        const randomPassword = crypto.randomBytes(16).toString('hex');
+        const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+        // 5) DB me save
+        const newUser = new User({
+            fullname: finalFullname,
+            email: finalEmail,
+            password: hashedPassword,
+            phone: finalPhone,
+            address: addressString || undefined,
+            city: addr.city || undefined,
+            state: addr.province || addr.state || undefined,
+            zip: addr.zip || undefined,
+            country: addr.country || undefined,
+            role: 'user',
+            isActive: true,
+            userType: 'shopify_customer',
+            walletBalance: 0,
+            shopifyCustomerId: customer.id?.toString(),
+        });
+
+        await newUser.save();
+        console.log('Customer saved to database:', { id: newUser._id, email: newUser.email });
+
+        // 6) Respond 200 to stop retries
+        return res.status(200).json({ success: true, message: 'Webhook received and user saved', userId: newUser._id });
     } catch (err) {
-        console.error("Webhook error:", err);
-        res.sendStatus(500);
+        // Duplicate key ya other errors: retry avoid karne ke liye 200 bhejo jab email duplicate ho
+        if (err?.code === 11000) {
+            console.log('Duplicate key on save, acknowledging webhook');
+            return res.status(200).json({ success: true, message: 'User already exists' });
+        }
+        console.error("Webhook error:", err?.message || err);
+        return res.sendStatus(200); // Ack to prevent repeated retries
     }
 }
 
