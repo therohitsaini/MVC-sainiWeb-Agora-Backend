@@ -121,43 +121,34 @@ const shopifyLogin = async (req, res) => {
 const proxyThemeAssetsController = async (req, res) => {
     try {
 
-        const shop = req.query.shop || "rohit-12345839.myshopify.com";
+        const shop = req.query.shop
         const themeId = req.query.theme_id;
 
-     console.log("shop in theme assets controller", shop);
-
-        // Forward storefront/preview cookies so password/preview sessions work
         const cookieHeader = req.headers.cookie || "";
         const userAgent = req.headers["user-agent"] || "node";
         const makeUrl = (base) => themeId ? `${base}${base.includes("?") ? "&" : "?"}theme_id=${themeId}` : base;
         const fetchWithSession = (url) => fetch(url, { headers: { Cookie: cookieHeader, "User-Agent": userAgent }, redirect: "manual" });
 
-        // 1) Pull the storefront home page to capture <head> assets (CSS/JS)
         let homeResp = await fetchWithSession(makeUrl(`https://${shop}/`));
 
-        // If storefront is locked and we have a password, auto-login (dev/testing)
         if (homeResp.status >= 300 && homeResp.status < 400) {
             const storefrontPassword = process.env.STOREFRONT_PASSWORD || 1;
             if (storefrontPassword && wrapper && CookieJar && axios) {
                 const jar = new CookieJar();
                 const client = wrapper(axios.create({ jar, withCredentials: true, headers: { "User-Agent": userAgent } }));
-                // visit password page to establish cookies
                 await client.get(`https://${shop}/password`).catch(() => { });
-                // submit password form
                 await client.post(`https://${shop}/password`, new URLSearchParams({ password: storefrontPassword }).toString(), {
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
                     maxRedirects: 0, validateStatus: () => true
                 });
-                // re-fetch home with authenticated jar
                 homeResp = await client.get(makeUrl(`https://${shop}/`));
-                // helper to fetch sections with jar
                 var jarFetch = async (url) => (await client.get(url)).data;
             } else {
                 return res.status(401).send("Storefront locked. Enter password or use preview.");
             }
         }
 
-        console.log("homeResp on theme assets page ssssssssssssssss", homeResp);
+
         const homeHtml = typeof homeResp.data === "string" ? homeResp.data : (await homeResp.text());
         const headMatch = homeHtml.match(/<head[\s\S]*?<\/head>/i);
         const headHtml = headMatch ? headMatch[0] : `
@@ -167,7 +158,6 @@ const proxyThemeAssetsController = async (req, res) => {
             <title>Agora App</title>
           </head>`;
 
-        // 2) Fetch real header/footer HTML via Section Rendering API
         const sectionFetch = typeof jarFetch === "function"
             ? (url) => jarFetch(url)
             : (url) => fetchWithSession(url).then(r => r.text());
@@ -207,10 +197,10 @@ const proxyThemeAssetsController = async (req, res) => {
 */
 const proxyShopifyConsultantPage = async (req, res) => {
     try {
-        const shop = req.query.shop 
-        console.log("shop in consultant registration page", shop);
+        const shop = req.query.shop
+        const customerId = req.params.customerId || req.query.customerId;
+        console.log("customerId in consultant registration page", customerId);
         const themeId = req.query.theme_id;
-        // Forward storefront/preview cookies so password/preview sessions work
         const cookieHeader = req.headers.cookie || "";
         const userAgent = req.headers["user-agent"] || "node";
         const makeUrl = (base) => themeId ? `${base}${base.includes("?") ? "&" : "?"}theme_id=${themeId}` : base;
@@ -352,7 +342,7 @@ const getCustomerDetail = async (req, customerId) => {
 
 const shopifyUserRegistrationController = async (req, res) => {
     try {
-        const customer = req.body; 
+        const customer = req.body;
         const shopDomain = req.headers['x-shopify-shop-domain'];
         console.log("🟢 New customer registered:", customer.id, "from shop:", shopDomain);
         const email = (customer.email || '').toLowerCase();
@@ -402,13 +392,13 @@ const shopifyUserRegistrationController = async (req, res) => {
         console.log('Customer saved to database:', { id: newUser._id, email: newUser.email });
         return res.status(200).json({ success: true, message: 'Webhook received and user saved', userId: newUser._id });
     } catch (err) {
-      
+
         if (err?.code === 11000) {
             console.log('Duplicate key on save, acknowledging webhook');
             return res.status(200).json({ success: true, message: 'User already exists' });
         }
         console.error("Webhook error:", err?.message || err);
-        return res.sendStatus(200); 
+        return res.sendStatus(200);
     }
 }
 
