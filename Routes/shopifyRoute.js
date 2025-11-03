@@ -1,6 +1,6 @@
 const express = require('express');
 const shopifyRoute = express.Router();
-const { installShopifyApp, authCallback, shopifyLogin, proxyThemeAssetsController, proxyShopifyConsultantPage, shopifyUserRegistrationController,} = require('../Controller/shopifyController');
+const { installShopifyApp, authCallback, shopifyLogin, proxyThemeAssetsController, proxyShopifyConsultantPage, shopifyUserRegistrationController, } = require('../Controller/shopifyController');
 
 // Middleware to preserve raw body for webhook HMAC verification
 const rawBodyMiddleware = express.raw({ type: 'application/json' });
@@ -17,5 +17,6 @@ shopifyRoute.get('/agora', proxyThemeAssetsController);
 shopifyRoute.get('/agora/consultant-registration', proxyShopifyConsultantPage);
 // Webhook route with raw body middleware (must come before JSON parsing)
 shopifyRoute.post('/webhooks/customers/create', rawBodyMiddleware, shopifyUserRegistrationController);
+
 
 module.exports = shopifyRoute;

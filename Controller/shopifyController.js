@@ -1,8 +1,10 @@
 const crypto = require('crypto');
 const dotenv = require('dotenv');
 const JWT = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 dotenv.config();
 const { shopModel } = require('../Modal/shopify');
+const { User } = require('../Modal/userSchema');
 let axios, wrapper, CookieJar;
 try {
     axios = require("axios");
@@ -298,44 +300,150 @@ function verifyShopifyHmac(rawBody, hmacHeader) {
         .digest('base64');
     return crypto.timingSafeEqual(Buffer.from(generated), Buffer.from(hmacHeader));
 }
-const shopifyUserRegistrationController = async (req, res) => {
+
+/**
+ * GraphQL helper function to CREATE customer in Shopify
+ */
+const createCustomerViaGraphQL = async (shop, accessToken, customerData) => {
     try {
-        const hmacHeader = req.headers['x-shopify-hmac-sha256'];
-        
-        // Get raw body (should be a Buffer from rawBodyMiddleware)
-        // If it's already parsed as JSON, we need to reconstruct it for HMAC verification
-        let rawBody = req.body;
-        
-        // Ensure we have a Buffer for HMAC verification
-        if (Buffer.isBuffer(rawBody)) {
-            // Perfect - we have raw body
-        } else if (typeof rawBody === 'string') {
-            rawBody = Buffer.from(rawBody, 'utf8');
-        } else if (typeof rawBody === 'object') {
-            // Body was parsed as JSON - stringify it back (this may cause HMAC mismatch)
-            // This is a fallback, but ideally raw body should be used
-            rawBody = Buffer.from(JSON.stringify(rawBody), 'utf8');
-        } else {
-            return res.status(400).send('Invalid request body');
-        }
-        
-        // Verify HMAC
-        if (!hmacHeader || !verifyShopifyHmac(rawBody, hmacHeader)) {
-            return res.status(401).send('Invalid HMAC');
+        const mutation = `
+            mutation customerCreate($input: CustomerCreateInput!) {
+                customerCreate(input: $input) {
+                    customer {
+                        id
+                        firstName
+                        lastName
+                        email
+                        phone
+                        displayName
+                    }
+                    userErrors {
+                        field
+                        message
+                    }
+                }
+            }
+        `;
+
+        const variables = {
+            input: {
+                email: customerData.email,
+                firstName: customerData.firstName || '',
+                lastName: customerData.lastName || '',
+                phone: customerData.phone || null,
+                addresses: customerData.address ? [{
+                    address1: customerData.address.address1 || '',
+                    city: customerData.address.city || '',
+                    province: customerData.address.province || customerData.address.state || '',
+                    zip: customerData.address.zip || '',
+                    country: customerData.address.country || ''
+                }] : null
+            }
+        };
+
+        const response = await axios.post(
+            `https://${shop}/admin/api/2024-07/graphql.json`,
+            { query: mutation, variables },
+            {
+                headers: {
+                    'X-Shopify-Access-Token': accessToken,
+                    'Content-Type': 'application/json',
+                }
+            }
+        );
+
+        if (response.data.errors) {
+            console.error('GraphQL errors:', response.data.errors);
+            return { success: false, errors: response.data.errors };
         }
 
-        // Parse the JSON payload
-        const payload = JSON.parse(rawBody.toString('utf8'));
-            
-        console.log('New customer registered:', payload.email);
-        
-        // Return 200 OK to Shopify (required for webhook acknowledgment)
-        return res.status(200).json({ success: true, message: 'Webhook received' });
+        if (response.data.data?.customerCreate?.userErrors?.length > 0) {
+            console.error('User errors:', response.data.data.customerCreate.userErrors);
+            return { success: false, errors: response.data.data.customerCreate.userErrors };
+        }
+
+        return {
+            success: true,
+            customer: response.data.data?.customerCreate?.customer
+        };
     } catch (error) {
-        console.error("User registration error:", error.message || error);
-        return res.status(500).send("Failed to register user");
+        console.error('Error creating customer via GraphQL:', error.message);
+        return { success: false, error: error.message };
+    }
+};
+
+/**
+ * GraphQL helper function to fetch customer details from Shopify
+ */
+const fetchCustomerViaGraphQL = async (shop, accessToken, customerId) => {
+    try {
+        const query = `
+            query getCustomer($id: ID!) {
+                customer(id: $id) {
+                    id
+                    firstName
+                    lastName
+                    email
+                    phone
+                    displayName
+                    addresses {
+                        address1
+                        city
+                        province
+                        zip
+                        country
+                    }
+                    createdAt
+                    updatedAt
+                }
+            }
+        `;
+
+        const variables = {
+            id: `gid://shopify/Customer/${customerId}`
+        };
+
+        const response = await axios.post(
+            `https://${shop}/admin/api/2024-07/graphql.json`,
+            { query, variables },
+            {
+                headers: {
+                    'X-Shopify-Access-Token': accessToken,
+                    'Content-Type': 'application/json',
+                }
+            }
+        );
+
+        if (response.data.errors) {
+            console.error('GraphQL errors:', response.data.errors);
+            return null;
+        }
+
+        return response.data.data?.customer || null;
+    } catch (error) {
+        console.error('Error fetching customer via GraphQL:', error.message);
+        return null;
+    }
+};
+
+const shopifyUserRegistrationController = async (req, res) => {
+    try {
+        const customer = req.body; // Shopify se new customer data
+        console.log("🟢 New customer registered:", customer.id);
+
+        // GraphQL se aur detail le lo
+        const data = await getCustomerDetail(customer.id);
+
+        // MongoDB me save ya response bhej
+        console.log("Full Customer:", data);
+
+        res.status(200).send("Webhook received");
+    } catch (err) {
+        console.error("Webhook error:", err);
+        res.sendStatus(500);
     }
 }
+
 
 
 
@@ -345,5 +453,6 @@ module.exports = {
     shopifyLogin,
     proxyThemeAssetsController,
     proxyShopifyConsultantPage,
-    shopifyUserRegistrationController
+    shopifyUserRegistrationController,
+    
 }

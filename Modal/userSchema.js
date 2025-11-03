@@ -161,6 +161,12 @@ const registerUserSchema = new mongoose.Schema(
         },
         userType: {
             type: String,
+        },
+        // Shopify-specific fields
+        shopifyCustomerId: {
+            type: String,
+            sparse: true,
+            trim: true,
         }
     },
     { timestamps: true }
