@@ -3,6 +3,8 @@
  * for registertaion use shopify signup page proxy
  * 
  */
+const mongoose = require("mongoose");
+const { shopModel } = require("../../Modal/shopify");
 
 const getCustomerDetail = async (shop, customerId) => {
     try {
