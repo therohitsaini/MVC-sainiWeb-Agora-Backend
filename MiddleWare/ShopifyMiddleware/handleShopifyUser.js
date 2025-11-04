@@ -5,6 +5,7 @@
  */
 const mongoose = require("mongoose");
 const { shopModel } = require("../../Modal/shopify");
+const axios = require("axios");
 
 const getCustomerDetail = async (shop, customerId) => {
     try {
