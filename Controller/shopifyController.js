@@ -128,7 +128,6 @@ const proxyThemeAssetsController = async (req, res) => {
         const userAgent = req.headers["user-agent"] || "node";
         const makeUrl = (base) => themeId ? `${base}${base.includes("?") ? "&" : "?"}theme_id=${themeId}` : base;
         const fetchWithSession = (url) => fetch(url, { headers: { Cookie: cookieHeader, "User-Agent": userAgent }, redirect: "manual" });
-
         let homeResp = await fetchWithSession(makeUrl(`https://${shop}/`));
 
         if (homeResp.status >= 300 && homeResp.status < 400) {
@@ -250,7 +249,7 @@ const proxyShopifyConsultantPage = async (req, res) => {
               ${headerHtml}
               <main style="min-height:70vh;">
                 <iframe 
-                  src="https://agora-ui-v2.netlify.app/consultant-registration" 
+                  src="https://agora-ui-v2.netlify.app/consultant-login" 
                   style="border:none;width:100%;height:100vh;display:block;"
                 ></iframe>
               </main>

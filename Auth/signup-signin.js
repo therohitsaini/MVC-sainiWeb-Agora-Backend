@@ -61,13 +61,12 @@ const signIn = async (request, response) => {
    try {
       const body = request.body
 
-      console.log(body);
+      console.log("body",body);
 
       let find_User = await User.findOne({ email: body.email })
+      console.log("find_User",find_User);
 
-      if (!find_User) {
-         find_User = await consultantSchemaExport.findOne({ email: body.email })
-      }
+      
       if (!find_User) {
          return response.status(400).send({ massage: "Incrrect Details ...!" })
       }
