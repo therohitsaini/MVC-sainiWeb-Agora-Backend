@@ -181,7 +181,7 @@ const proxyThemeAssetsController = async (req, res) => {
             sectionFetch(makeUrl(`https://${shop}/?section_id=header`)),
             sectionFetch(makeUrl(`https://${shop}/?section_id=footer`))
         ]);
-        console.log("headerHtml on theme assets page", headerHtml);
+     
         const pageHtml = `
           <!DOCTYPE html>
           <html>
