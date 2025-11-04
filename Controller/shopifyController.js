@@ -123,7 +123,7 @@ const proxyThemeAssetsController = async (req, res) => {
 
         const shop = req.query.shop
         const themeId = req.query.theme_id;
-
+        console.log("shop", shop, themeId)
         const cookieHeader = req.headers.cookie || "";
         const userAgent = req.headers["user-agent"] || "node";
         const makeUrl = (base) => themeId ? `${base}${base.includes("?") ? "&" : "?"}theme_id=${themeId}` : base;
@@ -218,7 +218,7 @@ const proxyShopifyConsultantPage = async (req, res) => {
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
                     maxRedirects: 0, validateStatus: () => true
                 });
-                homeResp = await client.get(makeUrl(`https://${shop}/`));          
+                homeResp = await client.get(makeUrl(`https://${shop}/`));
                 var jarFetch = async (url) => (await client.get(url)).data;
             } else {
                 return res.status(401).send("Storefront locked. Enter password or use preview.");
