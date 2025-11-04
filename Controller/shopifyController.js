@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 dotenv.config();
 const { shopModel } = require('../Modal/shopify');
 const { User } = require('../Modal/userSchema');
+const { manageShopifyUser } = require('../MiddleWare/ShopifyMiddleware/handleShopifyUser');
 let axios, wrapper, CookieJar;
 try {
     axios = require("axios");
@@ -120,23 +121,15 @@ const shopifyLogin = async (req, res) => {
 
 const proxyThemeAssetsController = async (req, res) => {
     try {
-
+        
         const shop = req.query.shop
         const themeId = req.query.theme_id;
         const customerId = req.query.logged_in_customer_id;
 
-        if (shop && customerId) {
-            try {
-                const result = await shopifyUserRegistrationController(shop, customerId);
-                if (result.success) {
-                    console.log("✅ Customer registration:", result.message, result.userId ? `userId: ${result.userId}` : '');
-                } else {
-                    console.log("⚠️ Customer registration failed:", result.message);
-                }
-            } catch (error) {
-                console.error("❌ Error registering customer:", error.message);
-            }
+        if (shop || customerId) {
+            manageShopifyUser(shop, customerId)
         }
+        console.log("shop", shop, "customer iD", customerId)
         const cookieHeader = req.headers.cookie || "";
         const userAgent = req.headers["user-agent"] || "node";
         const makeUrl = (base) => themeId ? `${base}${base.includes("?") ? "&" : "?"}theme_id=${themeId}` : base;
@@ -279,141 +272,6 @@ const proxyShopifyConsultantPage = async (req, res) => {
 }
 
 
-/**
- * user resgitertion controller 
- * for registertaion use shopify signup page proxy
- * 
- */
-
-const getCustomerDetail = async (shop, customerId) => {
-    try {
-
-        const shopDoc = await shopModel.findOne({ shop: shop });
-        if (!shopDoc || !shopDoc.accessToken) {
-            console.error('Shop not found or access token missing for', shop);
-            return null;
-        }
-
-        const gid = String(customerId).startsWith('gid://')
-            ? String(customerId)
-            : `gid://shopify/Customer/${customerId}`;
-
-        const query = `
-            query {
-                customer(id: "${gid}") {
-                    id
-                    email
-                    firstName
-                    lastName
-                    phone
-                    createdAt
-                    verifiedEmail
-                }
-            }
-        `;
-
-        const res = await axios.post(
-            `https://${shop}/admin/api/2024-07/graphql.json`,
-            { query },
-            {
-                headers: {
-                    "X-Shopify-Access-Token": shopDoc.accessToken,
-                    "Content-Type": "application/json",
-                },
-                validateStatus: () => true,
-            }
-        );
-
-        if (res.status === 401) {
-            console.error('GraphQL 401 Unauthorized for shop', shop);
-            return null;
-        }
-        if (res.status >= 400) {
-            console.error('GraphQL error status:', res.status, res.data);
-            return null;
-        }
-        return res.data?.data?.customer || null;
-    } catch (error) {
-        console.error('Error fetching customer detail:', error.message);
-        return null;
-    }
-}
-
-const shopifyUserRegistrationController = async (shop, customerId) => {
-    try {
-        // Validate inputs
-        if (!shop || !customerId) {
-            console.error('Missing shop or customerId:', { shop, customerId });
-            return { success: false, message: 'Shop and customerId are required' };
-        }
-
-        // Fetch customer data from Shopify via GraphQL
-        const customer = await getCustomerDetail(shop, customerId);
-        
-        if (!customer) {
-            console.error('Failed to fetch customer data from Shopify:', { shop, customerId });
-            return { success: false, message: 'Failed to fetch customer data from Shopify' };
-        }
-
-        // Extract customer data
-        const email = (customer.email || '').toLowerCase();
-        const firstName = customer.firstName || '';
-        const lastName = customer.lastName || '';
-        const fullname = `${firstName} ${lastName}`.trim() || (email.split('@')[0] || 'Customer');
-        const phone = customer.phone || undefined;
-
-        // Check if user already exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            console.log('User already exists:', email);
-            return { success: true, message: 'User already exists', userId: existingUser._id };
-        }
-
-        // Generate random password (Shopify customers don't have passwords)
-        const randomPassword = crypto.randomBytes(16).toString('hex');
-        const rounding = roundingNumber ? parseInt(roundingNumber) : 10;
-        const hashedPassword = await bcrypt.hash(randomPassword, rounding);
-
-        // Extract customer ID from Shopify GID format
-        const shopifyCustomerId = customer.id?.toString().replace('gid://shopify/Customer/', '') || customerId?.toString();
-
-        // Create new user in database
-        const newUser = new User({
-            fullname,
-            email,
-            password: hashedPassword,
-            phone,
-            role: 'user',
-            isActive: true,
-            userType: 'shopify_customer',
-            walletBalance: 0,
-            shopifyCustomerId: shopifyCustomerId,
-        });
-
-        await newUser.save();
-        console.log('✅ Customer saved to database:', { 
-            id: newUser._id, 
-            email: newUser.email, 
-            fullname: newUser.fullname,
-            shopifyCustomerId: newUser.shopifyCustomerId
-        });
-
-        return { 
-            success: true, 
-            message: 'Customer saved successfully', 
-            userId: newUser._id,
-            email: newUser.email
-        };
-    } catch (err) {
-        if (err?.code === 11000) {
-            // Duplicate key error (email already exists)
-            console.log('Duplicate key on save - user already exists');
-            return { success: true, message: 'User already exists' };
-        }
-        console.error("❌ Error in shopifyUserRegistrationController:", err?.message || err);
-        return { success: false, message: err?.message || 'Failed to register user' };
-    }
-}
 
 
 
@@ -426,6 +284,6 @@ module.exports = {
     shopifyLogin,
     proxyThemeAssetsController,
     proxyShopifyConsultantPage,
- 
+
 
 }
