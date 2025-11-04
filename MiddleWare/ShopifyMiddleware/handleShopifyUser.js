@@ -9,7 +9,7 @@ const axios = require("axios");
 
 const getCustomerDetail = async (shop, customerId) => {
     try {
-
+console.log("customerId", customerId)
         const shopDoc = await shopModel.findOne({ shop: shop });
         if (!shopDoc || !shopDoc.accessToken) {
             console.error('Shop not found or access token missing for', shop);

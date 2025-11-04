@@ -121,7 +121,7 @@ const shopifyLogin = async (req, res) => {
 
 const proxyThemeAssetsController = async (req, res) => {
     try {
-        
+
         const shop = req.query.shop
         const themeId = req.query.theme_id;
         const customerId = req.query.logged_in_customer_id;
@@ -129,7 +129,7 @@ const proxyThemeAssetsController = async (req, res) => {
         if (shop || customerId) {
             manageShopifyUser(shop, customerId)
         }
-        console.log("shop", shop, "customer iD", customerId)
+
         const cookieHeader = req.headers.cookie || "";
         const userAgent = req.headers["user-agent"] || "node";
         const makeUrl = (base) => themeId ? `${base}${base.includes("?") ? "&" : "?"}theme_id=${themeId}` : base;
