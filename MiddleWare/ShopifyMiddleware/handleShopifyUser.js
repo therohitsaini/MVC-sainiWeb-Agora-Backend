@@ -4,12 +4,19 @@
  * 
  */
 const mongoose = require("mongoose");
+const crypto = require('crypto');
+const bcrypt = require('bcrypt');
+const dotenv = require('dotenv');
+dotenv.config();
+
 const { shopModel } = require("../../Modal/shopify");
+const { User } = require("../../Modal/userSchema");
 const axios = require("axios");
+const roundingNumber = process.env.PASSWORD_SECRECT_ROUNDING || 10;
 
 const getCustomerDetail = async (shop, customerId) => {
     try {
-console.log("customerId", customerId)
+        console.log("🔍 Fetching customer detail for:", { shop, customerId });
         const shopDoc = await shopModel.findOne({ shop: shop });
         if (!shopDoc || !shopDoc.accessToken) {
             console.error('Shop not found or access token missing for', shop);
@@ -63,48 +70,78 @@ console.log("customerId", customerId)
 
 const manageShopifyUser = async (shop, customerId) => {
     try {
-        const customer = await getCustomerDetail(shop, customerId);
-        console.log("customer", customer)
-        // let enriched = null;
-        // try {
-        //     enriched = await getCustomerDetail(shop, customerId);
-        // } catch { }
-
-        // const finalFirstName = enriched?.firstName || firstName;
-        // const finalLastName = enriched?.lastName || lastName;
-        // const finalFullname = `${finalFirstName} ${finalLastName}`.trim() || fullname;
-        // const finalEmail = (enriched?.email || email || '').toLowerCase();
-        // const finalPhone = enriched?.phone || phone || undefined;
-        // const randomPassword = crypto.randomBytes(16).toString('hex');
-        // const hashedPassword = await bcrypt.hash(randomPassword, roundingNumber);
-        // const newUser = new User({
-        //     fullname: finalFullname,
-        //     email: finalEmail,
-        //     password: hashedPassword,
-        //     phone: finalPhone,
-        //     address: addressString || undefined,
-        //     city: addr.city || undefined,
-        //     state: addr.province || addr.state || undefined,
-        //     zip: addr.zip || undefined,
-        //     country: addr.country || undefined,
-        //     role: 'user',
-        //     isActive: true,
-        //     userType: 'shopify_customer',
-        //     walletBalance: 0,
-        //     shopifyCustomerId: customer.id?.toString(),
-        // });
-
-        // await newUser.save();
-        // console.log('Customer saved to database:', { id: newUser._id, email: newUser.email });
-        return { success: true, };
-    } catch (err) {
-
-        if (err?.code === 11000) {
-            console.log('Duplicate key on save, acknowledging webhook');
-            return res.status(200).json({ success: true, message: 'User already exists' });
+        // Validate inputs
+        if (!shop || !customerId) {
+            console.error('Missing shop or customerId:', { shop, customerId });
+            return { success: false, message: 'Shop and customerId are required' };
         }
-        console.error("Webhook error:", err?.message || err);
-        return res.sendStatus(200);
+
+        // Fetch customer data from Shopify via GraphQL
+        const customer = await getCustomerDetail(shop, customerId);
+        console.log("📦 Customer data from Shopify:", customer);
+        
+        if (!customer) {
+            console.error('❌ Failed to fetch customer data from Shopify:', { shop, customerId });
+            return { success: false, message: 'Failed to fetch customer data from Shopify' };
+        }
+
+        // Extract customer data
+        const email = (customer.email || '').toLowerCase();
+        const firstName = customer.firstName || '';
+        const lastName = customer.lastName || '';
+        const fullname = `${firstName} ${lastName}`.trim() || (email.split('@')[0] || 'Customer');
+        const phone = customer.phone || undefined;
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            console.log('ℹ️ User already exists:', email);
+            return { success: true, message: 'User already exists', userId: existingUser._id };
+        }
+
+        // Generate random password (Shopify customers don't have passwords)
+        const randomPassword = crypto.randomBytes(16).toString('hex');
+        const rounding = roundingNumber ? parseInt(roundingNumber) : 10;
+        const hashedPassword = await bcrypt.hash(randomPassword, rounding);
+
+        // Extract customer ID from Shopify GID format
+        const shopifyCustomerId = customer.id?.toString().replace('gid://shopify/Customer/', '') || customerId?.toString();
+
+        // Create new user in database
+        const newUser = new User({
+            fullname,
+            email,
+            password: hashedPassword,
+            phone,
+            role: 'user',
+            isActive: true,
+            userType: 'shopify_customer',
+            walletBalance: 0,
+            shopifyCustomerId: shopifyCustomerId,
+        });
+
+        await newUser.save();
+        console.log('✅ Customer saved to database:', { 
+            id: newUser._id, 
+            email: newUser.email, 
+            fullname: newUser.fullname,
+            shopifyCustomerId: newUser.shopifyCustomerId
+        });
+
+        return { 
+            success: true, 
+            message: 'Customer saved successfully', 
+            userId: newUser._id,
+            email: newUser.email
+        };
+    } catch (err) {
+        if (err?.code === 11000) {
+            // Duplicate key error (email already exists)
+            console.log('⚠️ Duplicate key on save - user already exists');
+            return { success: true, message: 'User already exists' };
+        }
+        console.error("❌ Error in manageShopifyUser:", err?.message || err);
+        return { success: false, message: err?.message || 'Failed to register user' };
     }
 }
 

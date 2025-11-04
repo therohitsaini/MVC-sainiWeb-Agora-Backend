@@ -126,8 +126,18 @@ const proxyThemeAssetsController = async (req, res) => {
         const themeId = req.query.theme_id;
         const customerId = req.query.logged_in_customer_id;
 
-        if (shop || customerId) {
-            manageShopifyUser(shop, customerId)
+        // If customer is logged in, register them in our database
+        if (shop && customerId) {
+            try {
+                const result = await manageShopifyUser(shop, customerId);
+                if (result.success) {
+                    console.log("✅ Customer registration:", result.message, result.userId ? `userId: ${result.userId}` : '');
+                } else {
+                    console.log("⚠️ Customer registration failed:", result.message);
+                }
+            } catch (error) {
+                console.error("❌ Error registering customer:", error.message);
+            }
         }
 
         const cookieHeader = req.headers.cookie || "";
