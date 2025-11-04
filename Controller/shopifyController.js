@@ -64,9 +64,18 @@ const authCallback = async (req, res) => {
 
         const accessToken = tokenRes.data.access_token;
 
-        // Save shop to DB
-        const newShop = new shopModel({ shop: shop, accessToken: accessToken });
-        await newShop.save();
+        // Update or create shop in DB
+        const existingShop = await shopModel.findOne({ shop: shop });
+        if (existingShop) {
+            existingShop.accessToken = accessToken;
+            existingShop.installedAt = new Date();
+            await existingShop.save();
+            console.log('✅ Updated access token for shop:', shop);
+        } else {
+            const newShop = new shopModel({ shop: shop, accessToken: accessToken });
+            await newShop.save();
+            console.log('✅ Created new shop entry:', shop);
+        }
 
         // Redirect user to dashboard
         res.redirect(`https://agora-ui-git-main-rohits-projects-f44a0e3e.vercel.app/dashboard/home?shop=${shop}`);

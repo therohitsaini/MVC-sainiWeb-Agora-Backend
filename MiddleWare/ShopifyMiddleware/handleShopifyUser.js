@@ -76,11 +76,15 @@ const getCustomerDetail = async (shop, customerId) => {
         );
 
         if (res.status === 401) {
-            console.error('❌ GraphQL 401 Unauthorized - trying REST API fallback');
-            // Fallback to REST API
+            console.error('❌ GraphQL 401 Unauthorized - Access token is invalid or expired');
+            console.error('💡 SOLUTION: Reinstall the app to get a new access token');
+            console.error('   - Visit: /apps/install?shop=' + shop);
+            console.error('   - Or update the token in database for shop:', shop);
+            
+            // Fallback to REST API (will likely also fail with 401)
             try {
                 const restUrl = `https://${shop}/admin/api/2024-07/customers/${customerId}.json`;
-                console.log('🌐 Trying REST API:', restUrl);
+                console.log('🌐 Trying REST API fallback:', restUrl);
                 const restRes = await axios.get(
                     restUrl,
                     {
@@ -104,7 +108,19 @@ const getCustomerDetail = async (shop, customerId) => {
                         verifiedEmail: c.verified_email,
                     };
                 } else {
-                    console.error('❌ REST API also failed:', restRes.status, restRes.data);
+                    console.error('❌ REST API also failed:', restRes.status);
+                    if (restRes.data?.errors) {
+                        console.error('Error details:', restRes.data.errors);
+                    }
+                    console.error('');
+                    console.error('═══════════════════════════════════════════════════════');
+                    console.error('⚠️  ACCESS TOKEN IS INVALID OR EXPIRED');
+                    console.error('═══════════════════════════════════════════════════════');
+                    console.error('To fix this:');
+                    console.error('1. Reinstall the app: /apps/install?shop=' + shop);
+                    console.error('2. Or update the accessToken in MongoDB for shop:', shop);
+                    console.error('   Current token starts with:', shopDoc.accessToken.substring(0, 15));
+                    console.error('═══════════════════════════════════════════════════════');
                     return null;
                 }
             } catch (restError) {
