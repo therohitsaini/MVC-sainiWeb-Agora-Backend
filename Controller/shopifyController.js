@@ -123,7 +123,7 @@ const proxyThemeAssetsController = async (req, res) => {
 
         const shop = req.query.shop
         const themeId = req.query.theme_id;
-        const customerId = req.query;
+        const customerId = req.query.logged_in_customer_id;
         console.log("shop", shop, "customer iD", customerId)
         const cookieHeader = req.headers.cookie || "";
         const userAgent = req.headers["user-agent"] || "node";
