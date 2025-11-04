@@ -123,7 +123,8 @@ const proxyThemeAssetsController = async (req, res) => {
 
         const shop = req.query.shop
         const themeId = req.query.theme_id;
-        console.log("shop", shop, themeId)
+        const customerId = req.query.customer_id;
+        console.log("shop", shop, "customer iD", customerId)
         const cookieHeader = req.headers.cookie || "";
         const userAgent = req.headers["user-agent"] || "node";
         const makeUrl = (base) => themeId ? `${base}${base.includes("?") ? "&" : "?"}theme_id=${themeId}` : base;
