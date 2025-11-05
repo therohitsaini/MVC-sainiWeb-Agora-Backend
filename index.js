@@ -46,9 +46,6 @@ const { consultantRoute } = require("./Routes/consultantRoute");
 const { employRoute } = require("./Routes/employRutes");
 
 
-
-
-
 app.use("/api/video-call", videoCallRouter);
 app.use("/api/auth", signinSignupRouter);
 app.use("/api/users", userDetailsRouter);
