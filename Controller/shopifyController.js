@@ -45,6 +45,7 @@ const authCallback = async (req, res) => {
 
     // if (state !== req.session.shopifyState)
     //     return res.status(400).send("Invalid state");
+    console.log("shop",shop);
 
     const params = { ...req.query };
     delete params['hmac'];
@@ -73,6 +74,7 @@ const authCallback = async (req, res) => {
             console.log('✅ Updated access token for shop:', shop);
         } else {
             const newShop = new shopModel({ shop: shop, accessToken: accessToken });
+
             await newShop.save();
             console.log('✅ Created new shop entry:', shop);
         }

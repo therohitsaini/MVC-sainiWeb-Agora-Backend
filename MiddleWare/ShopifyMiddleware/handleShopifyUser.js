@@ -14,6 +14,49 @@ const { User } = require("../../Modal/userSchema");
 const axios = require("axios");
 const roundingNumber = process.env.PASSWORD_SECRECT_ROUNDING || 10;
 
+// Helper function for REST API fallback
+const tryRestApiFallback = async (shop, customerId, accessToken) => {
+    try {
+        const restUrl = `https://${shop}/admin/api/2024-07/customers/${customerId}.json`;
+        console.log('🌐 Trying REST API fallback:', restUrl);
+        const restRes = await axios.get(
+            restUrl,
+            {
+                headers: {
+                    "X-Shopify-Access-Token": accessToken,
+                },
+                validateStatus: () => true,
+            }
+        );
+
+        console.log('📊 REST API Response Status:', restRes.status);
+        console.log('📊 REST API Response Data:', JSON.stringify(restRes.data, null, 2));
+
+        if (restRes.status === 200 && restRes.data?.customer) {
+            const c = restRes.data.customer;
+            console.log('✅ Got customer data via REST API');
+            return {
+                id: `gid://shopify/Customer/${c.id}`,
+                email: c.email,
+                firstName: c.first_name,
+                lastName: c.last_name,
+                phone: c.phone,
+                createdAt: c.created_at,
+                verifiedEmail: c.verified_email,
+            };
+        } else {
+            console.error('❌ REST API also failed:', restRes.status);
+            if (restRes.data?.errors) {
+                console.error('Error details:', restRes.data.errors);
+            }
+            return null;
+        }
+    } catch (restError) {
+        console.error('❌ REST API error:', restError.message);
+        return null;
+    }
+};
+
 const getCustomerDetail = async (shop, customerId) => {
     try {
         console.log("🔍 Fetching customer detail for:", { shop, customerId });
@@ -81,62 +124,46 @@ const getCustomerDetail = async (shop, customerId) => {
             console.error('   - Visit: /apps/install?shop=' + shop);
             console.error('   - Or update the token in database for shop:', shop);
             
-            // Fallback to REST API (will likely also fail with 401)
-            try {
-                const restUrl = `https://${shop}/admin/api/2024-07/customers/${customerId}.json`;
-                console.log('🌐 Trying REST API fallback:', restUrl);
-                const restRes = await axios.get(
-                    restUrl,
-                    {
-                        headers: {
-                            "X-Shopify-Access-Token": shopDoc.accessToken,
-                        },
-                        validateStatus: () => true,
-                    }
-                );
-
-                if (restRes.status === 200 && restRes.data?.customer) {
-                    const c = restRes.data.customer;
-                    console.log('✅ Got customer data via REST API');
-                    return {
-                        id: `gid://shopify/Customer/${c.id}`,
-                        email: c.email,
-                        firstName: c.first_name,
-                        lastName: c.last_name,
-                        phone: c.phone,
-                        createdAt: c.created_at,
-                        verifiedEmail: c.verified_email,
-                    };
-                } else {
-                    console.error('❌ REST API also failed:', restRes.status);
-                    if (restRes.data?.errors) {
-                        console.error('Error details:', restRes.data.errors);
-                    }
-                    console.error('');
-                    console.error('═══════════════════════════════════════════════════════');
-                    console.error('⚠️  ACCESS TOKEN IS INVALID OR EXPIRED');
-                    console.error('═══════════════════════════════════════════════════════');
-                    console.error('To fix this:');
-                    console.error('1. Reinstall the app: /apps/install?shop=' + shop);
-                    console.error('2. Or update the accessToken in MongoDB for shop:', shop);
-                    console.error('   Current token starts with:', shopDoc.accessToken.substring(0, 15));
-                    console.error('═══════════════════════════════════════════════════════');
-                    return null;
-                }
-            } catch (restError) {
-                console.error('❌ REST API error:', restError.message);
-                return null;
+            // Fallback to REST API
+            const restResult = await tryRestApiFallback(shop, customerId, shopDoc.accessToken);
+            if (!restResult) {
+                console.error('');
+                console.error('═══════════════════════════════════════════════════════');
+                console.error('⚠️  ACCESS TOKEN IS INVALID OR EXPIRED');
+                console.error('═══════════════════════════════════════════════════════');
+                console.error('To fix this:');
+                console.error('1. Reinstall the app: /apps/install?shop=' + shop);
+                console.error('2. Or update the accessToken in MongoDB for shop:', shop);
+                console.error('   Current token starts with:', shopDoc.accessToken.substring(0, 15));
+                console.error('═══════════════════════════════════════════════════════');
             }
+            return restResult;
         }
+        
+        // Log GraphQL response for debugging
+        console.log('📊 GraphQL Response Status:', res.status);
+        console.log('📊 GraphQL Response Data:', JSON.stringify(res.data, null, 2));
         
         if (res.status >= 400) {
             console.error('❌ GraphQL error status:', res.status, res.data);
-            return null;
+            // Try REST API fallback
+            return await tryRestApiFallback(shop, customerId, shopDoc.accessToken);
+        }
+        
+        // Check for GraphQL errors in response
+        if (res.data?.errors) {
+            console.error('❌ GraphQL errors in response:', res.data.errors);
+            // Try REST API fallback
+            return await tryRestApiFallback(shop, customerId, shopDoc.accessToken);
         }
         
         const customer = res.data?.data?.customer;
         if (customer) {
-            console.log('✅ Got customer data via GraphQL');
+            console.log('✅ Got customer data via GraphQL:', { email: customer.email, id: customer.id });
+        } else {
+            console.error('❌ GraphQL returned null customer - trying REST API fallback');
+            // Try REST API fallback
+            return await tryRestApiFallback(shop, customerId, shopDoc.accessToken);
         }
         return customer || null;
     } catch (error) {
