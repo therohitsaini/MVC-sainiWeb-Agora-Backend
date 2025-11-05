@@ -9,175 +9,59 @@ const { User } = require("../../Modal/userSchema");
 const axios = require("axios");
 const roundingNumber = process.env.PASSWORD_SECRECT_ROUNDING || 10;
 
-// Helper function for REST API fallback
-const tryRestApiFallback = async (shop, customerId, accessToken) => {
+// Shopify Admin API SDK (optional; falls back to axios if not installed)
+let shopifyApi, ApiVersion, Session;
+try {
+    ({ shopifyApi, ApiVersion, Session } = require('@shopify/shopify-api'));
+} catch (_) {
+    // SDK not installed; axios path will be used
+}
+
+// Prefer official SDK when available
+async function fetchCustomerWithSdk(shop, customerId) {
     try {
-        const restUrl = `https://${shop}/admin/api/2024-07/customers/${customerId}.json`;
-        console.log('🌐 Trying REST API fallback:', restUrl);
-        const restRes = await axios.get(
-            restUrl,
-            {
-                headers: {
-                    "X-Shopify-Access-Token": accessToken,
-                },
-                validateStatus: () => true,
-            }
-        );
+        if (!shopifyApi || !ApiVersion || !Session) return null;
 
-        console.log('📊 REST API Response Status:', restRes.status);
-        if (restRes.data) {
-            console.log('📊 REST API Response:', JSON.stringify(restRes.data, null, 2));
-        }
+        const shopDoc = await shopModel.findOne({ shop })
+            || await shopModel.findOne({ shop: shop.replace('.myshopify.com', '') })
+            || await shopModel.findOne({ shop: `${shop}.myshopify.com` });
+        if (!shopDoc?.accessToken) return null;
 
-        if (restRes.status === 200 && restRes.data?.customer) {
-            const c = restRes.data.customer;
-            console.log('✅ Got customer data via REST API');
-            return {
-                id: `gid://shopify/Customer/${c.id}`,
-                email: c.email,
-                firstName: c.first_name,
-                lastName: c.last_name,
-                phone: c.phone,
-                createdAt: c.created_at,
-                verifiedEmail: c.verified_email,
-                addresses: c.addresses || [],
-                defaultAddress: c.default_address || null,
-            };
-        } else {
-            console.error('❌ REST API also failed:', restRes.status);
-            if (restRes.data?.errors) {
-                console.error('Error details:', restRes.data.errors);
-            }
-            return null;
-        }
-    } catch (restError) {
-        console.error('❌ REST API error:', restError.message);
-        if (restError.response) {
-            console.error('REST API Response Status:', restError.response.status);
-            console.error('REST API Response Data:', restError.response.data);
-        }
+        const shopify = shopifyApi({
+            apiKey: process.env.SHOPIFY_API_KEY || "9670f701d5332dc0e886440fd2277221",
+            apiSecretKey: process.env.SHOPIFY_API_SECRET || "c29681750a54ed6a6f8f3a7d1eaa5f14",
+            apiVersion: ApiVersion.July24,
+            isCustomStoreApp: true,
+        });
+
+        const session = new Session({
+            id: `offline_${shop}`,
+            shop,
+            state: 'state',
+            isOnline: false,
+            accessToken: shopDoc.accessToken,
+        });
+
+        const client = new shopify.clients.Graphql({ session });
+        const gid = String(customerId).startsWith('gid://') ? String(customerId) : `gid://shopify/Customer/${customerId}`;
+        const query = `
+            query { customer(id: "${gid}") {
+              id email firstName lastName phone createdAt
+              defaultAddress { address1 city province country zip }
+              addresses { address1 city province country zip }
+            } }
+        `;
+        const resp = await client.query({ data: query });
+        return resp?.body?.data?.customer || null;
+    } catch (e) {
+        console.error('❌ SDK GraphQL error:', e?.message || e);
         return null;
     }
-};
+}
 
-// const getCustomerDetail = async (shop, customerId) => {
-//     try {
-//         console.log("🔍 Fetching customer detail for:", { shop, customerId });
+// Helper function for REST API fallback
 
-//         // Normalize shop name - try both with and without .myshopify.com
-//         let shopDoc = await shopModel.findOne({ shop: shop });
-//         if (!shopDoc) {
-//             // Try without .myshopify.com
-//             const shopWithoutDomain = shop.replace('.myshopify.com', '');
-//             shopDoc = await shopModel.findOne({ shop: shopWithoutDomain });
-//         }
-//         if (!shopDoc) {
-//             // Try with .myshopify.com added
-//             const shopWithDomain = shop.includes('.myshopify.com') ? shop : `${shop}.myshopify.com`;
-//             shopDoc = await shopModel.findOne({ shop: shopWithDomain });
-//         }
 
-//         if (!shopDoc || !shopDoc.accessToken) {
-//             console.error('❌ Shop not found or access token missing');
-//             console.error('Searched for shop:', shop);
-//             console.error('Available shops in DB:', await shopModel.find({}, { shop: 1, _id: 0 }));
-//             return null;
-//         }
-
-//         console.log('✅ Found shop in DB:', shopDoc.shop);
-//         console.log('🔑 Access token exists:', shopDoc.accessToken ? 'Yes (first 10 chars: ' + shopDoc.accessToken.substring(0, 10) + '...)' : 'No');
-
-//         const gid = String(customerId).startsWith('gid://')
-//             ? String(customerId)
-//             : `gid://shopify/Customer/${customerId}`;
-
-//         // Try GraphQL first
-//         const query = `
-//             query {
-//                 customer(id: "${gid}") {
-//                     id
-//                     email
-//                     firstName
-//                     lastName
-//                     phone
-//                     createdAt
-//                     verifiedEmail
-//                 }
-//             }
-//         `;
-
-//         const graphqlUrl = `https://${shop}/admin/api/2024-07/graphql.json`;
-//         console.log('🌐 Trying GraphQL:', graphqlUrl);
-
-//         const res = await axios.post(
-//             graphqlUrl,
-//             { query },
-//             {
-//                 headers: {
-//                     "X-Shopify-Access-Token": shopDoc.accessToken,
-//                     "Content-Type": "application/json",
-//                 },
-//                 validateStatus: () => true,
-//             }
-//         );
-
-//         if (res.status === 401) {
-//             console.error('❌ GraphQL 401 Unauthorized - Access token is invalid or expired');
-//             console.error('💡 SOLUTION: Reinstall the app to get a new access token');
-//             console.error('   - Visit: /apps/install?shop=' + shop);
-//             console.error('   - Or update the token in database for shop:', shop);
-
-//             // Fallback to REST API
-//             const restResult = await tryRestApiFallback(shop, customerId, shopDoc.accessToken);
-//             if (!restResult) {
-//                 console.error('');
-//                 console.error('═══════════════════════════════════════════════════════');
-//                 console.error('⚠️  ACCESS TOKEN IS INVALID OR EXPIRED');
-//                 console.error('═══════════════════════════════════════════════════════');
-//                 console.error('To fix this:');
-//                 console.error('1. Reinstall the app: /apps/install?shop=' + shop);
-//                 console.error('2. Or update the accessToken in MongoDB for shop:', shop);
-//                 console.error('   Current token starts with:', shopDoc.accessToken.substring(0, 15));
-//                 console.error('═══════════════════════════════════════════════════════');
-//             }
-//             return restResult;
-//         }
-
-//         // Log GraphQL response for debugging
-//         console.log('📊 GraphQL Response Status:', res.status);
-//         console.log('📊 GraphQL Response Data:', JSON.stringify(res.data, null, 2));
-
-//         if (res.status >= 400) {
-//             console.error('❌ GraphQL error status:', res.status, res.data);
-//             // Try REST API fallback
-//             return await tryRestApiFallback(shop, customerId, shopDoc.accessToken);
-//         }
-
-//         // Check for GraphQL errors in response
-//         if (res.data?.errors) {
-//             console.error('❌ GraphQL errors in response:', res.data.errors);
-//             // Try REST API fallback
-//             return await tryRestApiFallback(shop, customerId, shopDoc.accessToken);
-//         }
-
-//         const customer = res.data?.data?.customer;
-//         if (customer) {
-//             console.log('✅ Got customer data via GraphQL:', { email: customer.email, id: customer.id });
-//         } else {
-//             console.error('❌ GraphQL returned null customer - trying REST API fallback');
-//             // Try REST API fallback
-//             return await tryRestApiFallback(shop, customerId, shopDoc.accessToken);
-//         }
-//         return customer || null;
-//     } catch (error) {
-//         console.error('❌ Error fetching customer detail:', error.message);
-//         if (error.response) {
-//             console.error('Response status:', error.response.status);
-//             console.error('Response data:', error.response.data);
-//         }
-//         return null;
-//     }
-// }
 
 const getCustomerDetail = async (shop, customerId) => {
     try {
@@ -189,46 +73,32 @@ const getCustomerDetail = async (shop, customerId) => {
             (await shopModel.findOne({ shop: shop.replace(".myshopify.com", "") })) ||
             (await shopModel.findOne({ shop: `${shop}.myshopify.com` }));
 
-        console.log("shopDoc", shopDoc);
+        // shop doc found
         if (!shopDoc || !shopDoc.accessToken) {
             console.error("❌ Shop not found or missing access token in DB");
             return null;
         }
 
         const accessToken = shopDoc.accessToken;
-        console.log("accessToken", accessToken);
         const gid = String(customerId).startsWith("gid://")
             ? String(customerId)
             : `gid://shopify/Customer/${customerId}`;
 
-        console.log("gid", gid);
-        // 🧠 GraphQL query - using only valid Customer fields
-        const query = `
-        query {
-          customer(id: "${gid}") {
-            id
-            email
-            firstName
-            lastName
-            phone
-            createdAt
-            updatedAt
-            verifiedEmail
-            addresses {
-              address1
-              city
-              province
-              country
-              zip
-            }
-            defaultAddress {
-              address1
-              city
-              country
-              zip
-            }
-          }
+        // gid prepared
+        // 0) Try official SDK first
+        const sdkCustomer = await fetchCustomerWithSdk(shop, customerId);
+        if (sdkCustomer) {
+            console.log('✅ Customer via SDK');
+            return sdkCustomer;
         }
+
+        // 1) Fallback to raw GraphQL via axios (only safe fields)
+        const query = `
+        query { customer(id: "${gid}") {
+          id email firstName lastName phone createdAt updatedAt verifiedEmail
+          addresses { address1 city province country zip }
+          defaultAddress { address1 city country zip }
+        } }
       `;
 
         const graphqlUrl = `https://${shop}/admin/api/2024-07/graphql.json`;
@@ -244,79 +114,29 @@ const getCustomerDetail = async (shop, customerId) => {
                 validateStatus: () => true, // Don't throw on any status
             }
         );
-        
-        console.log("📊 GraphQL Response Status:", response.status);
-        console.log("📊 GraphQL Full Response:", JSON.stringify(response.data, null, 2));
-        
+
+        console.log("📊 GraphQL status:", response.status);
+
         // Check for GraphQL errors
         if (response.data?.errors && response.data.errors.length > 0) {
             console.error("❌ GraphQL Errors:", response.data.errors);
-            
-            // If errors are about invalid fields, try REST API fallback
-            const hasInvalidFieldErrors = response.data.errors.some(err => 
-                err.extensions?.code === 'undefinedField' || 
-                err.message?.includes("doesn't exist on type")
-            );
-            
-            if (hasInvalidFieldErrors) {
-                console.warn('⚠️ GraphQL query has invalid fields - trying REST API fallback');
-                return await tryRestApiFallback(shop, customerId, accessToken);
-            }
-            
-            // If access denied, try REST API fallback
-            const hasAccessDenied = response.data.errors.some(err => 
-                err.extensions?.code === 'ACCESS_DENIED'
-            );
-            
-            if (hasAccessDenied) {
-                console.warn('⚠️ Access denied in GraphQL - trying REST API fallback');
-                const restResult = await tryRestApiFallback(shop, customerId, accessToken);
-                if (!restResult) {
-                    console.error('');
-                    console.error('═══════════════════════════════════════════════════════');
-                    console.error('❌ MISSING REQUIRED SCOPE: read_customers');
-                    console.error('═══════════════════════════════════════════════════════');
-                    console.error('To fix this:');
-                    console.error('1. Go to ShopifyController.js line 22');
-                    console.error('2. Make sure SCOPES includes: read_customers');
-                    console.error('3. Reinstall the app: /apps/install?shop=' + shop);
-                    console.error('4. In Shopify admin, approve the read_customers permission');
-                    console.error('═══════════════════════════════════════════════════════');
-                }
-                return restResult;
-            }
-            
-            return null;
+            return await tryRestApiFallback(shop, customerId, accessToken);
         }
 
-        // Check if we have data in response
+        // Validate structure
         if (!response.data?.data) {
             console.error("❌ No data in GraphQL response");
-            console.error("Response structure:", JSON.stringify(response.data, null, 2));
             return await tryRestApiFallback(shop, customerId, accessToken);
         }
 
         const customer = response.data?.data?.customer;
-
         if (!customer) {
-            console.error("❌ Customer is null in GraphQL response");
-            console.error("Response data:", JSON.stringify(response.data?.data, null, 2));
-            console.error("Trying REST API fallback...");
+            console.error("❌ Customer is null - trying REST API fallback");
             return await tryRestApiFallback(shop, customerId, accessToken);
         }
 
-        console.log("✅ Customer data fetched successfully via GraphQL:");
-        console.log("--------------------------------------------------");
-        console.log("Customer ID:", customer.id);
-        console.log("Email:", customer.email);
-        console.log("First Name:", customer.firstName);
-        console.log("Last Name:", customer.lastName);
-        console.log("Phone:", customer.phone);
-        console.log("Full Customer Data:", JSON.stringify(customer, null, 2));
-        console.log("--------------------------------------------------");
-
+        console.log('✅ Customer via axios GraphQL');
         return customer;
-
     } catch (error) {
         console.error("❌ Error fetching customer detail:", error.message);
         if (error.response) {
@@ -339,12 +159,12 @@ const manageShopifyUser = async (shop, customerId) => {
         // Fetch customer data from Shopify via GraphQL
         const customer = await getCustomerDetail(shop, customerId);
         console.log("📦 Customer data from Shopify:", customer);
-        
+
         // If we couldn't fetch customer data due to missing scope, create minimal user record
         if (!customer) {
             console.warn('⚠️ Cannot fetch customer data - missing read_customers scope');
             console.warn('💡 Creating minimal user record with customerId only');
-            
+
             // Check if user already exists by shopifyCustomerId
             const existingUserByShopifyId = await User.findOne({ shopifyCustomerId: customerId.toString() });
             if (existingUserByShopifyId) {
@@ -372,14 +192,14 @@ const manageShopifyUser = async (shop, customerId) => {
             });
 
             await newUser.save();
-            console.log('✅ Minimal customer record saved to database:', { 
-                id: newUser._id, 
+            console.log('✅ Minimal customer record saved to database:', {
+                id: newUser._id,
                 shopifyCustomerId: newUser.shopifyCustomerId
             });
 
-            return { 
-                success: true, 
-                message: 'Minimal user record created', 
+            return {
+                success: true,
+                message: 'Minimal user record created',
                 userId: newUser._id,
                 shopifyCustomerId: newUser.shopifyCustomerId
             };
@@ -392,8 +212,8 @@ const manageShopifyUser = async (shop, customerId) => {
         const fullname = `${firstName} ${lastName}`.trim() || (email.split('@')[0] || 'Customer');
         const phone = customer.phone || undefined;
         const address = customer.defaultAddress || customer.addresses?.[0];
-        const addressString = address ? 
-            `${address.address1 || ''}, ${address.city || ''}, ${address.province || ''} ${address.zip || ''}`.trim() : 
+        const addressString = address ?
+            `${address.address1 || ''}, ${address.city || ''}, ${address.province || ''} ${address.zip || ''}`.trim() :
             '';
 
         // Check if user already exists by email
@@ -402,7 +222,7 @@ const manageShopifyUser = async (shop, customerId) => {
             console.log('ℹ️ User already exists:', email);
             return { success: true, message: 'User already exists', userId: existingUser._id };
         }
-        
+
         // Also check by shopifyCustomerId
         const shopifyCustomerId = customer.id?.toString().replace('gid://shopify/Customer/', '') || customerId?.toString();
         const existingUserByShopifyId = await User.findOne({ shopifyCustomerId: shopifyCustomerId });
@@ -446,16 +266,16 @@ const manageShopifyUser = async (shop, customerId) => {
         });
 
         await newUser.save();
-        console.log('✅ Customer saved to database:', { 
-            id: newUser._id, 
-            email: newUser.email, 
+        console.log('✅ Customer saved to database:', {
+            id: newUser._id,
+            email: newUser.email,
             fullname: newUser.fullname,
             shopifyCustomerId: newUser.shopifyCustomerId
         });
 
-        return { 
-            success: true, 
-            message: 'Customer saved successfully', 
+        return {
+            success: true,
+            message: 'Customer saved successfully',
             userId: newUser._id,
             email: newUser.email
         };
