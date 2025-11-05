@@ -9,48 +9,56 @@ const { User } = require("../../Modal/userSchema");
 const axios = require("axios");
 const roundingNumber = process.env.PASSWORD_SECRECT_ROUNDING || 10;
 
-// // Helper function for REST API fallback
-// const tryRestApiFallback = async (shop, customerId, accessToken) => {
-//     try {
-//         const restUrl = `https://${shop}/admin/api/2024-07/customers/${customerId}.json`;
-//         console.log('🌐 Trying REST API fallback:', restUrl);
-//         const restRes = await axios.get(
-//             restUrl,
-//             {
-//                 headers: {
-//                     "X-Shopify-Access-Token": accessToken,
-//                 },
-//                 validateStatus: () => true,
-//             }
-//         );
+// Helper function for REST API fallback
+const tryRestApiFallback = async (shop, customerId, accessToken) => {
+    try {
+        const restUrl = `https://${shop}/admin/api/2024-07/customers/${customerId}.json`;
+        console.log('🌐 Trying REST API fallback:', restUrl);
+        const restRes = await axios.get(
+            restUrl,
+            {
+                headers: {
+                    "X-Shopify-Access-Token": accessToken,
+                },
+                validateStatus: () => true,
+            }
+        );
 
-//         console.log('📊 REST API Response Status:', restRes.status);
-//         console.log('📊 REST API Response Data:', JSON.stringify(restRes.data, null, 2));
+        console.log('📊 REST API Response Status:', restRes.status);
+        if (restRes.data) {
+            console.log('📊 REST API Response:', JSON.stringify(restRes.data, null, 2));
+        }
 
-//         if (restRes.status === 200 && restRes.data?.customer) {
-//             const c = restRes.data.customer;
-//             console.log('✅ Got customer data via REST API');
-//             return {
-//                 id: `gid://shopify/Customer/${c.id}`,
-//                 email: c.email,
-//                 firstName: c.first_name,
-//                 lastName: c.last_name,
-//                 phone: c.phone,
-//                 createdAt: c.created_at,
-//                 verifiedEmail: c.verified_email,
-//             };
-//         } else {
-//             console.error('❌ REST API also failed:', restRes.status);
-//             if (restRes.data?.errors) {
-//                 console.error('Error details:', restRes.data.errors);
-//             }
-//             return null;
-//         }
-//     } catch (restError) {
-//         console.error('❌ REST API error:', restError.message);
-//         return null;
-//     }
-// };
+        if (restRes.status === 200 && restRes.data?.customer) {
+            const c = restRes.data.customer;
+            console.log('✅ Got customer data via REST API');
+            return {
+                id: `gid://shopify/Customer/${c.id}`,
+                email: c.email,
+                firstName: c.first_name,
+                lastName: c.last_name,
+                phone: c.phone,
+                createdAt: c.created_at,
+                verifiedEmail: c.verified_email,
+                addresses: c.addresses || [],
+                defaultAddress: c.default_address || null,
+            };
+        } else {
+            console.error('❌ REST API also failed:', restRes.status);
+            if (restRes.data?.errors) {
+                console.error('Error details:', restRes.data.errors);
+            }
+            return null;
+        }
+    } catch (restError) {
+        console.error('❌ REST API error:', restError.message);
+        if (restError.response) {
+            console.error('REST API Response Status:', restError.response.status);
+            console.error('REST API Response Data:', restError.response.data);
+        }
+        return null;
+    }
+};
 
 // const getCustomerDetail = async (shop, customerId) => {
 //     try {
@@ -233,9 +241,12 @@ const getCustomerDetail = async (shop, customerId) => {
                     "X-Shopify-Access-Token": accessToken,
                     "Content-Type": "application/json",
                 },
+                validateStatus: () => true, // Don't throw on any status
             }
         );
+        
         console.log("📊 GraphQL Response Status:", response.status);
+        console.log("📊 GraphQL Full Response:", JSON.stringify(response.data, null, 2));
         
         // Check for GraphQL errors
         if (response.data?.errors && response.data.errors.length > 0) {
@@ -259,22 +270,49 @@ const getCustomerDetail = async (shop, customerId) => {
             
             if (hasAccessDenied) {
                 console.warn('⚠️ Access denied in GraphQL - trying REST API fallback');
-                return await tryRestApiFallback(shop, customerId, accessToken);
+                const restResult = await tryRestApiFallback(shop, customerId, accessToken);
+                if (!restResult) {
+                    console.error('');
+                    console.error('═══════════════════════════════════════════════════════');
+                    console.error('❌ MISSING REQUIRED SCOPE: read_customers');
+                    console.error('═══════════════════════════════════════════════════════');
+                    console.error('To fix this:');
+                    console.error('1. Go to ShopifyController.js line 22');
+                    console.error('2. Make sure SCOPES includes: read_customers');
+                    console.error('3. Reinstall the app: /apps/install?shop=' + shop);
+                    console.error('4. In Shopify admin, approve the read_customers permission');
+                    console.error('═══════════════════════════════════════════════════════');
+                }
+                return restResult;
             }
             
             return null;
         }
 
-        const customer = response.data?.data?.customer;
-
-        if (!customer) {
-            console.error("❌ Customer not found or invalid ID - trying REST API fallback");
+        // Check if we have data in response
+        if (!response.data?.data) {
+            console.error("❌ No data in GraphQL response");
+            console.error("Response structure:", JSON.stringify(response.data, null, 2));
             return await tryRestApiFallback(shop, customerId, accessToken);
         }
 
-        console.log("✅ Customer data fetched successfully:");
+        const customer = response.data?.data?.customer;
+
+        if (!customer) {
+            console.error("❌ Customer is null in GraphQL response");
+            console.error("Response data:", JSON.stringify(response.data?.data, null, 2));
+            console.error("Trying REST API fallback...");
+            return await tryRestApiFallback(shop, customerId, accessToken);
+        }
+
+        console.log("✅ Customer data fetched successfully via GraphQL:");
         console.log("--------------------------------------------------");
-        console.log(JSON.stringify(customer, null, 2));
+        console.log("Customer ID:", customer.id);
+        console.log("Email:", customer.email);
+        console.log("First Name:", customer.firstName);
+        console.log("Last Name:", customer.lastName);
+        console.log("Phone:", customer.phone);
+        console.log("Full Customer Data:", JSON.stringify(customer, null, 2));
         console.log("--------------------------------------------------");
 
         return customer;
