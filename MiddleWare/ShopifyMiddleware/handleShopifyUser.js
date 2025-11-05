@@ -194,7 +194,7 @@ const getCustomerDetail = async (shop, customerId) => {
             : `gid://shopify/Customer/${customerId}`;
 
         console.log("gid", gid);
-        // 🧠 GraphQL query
+        // 🧠 GraphQL query - using only valid Customer fields
         const query = `
         query {
           customer(id: "${gid}") {
@@ -206,10 +206,6 @@ const getCustomerDetail = async (shop, customerId) => {
             createdAt
             updatedAt
             verifiedEmail
-            ordersCount
-            totalSpent
-            state
-            tags
             addresses {
               address1
               city
@@ -222,16 +218,6 @@ const getCustomerDetail = async (shop, customerId) => {
               city
               country
               zip
-            }
-            lastOrder {
-              id
-              name
-              totalPriceSet {
-                shopMoney {
-                  amount
-                  currencyCode
-                }
-              }
             }
           }
         }
@@ -249,17 +235,41 @@ const getCustomerDetail = async (shop, customerId) => {
                 },
             }
         );
-        console.log("response", response);
-        if (response.data.errors) {
+        console.log("📊 GraphQL Response Status:", response.status);
+        
+        // Check for GraphQL errors
+        if (response.data?.errors && response.data.errors.length > 0) {
             console.error("❌ GraphQL Errors:", response.data.errors);
+            
+            // If errors are about invalid fields, try REST API fallback
+            const hasInvalidFieldErrors = response.data.errors.some(err => 
+                err.extensions?.code === 'undefinedField' || 
+                err.message?.includes("doesn't exist on type")
+            );
+            
+            if (hasInvalidFieldErrors) {
+                console.warn('⚠️ GraphQL query has invalid fields - trying REST API fallback');
+                return await tryRestApiFallback(shop, customerId, accessToken);
+            }
+            
+            // If access denied, try REST API fallback
+            const hasAccessDenied = response.data.errors.some(err => 
+                err.extensions?.code === 'ACCESS_DENIED'
+            );
+            
+            if (hasAccessDenied) {
+                console.warn('⚠️ Access denied in GraphQL - trying REST API fallback');
+                return await tryRestApiFallback(shop, customerId, accessToken);
+            }
+            
             return null;
         }
 
-        const customer = response.data.data.customer;
+        const customer = response.data?.data?.customer;
 
         if (!customer) {
-            console.error("❌ Customer not found or invalid ID");
-            return null;
+            console.error("❌ Customer not found or invalid ID - trying REST API fallback");
+            return await tryRestApiFallback(shop, customerId, accessToken);
         }
 
         console.log("✅ Customer data fetched successfully:");
@@ -288,8 +298,129 @@ const manageShopifyUser = async (shop, customerId) => {
             return { success: false, message: 'Shop and customerId are required' };
         }
 
+        // Fetch customer data from Shopify via GraphQL
         const customer = await getCustomerDetail(shop, customerId);
-        console.log(" Customer data from Shopify:", customer);
+        console.log("📦 Customer data from Shopify:", customer);
+        
+        // If we couldn't fetch customer data due to missing scope, create minimal user record
+        if (!customer) {
+            console.warn('⚠️ Cannot fetch customer data - missing read_customers scope');
+            console.warn('💡 Creating minimal user record with customerId only');
+            
+            // Check if user already exists by shopifyCustomerId
+            const existingUserByShopifyId = await User.findOne({ shopifyCustomerId: customerId.toString() });
+            if (existingUserByShopifyId) {
+                console.log('ℹ️ User already exists with Shopify ID:', customerId);
+                return { success: true, message: 'User already exists', userId: existingUserByShopifyId._id };
+            }
+
+            // Create minimal user record
+            const randomPassword = crypto.randomBytes(16).toString('hex');
+            const rounding = roundingNumber ? parseInt(roundingNumber) : 10;
+            const hashedPassword = await bcrypt.hash(randomPassword, rounding);
+
+            // Generate temporary email based on customerId
+            const tempEmail = `shopify_customer_${customerId}@temp.shopify.local`;
+
+            const newUser = new User({
+                fullname: `Shopify Customer ${customerId}`,
+                email: tempEmail,
+                password: hashedPassword,
+                role: 'user',
+                isActive: true,
+                userType: 'shopify_customer',
+                walletBalance: 0,
+                shopifyCustomerId: customerId.toString(),
+            });
+
+            await newUser.save();
+            console.log('✅ Minimal customer record saved to database:', { 
+                id: newUser._id, 
+                shopifyCustomerId: newUser.shopifyCustomerId
+            });
+
+            return { 
+                success: true, 
+                message: 'Minimal user record created', 
+                userId: newUser._id,
+                shopifyCustomerId: newUser.shopifyCustomerId
+            };
+        }
+
+        // Extract customer data (when we have full data)
+        const email = (customer.email || '').toLowerCase();
+        const firstName = customer.firstName || '';
+        const lastName = customer.lastName || '';
+        const fullname = `${firstName} ${lastName}`.trim() || (email.split('@')[0] || 'Customer');
+        const phone = customer.phone || undefined;
+        const address = customer.defaultAddress || customer.addresses?.[0];
+        const addressString = address ? 
+            `${address.address1 || ''}, ${address.city || ''}, ${address.province || ''} ${address.zip || ''}`.trim() : 
+            '';
+
+        // Check if user already exists by email
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            console.log('ℹ️ User already exists:', email);
+            return { success: true, message: 'User already exists', userId: existingUser._id };
+        }
+        
+        // Also check by shopifyCustomerId
+        const shopifyCustomerId = customer.id?.toString().replace('gid://shopify/Customer/', '') || customerId?.toString();
+        const existingUserByShopifyId = await User.findOne({ shopifyCustomerId: shopifyCustomerId });
+        if (existingUserByShopifyId) {
+            console.log('ℹ️ User already exists with Shopify ID:', shopifyCustomerId);
+            // Update existing user with full data
+            existingUserByShopifyId.email = email;
+            existingUserByShopifyId.fullname = fullname;
+            if (phone) existingUserByShopifyId.phone = phone;
+            if (addressString) existingUserByShopifyId.address = addressString;
+            if (address?.city) existingUserByShopifyId.city = address.city;
+            if (address?.province) existingUserByShopifyId.state = address.province;
+            if (address?.zip) existingUserByShopifyId.zip = address.zip;
+            if (address?.country) existingUserByShopifyId.country = address.country;
+            await existingUserByShopifyId.save();
+            console.log('✅ Updated existing user with full customer data');
+            return { success: true, message: 'User updated with full data', userId: existingUserByShopifyId._id };
+        }
+
+        // Generate random password (Shopify customers don't have passwords)
+        const randomPassword = crypto.randomBytes(16).toString('hex');
+        const rounding = roundingNumber ? parseInt(roundingNumber) : 10;
+        const hashedPassword = await bcrypt.hash(randomPassword, rounding);
+
+        // Create new user in database
+        const newUser = new User({
+            fullname,
+            email,
+            password: hashedPassword,
+            phone,
+            address: addressString || undefined,
+            city: address?.city || undefined,
+            state: address?.province || address?.state || undefined,
+            zip: address?.zip || undefined,
+            country: address?.country || undefined,
+            role: 'user',
+            isActive: true,
+            userType: 'shopify_customer',
+            walletBalance: 0,
+            shopifyCustomerId: shopifyCustomerId,
+        });
+
+        await newUser.save();
+        console.log('✅ Customer saved to database:', { 
+            id: newUser._id, 
+            email: newUser.email, 
+            fullname: newUser.fullname,
+            shopifyCustomerId: newUser.shopifyCustomerId
+        });
+
+        return { 
+            success: true, 
+            message: 'Customer saved successfully', 
+            userId: newUser._id,
+            email: newUser.email
+        };
 
     } catch (err) {
         if (err?.code === 11000) {
