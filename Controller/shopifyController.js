@@ -135,7 +135,7 @@ const authCallback = async (req, res) => {
         if (generatedHmac !== hmac) {
             console.log("❌ HMAC validation failed");
             console.log("🔍 Message used for validation:", message);
-             res.status(400).send("HMAC validation failed");
+            res.status(400).send("HMAC validation failed");
         }
 
         console.log("✅ HMAC validation successful");
@@ -229,7 +229,7 @@ const proxyThemeAssetsController = async (req, res) => {
         const shop = req.query.shop
         const themeId = req.query.theme_id;
         const customerId = req.query.logged_in_customer_id;
-
+        console.log("proxyThemeAssetsController shop:", shop, " themeId:", themeId, " customerId:", customerId);
         // If customer is logged in, register them in our database
         if (shop && customerId) {
             try {
@@ -294,7 +294,7 @@ const proxyThemeAssetsController = async (req, res) => {
               ${headerHtml}
               <main style="min-height:70vh;">
                 <iframe 
-                
+
                   src="https://tangerine-tapioca-c659db.netlify.app/home" 
                   style="border:none;width:100%;height:100vh;display:block;"
                 ></iframe>
