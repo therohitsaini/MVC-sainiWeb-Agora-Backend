@@ -18,7 +18,7 @@ try {
 
 
 const SHOPIFY_API_KEY = process.env.SHOPIFY_API_KEY || "1844b97873b270b025334fd34790185c";
-const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET || "85cce65962f7a73df3634b28a9aaa054";
+const SHOPIFY_API_SECRET = "85cce65962f7a73df3634b28a9aaa054";
 const SCOPES = process.env.SCOPES || "read_customers,read_products,read_orders,read_themes";
 const APP_URL = process.env.APP_URL || "http://localhost:5001";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
@@ -44,14 +44,25 @@ const installShopifyApp = (req, res) => {
 const authCallback = async (req, res) => {
     console.log("authCallback");
     const { shop, code, hmac, state } = req.query;
+    console.log("shop", shop, code, hmac, state);
 
     const params = { ...req.query };
     delete params['hmac'];
     delete params['signature'];
-    const message = Object.keys(params).sort().map(k => `${k}=${params[k]}`).join('&');
-    const generatedHash = crypto.createHmac('sha256', SHOPIFY_API_SECRET).update(message).digest('hex');
+    const message = Object.keys(params)
+        .sort()
+        .map(k => `${k}=${params[k]}`)
+        .join('&');
 
-    if (generatedHash !== hmac)
+    const calculated = crypto
+        .createHmac('sha256', SHOPIFY_API_SECRET)
+        .update(message)
+        .digest('hex')
+        .toLowerCase();
+    const received = String(hmac || '').toLowerCase();
+
+    if (received.length !== calculated.length ||
+        !crypto.timingSafeEqual(Buffer.from(calculated, 'utf8'), Buffer.from(received, 'utf8')))
         return res.status(400).send("HMAC validation failed");
 
     try {
