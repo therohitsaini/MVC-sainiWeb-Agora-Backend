@@ -17,8 +17,8 @@ try {
 
 
 
-const SHOPIFY_API_KEY = "9670f701d5332dc0e886440fd2277221";
-const SHOPIFY_API_SECRET = "c29681750a54ed6a6f8f3a7d1eaa5f14";
+const SHOPIFY_API_KEY = process.env.SHOPIFY_API_KEY || "1844b97873b270b025334fd34790185c";
+const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET || "85cce65962f7a73df3634b28a9aaa054";
 const SCOPES = process.env.SCOPES || "read_customers,read_products,read_orders,read_themes";
 const APP_URL = process.env.APP_URL || "http://localhost:5001";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
@@ -26,6 +26,7 @@ const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff";
 const roundingNumber = process.env.PASSWORD_SECRECT_ROUNDING
 
 const installShopifyApp = (req, res) => {
+    console.log("installShopifyApp");
     const shop = req.query.shop;
     if (!shop) return res.status(400).send("Missing shop param");
     const state = crypto.randomBytes(16).toString('hex');
@@ -41,9 +42,8 @@ const installShopifyApp = (req, res) => {
 };
 
 const authCallback = async (req, res) => {
+    console.log("authCallback");
     const { shop, code, hmac, state } = req.query;
-
-
 
     const params = { ...req.query };
     delete params['hmac'];
@@ -61,9 +61,7 @@ const authCallback = async (req, res) => {
             code
         });
 
-        const accessToken = tokenRes.data.access_token;
-
-        // Update or create shop in DB
+        const accessToken = tokenRes.data.access_token;    
         const existingShop = await shopModel.findOne({ shop: shop });
         if (existingShop) {
             existingShop.accessToken = accessToken;
@@ -89,6 +87,7 @@ const authCallback = async (req, res) => {
 
 
 const shopifyLogin = async (req, res) => {
+    console.log("shopifyLogin");
     try {
         const { hmac, shop, host, timestamp } = req.query;
         if (!hmac || !shop || !timestamp) {
