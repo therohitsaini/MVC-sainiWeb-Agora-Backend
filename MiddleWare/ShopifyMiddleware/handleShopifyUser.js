@@ -177,6 +177,7 @@ const getCustomerDetail = async (shop, customerId) => {
 }
 
 const manageShopifyUser = async (shop, customerId) => {
+    console.log("🔍 Managing Shopify user:", { shop, customerId });
     try {
         // Validate inputs
         if (!shop || !customerId) {
@@ -188,12 +189,54 @@ const manageShopifyUser = async (shop, customerId) => {
         const customer = await getCustomerDetail(shop, customerId);
         console.log("📦 Customer data from Shopify:", customer);
         
+        // If we couldn't fetch customer data due to missing scope, create minimal user record
         if (!customer) {
-            console.error('❌ Failed to fetch customer data from Shopify:', { shop, customerId });
-            return { success: false, message: 'Failed to fetch customer data from Shopify' };
+            console.warn('⚠️ Cannot fetch customer data - missing read_customers scope');
+            console.warn('💡 Creating minimal user record with customerId only');
+            
+            // Check if user already exists by shopifyCustomerId
+            const existingUserByShopifyId = await User.findOne({ shopifyCustomerId: customerId.toString() });
+            if (existingUserByShopifyId) {
+                console.log('ℹ️ User already exists with Shopify ID:', customerId);
+                return { success: true, message: 'User already exists', userId: existingUserByShopifyId._id };
+            }
+
+            // Create minimal user record without email (will need to be updated later)
+            const randomPassword = crypto.randomBytes(16).toString('hex');
+            const rounding = roundingNumber ? parseInt(roundingNumber) : 10;
+            const hashedPassword = await bcrypt.hash(randomPassword, rounding);
+
+            // Generate temporary email based on customerId
+            const tempEmail = `shopify_customer_${customerId}@temp.shopify.local`;
+
+            const newUser = new User({
+                fullname: `Shopify Customer ${customerId}`,
+                email: tempEmail,
+                password: hashedPassword,
+                role: 'user',
+                isActive: true,
+                userType: 'shopify_customer',
+                walletBalance: 0,
+                shopifyCustomerId: customerId.toString(),
+            });
+
+            await newUser.save();
+            console.log('✅ Minimal customer record saved to database (will need scope fix to get full data):', { 
+                id: newUser._id, 
+                shopifyCustomerId: newUser.shopifyCustomerId,
+                note: 'Email is temporary - update after adding read_customers scope'
+            });
+
+            return { 
+                success: true, 
+                message: 'Minimal user record created (missing read_customers scope)', 
+                userId: newUser._id,
+                shopifyCustomerId: newUser.shopifyCustomerId,
+                warning: 'Full customer data not available - app needs read_customers scope'
+            };
         }
 
-        // Extract customer data
+        // Extract customer data (when we have full data)
         const email = (customer.email || '').toLowerCase();
         const firstName = customer.firstName || '';
         const lastName = customer.lastName || '';
@@ -205,6 +248,21 @@ const manageShopifyUser = async (shop, customerId) => {
         if (existingUser) {
             console.log('ℹ️ User already exists:', email);
             return { success: true, message: 'User already exists', userId: existingUser._id };
+        }
+        
+        // Also check by shopifyCustomerId
+        const existingUserByShopifyId = await User.findOne({ shopifyCustomerId: customerId.toString() });
+        if (existingUserByShopifyId) {
+            console.log('ℹ️ User already exists with Shopify ID:', customerId);
+            // Update existing user with full data if available
+            if (email && email !== existingUserByShopifyId.email) {
+                existingUserByShopifyId.email = email;
+                existingUserByShopifyId.fullname = fullname;
+                if (phone) existingUserByShopifyId.phone = phone;
+                await existingUserByShopifyId.save();
+                console.log('✅ Updated existing user with full customer data');
+            }
+            return { success: true, message: 'User already exists', userId: existingUserByShopifyId._id };
         }
 
         // Generate random password (Shopify customers don't have passwords)
