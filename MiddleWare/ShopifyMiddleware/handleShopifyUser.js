@@ -249,7 +249,7 @@ const getCustomerDetail = async (shop, customerId) => {
                 },
             }
         );
-
+        console.log("response", response);
         if (response.data.errors) {
             console.error("❌ GraphQL Errors:", response.data.errors);
             return null;
