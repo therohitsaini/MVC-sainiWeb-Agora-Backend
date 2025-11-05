@@ -54,6 +54,7 @@ const getCustomerDetails = async (shop, accessToken, customerId) => {
                 },
             }
         );
+        console.log("response", response);
 
         // Handle response
         if (response.data.errors) {

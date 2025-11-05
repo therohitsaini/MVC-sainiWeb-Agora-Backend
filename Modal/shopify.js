@@ -5,6 +5,6 @@ const shop = new mongoose.Schema({
     installedAt: { type: Date, default: Date.now }
 });
 
-const shopModel = mongoose.model('Shop', shop);
+const shopModel = mongoose.model('shopifyShop', shop);
 
 module.exports = { shopModel }
