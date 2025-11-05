@@ -181,16 +181,19 @@ const getCustomerDetail = async (shop, customerId) => {
             (await shopModel.findOne({ shop: shop.replace(".myshopify.com", "") })) ||
             (await shopModel.findOne({ shop: `${shop}.myshopify.com` }));
 
+        console.log("shopDoc", shopDoc);
         if (!shopDoc || !shopDoc.accessToken) {
             console.error("❌ Shop not found or missing access token in DB");
             return null;
         }
 
         const accessToken = shopDoc.accessToken;
+        console.log("accessToken", accessToken);
         const gid = String(customerId).startsWith("gid://")
             ? String(customerId)
             : `gid://shopify/Customer/${customerId}`;
 
+        console.log("gid", gid);
         // 🧠 GraphQL query
         const query = `
         query {
