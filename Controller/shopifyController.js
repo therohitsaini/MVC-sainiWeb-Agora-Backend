@@ -316,8 +316,10 @@ const proxyThemeAssetsController = async (req, res) => {
 */
 const proxyShopifyConsultantPage = async (req, res) => {
     try {
+        console.log("proxyShopifyConsultantPage");
         const shop = req.query.shop
         const themeId = req.query.theme_id;
+        console.log("shop", shop,);
         const cookieHeader = req.headers.cookie || "";
         const userAgent = req.headers["user-agent"] || "node";
         const makeUrl = (base) => themeId ? `${base}${base.includes("?") ? "&" : "?"}theme_id=${themeId}` : base;
