@@ -19,7 +19,7 @@ try {
 
 const SHOPIFY_API_KEY = "9670f701d5332dc0e886440fd2277221";
 const SHOPIFY_API_SECRET = "c29681750a54ed6a6f8f3a7d1eaa5f14";
-const SCOPES = process.env.SCOPES || "read_products,read_orders,read_customers,read_themes,read_discounts,read_shipping,read_inventory,read_locations,read_metaobjects,read_price_rules,read_reports,read_themes,read_transactions,read_users,read_webhooks,write_products,write_orders,write_customers,write_themes,write_discounts,write_shipping,write_inventory,write_locations,write_metaobjects,write_price_rules,write_reports,write_themes,write_transactions,write_users,write_webhooks";
+const SCOPES = process.env.SCOPES || "read_products,read_orders,read_customers,read_themes,read_customers";
 const APP_URL = process.env.APP_URL || "http://localhost:5001";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
 const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff";
