@@ -19,7 +19,7 @@ try {
 
 const SHOPIFY_API_KEY = "9670f701d5332dc0e886440fd2277221";
 const SHOPIFY_API_SECRET = "c29681750a54ed6a6f8f3a7d1eaa5f14";
-const SCOPES = process.env.SCOPES || "read_products,read_orders,read_customers,read_themes,read_customers";
+const SCOPES = process.env.SCOPES || "read_customers,read_products,read_orders,read_themes";
 const APP_URL = process.env.APP_URL || "http://localhost:5001";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
 const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff";
@@ -43,9 +43,7 @@ const installShopifyApp = (req, res) => {
 const authCallback = async (req, res) => {
     const { shop, code, hmac, state } = req.query;
 
-    // if (state !== req.session.shopifyState)
-    //     return res.status(400).send("Invalid state");
-    console.log("shop",shop);
+
 
     const params = { ...req.query };
     delete params['hmac'];
@@ -192,7 +190,7 @@ const proxyThemeAssetsController = async (req, res) => {
             sectionFetch(makeUrl(`https://${shop}/?section_id=header`)),
             sectionFetch(makeUrl(`https://${shop}/?section_id=footer`))
         ]);
-     
+
         const pageHtml = `
           <!DOCTYPE html>
           <html>
