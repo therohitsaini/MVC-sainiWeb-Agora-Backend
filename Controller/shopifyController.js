@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const dotenv = require('dotenv');
 const JWT = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const querystring = require("querystring");
 dotenv.config();
 const { shopModel } = require('../Modal/shopify');
 const { User } = require('../Modal/userSchema');
@@ -17,8 +18,8 @@ try {
 
 
 
-const SHOPIFY_API_KEY = process.env.SHOPIFY_API_KEY || "1844b97873b270b025334fd34790185c";
-const SHOPIFY_API_SECRET = "85cce65962f7a73df3634b28a9aaa054";
+const SHOPIFY_API_KEY = process.env.SHOPIFY_API_KEY_ || "1844b97873b270b025334fd34790185c";
+const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET_ || "85cce65962f7a73df3634b28a9aaa054";
 const SCOPES = process.env.SCOPES || "read_customers,read_products,read_orders,read_themes";
 const APP_URL = process.env.APP_URL || "http://localhost:5001";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
@@ -41,60 +42,144 @@ const installShopifyApp = (req, res) => {
     res.redirect(installUrl);
 };
 
+// const authCallback = async (req, res) => {
+
+//     console.log("authCallback___________", SHOPIFY_API_SECRET);
+//     const { shop, code, hmac, state } = req.query;
+//     // console.log("shop", shop, code, hmac,);
+
+//     const params = { ...req.query };
+//     delete params['hmac'];
+//     delete params['signature'];
+//     const message = Object.keys(params)
+//         .sort()
+//         .map(k => `${k}=${params[k]}`)
+//         .join('&');
+
+//     const calculated = crypto
+//         .createHmac('sha256', "85cce65962f7a73df3634b28a9aaa054")
+//         .update(message)
+//         .digest('hex')
+//         .toLowerCase();
+//     console.log("calculated", calculated);
+//     const received = String(hmac || '').toLowerCase();
+//     console.log("received", received);
+//     if (received.length !== calculated.length ||
+//         !crypto.timingSafeEqual(Buffer.from(calculated, 'utf8'), Buffer.from(received, 'utf8')))
+//         return res.status(400).send("HMAC_____ validation failed");
+
+//     try {
+//         const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
+//             client_id: SHOPIFY_API_KEY,
+//             client_secret: SHOPIFY_API_SECRET,
+//             code
+//         });
+
+//         const accessToken = tokenRes.data.access_token;
+//         const existingShop = await shopModel.findOne({ shop: shop });
+//         if (existingShop) {
+//             existingShop.accessToken = accessToken;
+//             existingShop.installedAt = new Date();
+//             await existingShop.save();
+//             console.log('✅ Updated access token for shop:', shop);
+//         } else {
+//             const newShop = new shopModel({ shop: shop, accessToken: accessToken });
+
+//             await newShop.save();
+//             console.log('✅ Created new shop entry:', shop);
+//         }
+
+//         // Redirect user to dashboard
+//         res.redirect(`https://agora-ui-git-main-rohits-projects-f44a0e3e.vercel.app/dashboard/home?shop=${shop}`);
+
+//     } catch (err) {
+//         console.error(err.response?.data || err.message);
+//         res.status(500).send("Failed to get access token");
+//     }
+
+// };
+
+
+
 const authCallback = async (req, res) => {
-    console.log("authCallback");
-    const { shop, code, hmac, state } = req.query;
-    console.log("shop", shop, code, hmac, state);
-
-    const params = { ...req.query };
-    delete params['hmac'];
-    delete params['signature'];
-    const message = Object.keys(params)
-        .sort()
-        .map(k => `${k}=${params[k]}`)
-        .join('&');
-
-    const calculated = crypto
-        .createHmac('sha256', SHOPIFY_API_SECRET)
-        .update(message)
-        .digest('hex')
-        .toLowerCase();
-    const received = String(hmac || '').toLowerCase();
-
-    if (received.length !== calculated.length ||
-        !crypto.timingSafeEqual(Buffer.from(calculated, 'utf8'), Buffer.from(received, 'utf8')))
-        return res.status(400).send("HMAC validation failed");
-
     try {
-        const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
-            client_id: SHOPIFY_API_KEY,
-            client_secret: SHOPIFY_API_SECRET,
-            code
-        });
+        console.log("🔁 Auth callback triggered");
 
-        const accessToken = tokenRes.data.access_token;    
-        const existingShop = await shopModel.findOne({ shop: shop });
-        if (existingShop) {
-            existingShop.accessToken = accessToken;
-            existingShop.installedAt = new Date();
-            await existingShop.save();
-            console.log('✅ Updated access token for shop:', shop);
-        } else {
-            const newShop = new shopModel({ shop: shop, accessToken: accessToken });
+        const { shop, hmac, code } = req.query;
 
-            await newShop.save();
-            console.log('✅ Created new shop entry:', shop);
+        // --- STEP 1: Validate presence of required params
+        if (!shop || !hmac || !code) {
+            console.log("❌ Missing required parameters");
+            return res.status(400).send("Missing required parameters");
         }
 
-        // Redirect user to dashboard
-        res.redirect(`https://agora-ui-git-main-rohits-projects-f44a0e3e.vercel.app/dashboard/home?shop=${shop}`);
+        // --- STEP 2: Create message for HMAC validation
+        const { hmac: _hmac, signature, ...params } = req.query;
 
-    } catch (err) {
-        console.error(err.response?.data || err.message);
-        res.status(500).send("Failed to get access token");
+        // Shopify requires the params to be sorted alphabetically
+        const message = Object.keys(params)
+            .sort()
+            .map((key) => `${key}=${params[key]}`)
+            .join("&");
+
+        // --- STEP 3: Generate HMAC using your Shopify app secret
+        const generatedHmac = crypto
+            .createHmac("sha256", process.env.SHOPIFY_API_SECRET_)
+            .update(message)
+            .digest("hex");
+
+        console.log("🧮 Generated HMAC:", generatedHmac);
+        console.log("📦 Received HMAC:", hmac);
+
+        // --- STEP 4: Compare HMAC
+        if (generatedHmac !== hmac) {
+            console.log("❌ HMAC validation failed");
+            console.log("🔍 Message used for validation:", message);
+             res.status(400).send("HMAC validation failed");
+        }
+
+        console.log("✅ HMAC validation successful");
+
+        // --- STEP 5: Exchange code for access token
+        const tokenResponse = await axios.post(
+            `https://${shop}/admin/oauth/access_token`,
+            {
+                client_id: process.env.SHOPIFY_API_KEY_,
+                client_secret: process.env.SHOPIFY_API_SECRET_,
+                code,
+            }
+        );
+
+        const accessToken = tokenResponse.data.access_token;
+        console.log("🔑 Access token received:", accessToken ? "Yes" : "No");
+
+        // --- STEP 6: Save shop info to MongoDB
+        let shopDoc = await shopModel.findOne({ shop });
+
+        if (shopDoc) {
+            shopDoc.accessToken = accessToken;
+            shopDoc.installedAt = new Date();
+            await shopDoc.save();
+            console.log("✅ Updated existing shop:", shop);
+        } else {
+            await new shopModel({
+                shop,
+                accessToken,
+                installedAt: new Date(),
+            }).save();
+            console.log("✅ Added new shop:", shop);
+        }
+
+        // --- STEP 7: Redirect to your frontend dashboard
+        const redirectUrl = `https://agora-ui-git-main-rohits-projects-f44a0e3e.vercel.app/dashboard/home?shop=${shop}`;
+        console.log("➡️ Redirecting to:", redirectUrl);
+        return res.redirect(redirectUrl);
+    } catch (error) {
+        console.error("❌ Auth callback error:", error.response?.data || error.message);
+        return res.status(500).send("Failed to complete authentication");
     }
-
 };
+
 
 
 const shopifyLogin = async (req, res) => {
@@ -209,7 +294,7 @@ const proxyThemeAssetsController = async (req, res) => {
               ${headerHtml}
               <main style="min-height:70vh;">
                 <iframe 
-                  src="https://agora-ui-v2.netlify.app/home" 
+                  src="https://tangerine-tapioca-c659db.netlify.app/home" 
                   style="border:none;width:100%;height:100vh;display:block;"
                 ></iframe>
               </main>
@@ -284,7 +369,7 @@ const proxyShopifyConsultantPage = async (req, res) => {
               ${headerHtml}
               <main style="min-height:70vh;">
                 <iframe 
-                  src="https://agora-ui-v2.netlify.app/consultant-login" 
+                  src="https://tangerine-tapioca-c659db.netlify.app/consultant-login" 
                   style="border:none;width:100%;height:100vh;display:block;"
                 ></iframe>
               </main>
