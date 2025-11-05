@@ -122,7 +122,7 @@ const manageShopifyUser = async (shop, customerId) => {
         //     headers: { "X-Shopify-Access-Token": accessToken }
         // });
 
-    } catch (error) {
+    } catch (err) {
         console.error("❌ Error fetching customer:", err.response?.data || err.message);
         res.status(500).json({ error: err.response?.data || err.message });
     }
