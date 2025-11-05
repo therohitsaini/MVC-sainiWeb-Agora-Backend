@@ -13,7 +13,6 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@shopify/shopify-api": "^12.1.1",
     "agora-access-token": "^2.0.4",
     "axios": "^1.12.2",
     "axios-cookiejar-support": "^6.0.2",
