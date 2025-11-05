@@ -116,13 +116,18 @@ const manageShopifyUser = async (shop, customerId) => {
         const url = `https://${shop}/admin/api/2024-10/graphql.json`;
         const response = await axios.post(url, graphqlQuery, { headers });
 
-        console.log("✅ Customer Data:", response);
-  
+        if (response.data && response.data.customer) {
+            console.log("✅ Customer found:", response.data.customer);
+        } else {
+            console.error("❌ Customer fetch failed:", response.data);
+        }
+
+
         // const customer = await axios.get(`https://${shop}/admin/api/2024-07/customers/${customerId}.json`, {
         //     headers: { "X-Shopify-Access-Token": accessToken }
         // });
 
-    } catch (err) {
+    } catch (error) {
         console.error("❌ Error fetching customer:", err.response?.data || err.message);
 
     }
