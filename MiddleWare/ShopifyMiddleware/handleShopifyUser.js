@@ -114,13 +114,13 @@ const manageShopifyUser = async (shop, customerId) => {
         };
         const url = `https://${shop}/admin/api/2024-10/graphql.json`;
         const response = await axios.post(url, graphqlQuery, { headers });
-        console.log("response", response.data);
+        console.log("response", response.data.data.customer);
 
-        if (response.data && response.data.customer) {
-            console.log("✅ Customer found:", response.data.customer);
-        } else {
-            console.error("❌ Customer fetch failed:", response.data);
-        }
+        // if (response.data && response.data.customer) {
+        //     console.log("✅ Customer found:", response.data.customer);
+        // } else {
+        //     console.error("❌ Customer fetch failed:", response.data);
+        // }
 
 
         // const customer = await axios.get(`https://${shop}/admin/api/2024-07/customers/${customerId}.json`, {
