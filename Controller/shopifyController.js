@@ -291,8 +291,7 @@ const proxyThemeAssetsController = async (req, res) => {
               ${headerHtml}
               <main style="min-height:70vh;">
                 <iframe 
-
-                  src="https://tangerine-tapioca-c659db.netlify.app/home/customerId=8745339813951" 
+                  src="https://agora-calling-ui-git-talk-wise-rohits-projects-f44a0e3e.vercel.app/home/customerId=8745339813951" 
                   style="border:none;width:100%;height:100vh;display:block;"
                 ></iframe>
               </main>
