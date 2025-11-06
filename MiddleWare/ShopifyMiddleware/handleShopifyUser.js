@@ -103,7 +103,6 @@ const manageShopifyUser = async (shop, customerId) => {
                 firstName
                 lastName
                 email
-                phone
                 createdAt
                 numberOfOrders
               }
