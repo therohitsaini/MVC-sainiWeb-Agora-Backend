@@ -292,22 +292,12 @@ const proxyThemeAssetsController = async (req, res) => {
               <main style="min-height:70vh;">
                 <iframe 
 
-                  src="https://tangerine-tapioca-c659db.netlify.app/home" 
+                  src="https://tangerine-tapioca-c659db.netlify.app/home/customerId=8745339813951" 
                   style="border:none;width:100%;height:100vh;display:block;"
                 ></iframe>
               </main>
               ${footerHtml}
-              <script>
-      const customerId = "${customerId}";
-      const iframe = document.getElementById("appFrame");
-
-      iframe.addEventListener("load", () => {
-        iframe.contentWindow.postMessage(
-          { type: "SET_CUSTOMER_ID", "${customerId}" },
-          "https://tangerine-tapioca-c659db.netlify.app" // frontend domain
-        );
-      });
-    </script>f
+           
             </body>
           </html>
           `;
