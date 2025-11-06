@@ -18,10 +18,10 @@ try {
 
 
 
-const SHOPIFY_API_KEY = process.env.SHOPIFY_API_KEY_ || "1844b97873b270b025334fd34790185c";
-const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET_ || "85cce65962f7a73df3634b28a9aaa054";
-const SCOPES = process.env.SCOPES || "read_customers,read_products,read_orders,read_themes";
-const APP_URL = process.env.APP_URL || "http://localhost:5001";
+const SHOPIFY_API_KEY =  '1844b97873b270b025334fd34790185c';
+const SHOPIFY_API_SECRET = "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";
+const SCOPES =  "read_customers,read_products,read_orders,read_themes";
+const APP_URL =  "http://localhost:5001";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
 const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff";
 const roundingNumber = process.env.PASSWORD_SECRECT_ROUNDING
@@ -32,7 +32,7 @@ const installShopifyApp = (req, res) => {
     if (!shop) return res.status(400).send("Missing shop param");
     const state = crypto.randomBytes(16).toString('hex');
 
-    const redirectUri = `${APP_URL}/auth/callback`;
+    const redirectUri = `${APP_URL}/apps/callback`;
 
     const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${SHOPIFY_API_KEY
         }&scope=${SCOPES
@@ -124,18 +124,20 @@ const authCallback = async (req, res) => {
 
         // --- STEP 3: Generate HMAC using your Shopify app secret
         const generatedHmac = crypto
-            .createHmac("sha256", process.env.SHOPIFY_API_SECRET_)
+            .createHmac("sha256", SHOPIFY_API_SECRET)
             .update(message)
             .digest("hex");
 
         console.log("🧮 Generated HMAC:", generatedHmac);
         console.log("📦 Received HMAC:", hmac);
+        console.log("🔍 Message used for validation:", message);
+        console.log("🔑 Secret used (first 10 chars):", SHOPIFY_API_SECRET.substring(0, 10) + "...");
 
-        // --- STEP 4: Compare HMAC
-        if (generatedHmac !== hmac) {
+        // --- STEP 4: Compare HMAC (case-insensitive)
+        if (generatedHmac.toLowerCase() !== hmac.toLowerCase()) {
             console.log("❌ HMAC validation failed");
-            console.log("🔍 Message used for validation:", message);
-            res.status(400).send("HMAC validation failed");
+            console.log("💡 Check: Is SHOPIFY_API_SECRET correct for your new app?");
+            return res.status(400).send("HMAC validation failed");
         }
 
         console.log("✅ HMAC validation successful");
@@ -144,8 +146,8 @@ const authCallback = async (req, res) => {
         const tokenResponse = await axios.post(
             `https://${shop}/admin/oauth/access_token`,
             {
-                client_id: process.env.SHOPIFY_API_KEY_,
-                client_secret: process.env.SHOPIFY_API_SECRET_,
+                client_id: SHOPIFY_API_KEY,
+                client_secret: SHOPIFY_API_SECRET,
                 code,
             }
         );
