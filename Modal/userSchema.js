@@ -71,7 +71,7 @@ const registerUserSchema = new mongoose.Schema(
         },
         password: {
             type: String,
-            required: true,
+            // required: true,
             trim: true,
         },
         isActive: {

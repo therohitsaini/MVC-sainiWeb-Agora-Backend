@@ -124,7 +124,7 @@ const manageShopifyUser = async (shop, customerId) => {
             if (user) {
                 return { success: true, message: "Customer already exists", userId: user._id };
             } else {
-                const newUser = new User({ shopifyCustomerId: id, email: customer.email, firstName: customer.firstName, createdAt: customer.createdAt, numberOfOrders: customer.numberOfOrders });
+                const newUser = new User({ shopifyCustomerId: id, email: customer.email, fullname: customer.firstName, createdAt: customer.createdAt, numberOfOrders: customer.numberOfOrders });
                 await newUser.save();
                 return { success: true, message: "Customer created successfully", userId: newUser._id };
             }
