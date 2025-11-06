@@ -18,10 +18,10 @@ try {
 
 
 
-const SHOPIFY_API_KEY =  '1844b97873b270b025334fd34790185c';
+const SHOPIFY_API_KEY = '1844b97873b270b025334fd34790185c';
 const SHOPIFY_API_SECRET = "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";
-const SCOPES =  "read_customers,read_products,read_orders,read_themes";
-const APP_URL =  "http://localhost:5001";
+const SCOPES = "read_customers,read_products,read_orders,read_themes";
+const APP_URL = "http://localhost:5001";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
 const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff";
 const roundingNumber = process.env.PASSWORD_SECRECT_ROUNDING
@@ -229,8 +229,6 @@ const proxyThemeAssetsController = async (req, res) => {
         const shop = req.query.shop
         const themeId = req.query.theme_id;
         const customerId = req.query.logged_in_customer_id;
-        console.log("proxyThemeAssetsController shop:", shop, " themeId:", themeId, " customerId:", customerId);
-        // If customer is logged in, register them in our database
         if (shop && customerId) {
             try {
                 const result = await manageShopifyUser(shop, customerId);
@@ -299,8 +297,20 @@ const proxyThemeAssetsController = async (req, res) => {
                 ></iframe>
               </main>
               ${footerHtml}
+              <script>
+      const customerId = "${customerId}";
+      const iframe = document.getElementById("appFrame");
+
+      iframe.addEventListener("load", () => {
+        iframe.contentWindow.postMessage(
+          { type: "SET_CUSTOMER_ID", "${customerId}" },
+          "https://tangerine-tapioca-c659db.netlify.app" // frontend domain
+        );
+      });
+    </script>f
             </body>
-          </html>`;
+          </html>
+          `;
         return res.status(200).send(pageHtml);
     }
 
