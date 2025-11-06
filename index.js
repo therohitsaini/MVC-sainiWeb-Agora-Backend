@@ -54,6 +54,7 @@ app.use("/api-consltor", bookAppointmentRoute)
 app.use("/api-consultant", consultantRoute)
 app.use("/api-employee", employRoute)
 app.use("/apps", shopifyRoute);
+app.use("/app", shopifyRoute); // Also mount at /app for backwards compatibility
 
 
 ioServer(server);

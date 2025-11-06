@@ -115,6 +115,7 @@ const manageShopifyUser = async (shop, customerId) => {
         };
         const url = `https://${shop}/admin/api/2024-10/graphql.json`;
         const response = await axios.post(url, graphqlQuery, { headers });
+        console.log("response", response);
 
         if (response.data && response.data.customer) {
             console.log("✅ Customer found:", response.data.customer);
@@ -128,7 +129,7 @@ const manageShopifyUser = async (shop, customerId) => {
         // });
 
     } catch (error) {
-        console.error("❌ Error fetching customer:", err.response?.data || err.message);
+        console.error("❌ Error fetching customer:", error.response?.data || error.message);
 
     }
 }

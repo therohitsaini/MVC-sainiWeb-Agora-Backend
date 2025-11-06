@@ -32,7 +32,7 @@ const installShopifyApp = (req, res) => {
     if (!shop) return res.status(400).send("Missing shop param");
     const state = crypto.randomBytes(16).toString('hex');
 
-    const redirectUri = `${APP_URL}/apps/callback`;
+    const redirectUri = `${APP_URL}/app/callback`;
 
     const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${SHOPIFY_API_KEY
         }&scope=${SCOPES
@@ -181,8 +181,6 @@ const authCallback = async (req, res) => {
         return res.status(500).send("Failed to complete authentication");
     }
 };
-
-
 
 const shopifyLogin = async (req, res) => {
     console.log("shopifyLogin");
