@@ -114,7 +114,7 @@ const manageShopifyUser = async (shop, customerId) => {
         };
         const url = `https://${shop}/admin/api/2024-10/graphql.json`;
         const response = await axios.post(url, graphqlQuery, { headers });
-        console.log("response", response);
+        console.log("response", response.data.customer);
 
         if (response.data && response.data.customer) {
             console.log("✅ Customer found:", response.data.customer);
