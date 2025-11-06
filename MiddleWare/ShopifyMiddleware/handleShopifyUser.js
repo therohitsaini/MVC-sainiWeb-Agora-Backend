@@ -115,17 +115,18 @@ const manageShopifyUser = async (shop, customerId) => {
         const url = `https://${shop}/admin/api/2024-10/graphql.json`;
         const response = await axios.post(url, graphqlQuery, { headers });
         console.log("response", response.data.data.customer);
-
-        // if (response.data && response.data.customer) {
-        //     console.log("✅ Customer found:", response.data.customer);
-        // } else {
-        //     console.error("❌ Customer fetch failed:", response.data);
-        // }
-
-
-        // const customer = await axios.get(`https://${shop}/admin/api/2024-07/customers/${customerId}.json`, {
-        //     headers: { "X-Shopify-Access-Token": accessToken }
-        // });
+        if (response.data.data.customer) {
+            const customer = response.data.data.customer;
+            const id = customer.id.split('/').pop();
+            const user = await User.findOne({ shopifyCustomerId: id });
+            if (user) {
+                return { success: true, message: "Customer already exists", userId: user._id };
+            } else {
+                const newUser = new User({ shopifyCustomerId: id, email: customer.email, firstName: customer.firstName, createdAt: customer.createdAt, numberOfOrders: customer.numberOfOrders });
+                await newUser.save();
+                return { success: true, message: "Customer created successfully", userId: newUser._id };
+            }
+        }
 
     } catch (error) {
         console.error("❌ Error fetching customer:", error.response?.data || error.message);
