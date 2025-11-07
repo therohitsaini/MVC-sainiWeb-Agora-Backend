@@ -284,22 +284,8 @@ const proxyThemeAssetsController = async (req, res) => {
         ]);
 
         const pageHtml = `
-          <!DOCTYPE html>
-          <html>
-            ${headHtml}
-            <body style="margin:0;padding:0;">
-              ${headerHtml}
-              <main style="min-height:70vh;">
-                <iframe 
-                  src="https://agora-calling-ui-git-talk-wise-rohits-projects-f44a0e3e.vercel.app/home/customerId=8745339813951" 
-                  style="border:none;width:100%;height:100vh;display:block;"
-                ></iframe>
-              </main>
-              ${footerHtml}
-           
-            </body>
-          </html>
-          `;
+        <p>https://agora-calling-ui-git-talk-wise-rohits-projects-f44a0e3e.vercel.app/home</p>
+        `
         return res.status(200).send(pageHtml);
     }
 
