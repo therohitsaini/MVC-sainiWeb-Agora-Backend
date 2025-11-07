@@ -284,8 +284,19 @@ const proxyThemeAssetsController = async (req, res) => {
         ]);
 
         const pageHtml = `
-        <p>https://agora-calling-ui-git-talk-wise-rohits-projects-f44a0e3e.vercel.app/home</p>
-        `
+          <!DOCTYPE html>
+          <html>
+            ${headHtml}
+            <body style="margin:0;padding:0;">
+              ${headerHtml}
+              <main style="min-height:70vh;">
+              <p>react app is running on this page</p>
+              </main>
+              ${footerHtml}
+           
+            </body>
+          </html>
+          `;
         return res.status(200).send(pageHtml);
     }
 
