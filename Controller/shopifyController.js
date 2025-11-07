@@ -290,7 +290,10 @@ const proxyThemeAssetsController = async (req, res) => {
             <body style="margin:0;padding:0;">
               ${headerHtml}
               <main style="min-height:70vh;">
-              <p>react app is running on this page</p>
+              <iframe 
+                  src="https://agora-calling-ui-git-agora-ui-new-rohits-projects-f44a0e3e.vercel.app/home" 
+                  style="border:none;width:100%;height:100vh;display:block;"
+                ></iframe>
               </main>
               ${footerHtml}
            
