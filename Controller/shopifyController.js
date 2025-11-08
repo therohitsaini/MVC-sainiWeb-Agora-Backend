@@ -17,17 +17,20 @@ try {
 }
 
 
-
-const SHOPIFY_API_KEY = '1844b97873b270b025334fd34790185c';
-const SHOPIFY_API_SECRET = "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";
+const SHOPIFY_API_KEY = process.env.BACKE_END_SHOPIFY_API_KEY;
+const SHOPIFY_API_SECRET = process.env.BACKE_END_SHOPIFY_API_SECRET;
 const SCOPES = "read_customers,read_products,read_orders,read_themes";
 const APP_URL = "http://localhost:5001";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
 const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff";
 const roundingNumber = process.env.PASSWORD_SECRECT_ROUNDING
-
+console.log("SHOPIFY_API_KEY", SHOPIFY_API_KEY);
+console.log("SHOPIFY_API_SECRET", SHOPIFY_API_SECRET);
 const installShopifyApp = (req, res) => {
     console.log("installShopifyApp");
+    if (!SHOPIFY_API_KEY || !SHOPIFY_API_SECRET) {
+        return res.status(400).send("SHOPIFY_API_KEY or SHOPIFY_API_SECRET is not set");
+    }
     const shop = req.query.shop;
     if (!shop) return res.status(400).send("Missing shop param");
     const state = crypto.randomBytes(16).toString('hex');
@@ -106,6 +109,9 @@ const authCallback = async (req, res) => {
         console.log("🔁 Auth callback triggered");
 
         const { shop, hmac, code } = req.query;
+        console.log("shop", shop);
+        console.log("hmac", hmac);
+        console.log("code", code);
 
         // --- STEP 1: Validate presence of required params
         if (!shop || !hmac || !code) {
@@ -291,7 +297,7 @@ const proxyThemeAssetsController = async (req, res) => {
               ${headerHtml}
               <main style="min-height:70vh;">
               <iframe 
-                  src="https://agora-calling-ui-git-agora-ui-new-rohits-projects-f44a0e3e.vercel.app/home" 
+                  src="https://agora-ui-nine.vercel.app/home" 
                   style="border:none;width:100%;height:100vh;display:block;"
                 ></iframe>
               </main>
