@@ -278,10 +278,7 @@ const proxyThemeAssetsController = async (req, res) => {
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <title>Agora App</title>
 
-            <script>
-                const customerId = "${customerId}";
-                
-            </script>
+            
           </head>`;
 
         const sectionFetch = typeof jarFetch === "function"
@@ -298,10 +295,16 @@ const proxyThemeAssetsController = async (req, res) => {
           <html>
             ${headHtml}
             <body style="margin:0;padding:0;">
+
+                <script>
+                    const customerId = "${customerId}";
+                    
+                </script>
+            
               ${headerHtml}
               <main style="min-height:70vh;">
               <iframe 
-                  src="https://agora-ui-nine.vercel.app/home?customerId=${customerId}" 
+                  src="https://agora-ui-git-talk-wise-rohits-projects-f44a0e3e.vercel.app/home?customerId=${customerId}" 
                   style="border:none;width:100%;height:100vh;display:block;"
                 ></iframe>
               </main>
