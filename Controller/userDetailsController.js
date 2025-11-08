@@ -1,9 +1,9 @@
-const {User} = require("../Modal/userSchema");
+const { User } = require("../Modal/userSchema");
 
 const getAllUsers = async (req, res) => {
     try {
         const users = await User.find({ role: "user" })
-       
+
 
         res.status(200).json({
             success: true,
@@ -48,4 +48,31 @@ const getUserById = async (req, res) => {
     }
 };
 
-module.exports = { getAllUsers, getUserById };
+const getShopifyUserByCustomerId = async (req, res) => {
+    try {
+        const { customerId } = req.params;
+        console.log("customerId", customerId);
+        const user = await User.findOne({ shopifyCustomerId: customerId });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+        res.status(200).json({
+            success: true,
+            message: "User retrieved successfully",
+            data: user
+        });
+
+    } catch (error) {
+        console.error("Error fetching user:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch user",
+            error: error.message
+        });
+    }
+}
+
+module.exports = { getAllUsers, getUserById, getShopifyUserByCustomerId };
