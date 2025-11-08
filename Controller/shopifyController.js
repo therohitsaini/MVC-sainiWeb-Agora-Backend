@@ -304,7 +304,7 @@ const proxyThemeAssetsController = async (req, res) => {
               ${headerHtml}
               <main style="min-height:70vh;">
               <iframe 
-                  src="https://agora-ui-nine.vercel.app/home?customerId=${customerId}" 
+                  src="https://agora-ui-git-talk-wise-rohits-projects-f44a0e3e.vercel.app/home?customerId=${customerId}" 
                   style="border:none;width:100%;height:100vh;display:block;"
                 ></iframe>
               </main>
