@@ -24,8 +24,7 @@ const APP_URL = "http://localhost:5001";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
 const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff";
 const roundingNumber = process.env.PASSWORD_SECRECT_ROUNDING
-console.log("SHOPIFY_API_KEY", SHOPIFY_API_KEY);
-console.log("SHOPIFY_API_SECRET", SHOPIFY_API_SECRET);
+
 const installShopifyApp = (req, res) => {
     console.log("installShopifyApp");
     if (!SHOPIFY_API_KEY || !SHOPIFY_API_SECRET) {

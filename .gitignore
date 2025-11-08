@@ -9,5 +9,7 @@ node_modules/
 *.log
 .DS_Store
 Thumbs.db
+calculateHMAC.js
+.env
 
     
