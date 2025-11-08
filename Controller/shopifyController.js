@@ -379,7 +379,7 @@ const proxyShopifyConsultantPage = async (req, res) => {
                   style="border:none;width:100%;height:100vh;display:block;"
                 ></iframe>
               </main>
-              ${footerHtml}
+          
             </body>
           </html>`;
         return res.status(200).send(pageHtml);
