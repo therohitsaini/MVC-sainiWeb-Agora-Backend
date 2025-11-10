@@ -53,6 +53,7 @@ const getShopifyUserByCustomerId = async (req, res) => {
         const { customerId } = req.params;
         console.log("customerId", customerId);
         const user = await User.findOne({ shopifyCustomerId: customerId });
+        console.log("user__SHOPIFY__", user);
         if (!user) {
             return res.status(404).json({
                 success: false,
