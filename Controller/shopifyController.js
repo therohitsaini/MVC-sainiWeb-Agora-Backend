@@ -301,14 +301,16 @@ const proxyThemeAssetsController = async (req, res) => {
                     
                 </script>
             
-              ${headerHtml}
+             
               <main style="min-height:70vh;">
+                  ${headerHtml}
               <iframe 
                   src="https://agora-ui-nine.vercel.app/home?customerId=${customerId}" 
                   style="border:none;width:100%;height:100vh;display:block;"
                 ></iframe>
+                  ${footerHtml}
               </main>
-              ${footerHtml}
+            
            
             </body>
           </html>
