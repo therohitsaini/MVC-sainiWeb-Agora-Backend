@@ -1,62 +1,7 @@
-// const mongoose = require("mongoose");
-
-// const userSchema = new mongoose.Schema({
-//     fullname: {
-//         type: String,
-//         required: [true, "fullname is required"],
-//         unique: false,
-//         trim: true,
-//         minlength: [3, "fullname must be at least 3 characters long"],
-//         maxlength: [30, "fullname cannot exceed 30 characters"]
-//     },
-//     email: {
-//         type: String,
-//         required: [true, "Email is required"],
-//         unique: true,
-//         trim: true,
-//         lowercase: true,
-//         match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, "Please enter a valid email"]
-//     },
-//     password: {
-//         type: String,
-//         required: [true, "Password is required"],
-//         minlength: [6, "Password must be at least 6 characters long"]
-//     },
-//     agoraUid: {
-//         type: Number,
-//         unique: true
-//     },
-//     walletBalance: {
-//         type: Number,
-//         default: 100
-//     },
-//     isActive: {
-//         type: Boolean,
-//         default: false
-//     },
-//     role: {
-//         type: String,
-//         default: "user"
-//     },
-//     consultantStatus: {
-//         type: Boolean,
-//         default: true
-//     }
-// }, {
-//     timestamps: true // Adds createdAt and updatedAt fields
-// });
-
-// // Create and export the User model
-// const User = mongoose.model("ragisterUser", userSchema);
-
-// module.exports = User;
-
-
 const mongoose = require("mongoose");
 
 const registerUserSchema = new mongoose.Schema(
     {
-        // Common fields
         fullname: {
             type: String,
             required: true,
@@ -71,98 +16,112 @@ const registerUserSchema = new mongoose.Schema(
         },
         password: {
             type: String,
-            // required: true,
             trim: true,
         },
         isActive: {
             type: Boolean,
             default: true,
         },
-        role: {
+
+        // User Type
+        userType: {
             type: String,
-            default: "user",
+            required: true,
         },
 
-        // USER-SPECIFIC FIELDS
-        agoraUid: {
-            type: Number,
-            unique: true,
-            sparse: true, // important so MongoDB allows null values
-        },
-        walletBalance: {
-            type: Number,
-
+        displayName: {
+            type: String,
+            required: true,
         },
 
-        // CONSULTANT-SPECIFIC FIELDS
         phone: {
             type: String,
-            trim: true,
+            required: true,
         },
-        profession: {
-            type: String,
-            trim: true,
-        },
-        specialization: {
-            type: String,
-            trim: true,
-        },
-        licenseNo: {
-            type: String,
-            unique: true,
-            sparse: true,
-            trim: true,
-        },
+
+        // Consultant Details
         experience: {
-            type: Number,
-            min: 0,
+            type: String,
+            required: true,
         },
         fees: {
-            type: Number,
-            min: 0,
+            type: String,
+            required: true,
+        },
+        language: {
+            type: Array,
+            required: true,
         },
         bio: {
             type: String,
-            trim: true,
-            maxlength: 1000,
+            // required: true,
         },
-        language: {
-            type: [String],
+        gender: {
+            type: String,
+            required: true,
+        },
+
+        // Address Fields
+        houseNumber: {
+            type: String,
+            required: true,
+        },
+        streetArea: {
+            type: String,
+            required: true,
+        },
+        landmark: {
+            type: String,
+            required: true,
+        },
+        address: {
+            type: String,
+            required: true,
+        },
+        pincode: {
+            type: String,
+            required: true,
+        },
+
+        dateOfBirth: {
+            type: Date,
+            required: true,
+        },
+
+        pan_cardNumber: {
+            type: String,
+            required: true,
+        },
+
+        // User-specific
+        agoraUid: {
+            type: Number,
+            unique: true,
+            sparse: true, // null values ko ignore karega - duplicate error se bachayega
+        },
+        walletBalance: {
+            type: Number,
+            default: 0
+        },
+
+        profession: {
+            type: String,
+            required: true,
+        },
+        specialization: {
+            type: String,
+            required: true,
+        },
+        licenseNo: {
+            type: String,
+            required: true,
         },
         consultantStatus: {
             type: Boolean,
-            default: true,
+           
         },
 
-        // EMPLOYEE-SPECIFIC FIELDS
-        address: {
-            type: String,
-            trim: true,
-        },
-        city: {
-            type: String,
-            trim: true,
-        },
-        state: {
-            type: String,
-            trim: true,
-        },
-        zip: {
-            type: String,
-            trim: true,
-        },
-        country: {
-            type: String,
-            trim: true,
-        },
-        dateOfBirth: {
-            type: Date,
-            trim: true,
-        },
-        userType: {
-            type: String,
-        },
-        // Shopify-specific fields
+        // Shopify
         shopifyCustomerId: {
             type: String,
             sparse: true,
@@ -172,11 +131,7 @@ const registerUserSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-const User = mongoose.model("newUser", registerUserSchema);
+// Model already exists check karo - duplicate model name se bachne ke liye
+const User = mongoose.models.ragisterUser || mongoose.model("ragisterUser", registerUserSchema);
 
-
-
-
-
-
-module.exports = { User }
+module.exports = { User };

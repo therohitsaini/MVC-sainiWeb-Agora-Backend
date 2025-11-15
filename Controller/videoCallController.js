@@ -45,7 +45,7 @@ const generateVoiceToken = async (req, res) => {
    try {
       const { channelName, uid } = req.body;
 
-      console.log("Voice token request:", { channelName, uid });
+      
 
       if (!channelName || !uid) {
          return res.status(400).json({
@@ -53,7 +53,6 @@ const generateVoiceToken = async (req, res) => {
          });
       }
 
-    
       const appId = process.env.AGORA_APP_ID;
       const appCertificate = process.env.AGORA_APP_CERTIFICATE;
 
@@ -71,8 +70,6 @@ const generateVoiceToken = async (req, res) => {
             }
          });
       }
-
-    
       const token = RtcTokenBuilder.buildTokenWithUid(
          appId,
          appCertificate,
@@ -81,9 +78,7 @@ const generateVoiceToken = async (req, res) => {
          RtcRole.PUBLISHER,
          0
       );
-
       console.log("Token generated successfully for:", { channelName, uid });
-
       res.json({
          token,
          appId: appId,

@@ -1,5 +1,4 @@
 const { User } = require("../Modal/userSchema")
-const { consultantSchemaExport } = require("../Modal/consultantSchema")
 const bcrypt = require("bcrypt")
 const JWT = require("jsonwebtoken");
 const { verify_Token } = require("./auth");

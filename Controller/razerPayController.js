@@ -21,7 +21,7 @@ const createOrderController = async (req, res) => {
             currency: 'INR',
             receipt: `wallet_${userId}_${Date.now()}`
         });
-        console.log("order", order)
+    
         res.json({ success: true, order });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });

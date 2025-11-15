@@ -2,8 +2,7 @@ const { User } = require("../Modal/userSchema");
 
 const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find({ role: "user" })
-
+        const users = await User.find({ role: "user" }).select("-password")
 
         res.status(200).json({
             success: true,

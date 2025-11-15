@@ -17,117 +17,121 @@ try {
 }
 
 
-const SHOPIFY_API_KEY = process.env.BACKE_END_SHOPIFY_API_KEY;
-const SHOPIFY_API_SECRET = process.env.BACKE_END_SHOPIFY_API_SECRET;
-const SCOPES = "read_customers,read_products,read_orders,read_themes";
-const APP_URL = "http://localhost:5001";
+const client_id = process.env.SHOPIFY_CLIENT_ID || "1844b97873b270b025334fd34790185c";
+const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET || "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";
+const SCOPES = process.env.SHOPIFY_SCOPES || "read_customers,read_products";
+const APP_URL = process.env.APP_URL || "http://localhost:5001";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
 const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff";
 const roundingNumber = process.env.PASSWORD_SECRECT_ROUNDING
 
+/**
+ * STEP 1: Shopify App Installation Function
+ * 
+ * Ye function tab call hota hai jab user Shopify store se app install karta hai
+ * 
+ * Flow:
+ * 1. User Shopify Admin Panel se app install karta hai
+ * 2. Shopify redirect karta hai: http://localhost:5001/app/install?shop=store-name.myshopify.com
+ * 3. Ye function Shopify ke OAuth authorize URL par redirect karta hai
+ * 4. User Shopify par permissions approve karta hai
+ * 5. Shopify phir callback URL par redirect karta hai (authCallback function)
+ */
 const installShopifyApp = (req, res) => {
+
+    console.log("req.query", req.query);
     console.log("installShopifyApp");
-    if (!SHOPIFY_API_KEY || !SHOPIFY_API_SECRET) {
-        return res.status(400).send("SHOPIFY_API_KEY or SHOPIFY_API_SECRET is not set");
+    console.log("client_id", client_id);
+    console.log("SHOPIFY_API_SECRET", SHOPIFY_API_SECRET);
+
+    // Validation: client_id aur secret check karo
+    if (!client_id || !SHOPIFY_API_SECRET) {
+        return res.status(400).send("client_id or SHOPIFY_API_SECRET is not set");
     }
+
+    // Shop name extract karo (e.g., "store-name.myshopify.com")
     const shop = req.query.shop;
+    console.log("shop", shop);
     if (!shop) return res.status(400).send("Missing shop param");
+
+    // Security ke liye random state generate karo (CSRF protection)
     const state = crypto.randomBytes(16).toString('hex');
+    console.log("state", state);
 
-    const redirectUri = `${APP_URL}/app/callback`;
+    // Callback URL define karo - yaha Shopify redirect karega after approval
+    // Request se dynamically URL banaye (environment variable me ${HOST}/${PORT} resolve nahi ho rahe)
+    let baseUrl = APP_URL;
 
-    const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${SHOPIFY_API_KEY
+    // Agar APP_URL me ${HOST} ya ${PORT} hai, to request se extract karo
+    if (!baseUrl || baseUrl.includes('${HOST}') || baseUrl.includes('${PORT}')) {
+        const protocol = req.protocol || 'http';
+        const host = req.get('host') || req.headers.host || 'localhost:5001';
+        baseUrl = `${protocol}://${host}`;
+    }
+
+    const redirectUri = `${baseUrl}/app/callback`;
+    console.log("redirectUri", redirectUri);
+
+    // Shopify OAuth authorize URL banayo
+    // Ye URL user ko Shopify permission page par le jayega
+    const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${client_id
         }&scope=${SCOPES
         }&redirect_uri=${encodeURIComponent(redirectUri)
         }&state=${state}`;
+    console.log("installUrl", installUrl);
 
+    // User ko Shopify OAuth page par redirect karo
     res.redirect(installUrl);
 };
 
-// const authCallback = async (req, res) => {
-
-//     console.log("authCallback___________", SHOPIFY_API_SECRET);
-//     const { shop, code, hmac, state } = req.query;
-//     // console.log("shop", shop, code, hmac,);
-
-//     const params = { ...req.query };
-//     delete params['hmac'];
-//     delete params['signature'];
-//     const message = Object.keys(params)
-//         .sort()
-//         .map(k => `${k}=${params[k]}`)
-//         .join('&');
-
-//     const calculated = crypto
-//         .createHmac('sha256', "85cce65962f7a73df3634b28a9aaa054")
-//         .update(message)
-//         .digest('hex')
-//         .toLowerCase();
-//     console.log("calculated", calculated);
-//     const received = String(hmac || '').toLowerCase();
-//     console.log("received", received);
-//     if (received.length !== calculated.length ||
-//         !crypto.timingSafeEqual(Buffer.from(calculated, 'utf8'), Buffer.from(received, 'utf8')))
-//         return res.status(400).send("HMAC_____ validation failed");
-
-//     try {
-//         const tokenRes = await axios.post(`https://${shop}/admin/oauth/access_token`, {
-//             client_id: SHOPIFY_API_KEY,
-//             client_secret: SHOPIFY_API_SECRET,
-//             code
-//         });
-
-//         const accessToken = tokenRes.data.access_token;
-//         const existingShop = await shopModel.findOne({ shop: shop });
-//         if (existingShop) {
-//             existingShop.accessToken = accessToken;
-//             existingShop.installedAt = new Date();
-//             await existingShop.save();
-//             console.log('✅ Updated access token for shop:', shop);
-//         } else {
-//             const newShop = new shopModel({ shop: shop, accessToken: accessToken });
-
-//             await newShop.save();
-//             console.log('✅ Created new shop entry:', shop);
-//         }
-
-//         // Redirect user to dashboard
-//         res.redirect(`https://agora-ui-git-main-rohits-projects-f44a0e3e.vercel.app/dashboard/home?shop=${shop}`);
-
-//     } catch (err) {
-//         console.error(err.response?.data || err.message);
-//         res.status(500).send("Failed to get access token");
-//     }
-
-// };
 
 
-
+/**
+ * STEP 2: OAuth Callback Function
+ * 
+ * Ye function automatically call hota hai jab:
+ * 1. User Shopify par permissions approve kar deta hai
+ * 2. Shopify redirect karta hai: http://localhost:5001/app/callback?shop=...&code=...&hmac=...
+ * 
+ * Complete Flow:
+ * 1. User installShopifyApp se Shopify OAuth page par jata hai
+ * 2. User permissions approve karta hai
+ * 3. Shopify callback URL par redirect karta hai with code aur hmac
+ * 4. Ye function HMAC verify karta hai (security check)
+ * 5. Code ko access token me convert karta hai
+ * 6. Shop info database me save karta hai
+ * 7. User ko frontend dashboard par redirect karta hai
+ */
 const authCallback = async (req, res) => {
     try {
         console.log("🔁 Auth callback triggered");
 
+        // Shopify se aaye huye query parameters extract karo
         const { shop, hmac, code } = req.query;
         console.log("shop", shop);
         console.log("hmac", hmac);
         console.log("code", code);
 
-        // --- STEP 1: Validate presence of required params
+        // --- STEP 1: Required parameters check karo
         if (!shop || !hmac || !code) {
             console.log("❌ Missing required parameters");
             return res.status(400).send("Missing required parameters");
         }
 
-        // --- STEP 2: Create message for HMAC validation
-        const { hmac: _hmac, signature, ...params } = req.query;
+        // --- STEP 2: HMAC validation ke liye message banayo
+        // HMAC security ke liye hota hai - verify karta hai ki request Shopify se hi aayi hai
+        // hmac aur signature ko exclude karo (ye validation ke liye use hoga)
+        const params = { ...req.query };
+        delete params.hmac;
+        delete params.signature;
 
-        // Shopify requires the params to be sorted alphabetically
-        const message = Object.keys(params)
-            .sort()
+        // Shopify requires: parameters alphabetically sorted hone chahiye
+        const sortedKeys = Object.keys(params).sort();
+        const message = sortedKeys
             .map((key) => `${key}=${params[key]}`)
             .join("&");
 
-        // --- STEP 3: Generate HMAC using your Shopify app secret
+        // --- STEP 3: Apne secret se HMAC generate karo
         const generatedHmac = crypto
             .createHmac("sha256", SHOPIFY_API_SECRET)
             .update(message)
@@ -136,39 +140,53 @@ const authCallback = async (req, res) => {
         console.log("🧮 Generated HMAC:", generatedHmac);
         console.log("📦 Received HMAC:", hmac);
         console.log("🔍 Message used for validation:", message);
+        console.log("📝 Sorted keys:", sortedKeys.join(", "));
         console.log("🔑 Secret used (first 10 chars):", SHOPIFY_API_SECRET.substring(0, 10) + "...");
+        console.log("🔑 Secret used (full length):", SHOPIFY_API_SECRET.length, "characters");
+        console.log("📋 All query params:", JSON.stringify(req.query, null, 2));
 
-        // --- STEP 4: Compare HMAC (case-insensitive)
+        // Additional debugging: Check if secrets match
+        console.log("🔍 Client ID:", client_id);
+        console.log("🔍 Secret starts with:", SHOPIFY_API_SECRET.substring(0, 5));
+
+        // --- STEP 4: HMAC compare karo (security verification)
+        // Agar match nahi kiya to request fake/unauthorized hai
         if (generatedHmac.toLowerCase() !== hmac.toLowerCase()) {
             console.log("❌ HMAC validation failed");
-            console.log("💡 Check: Is SHOPIFY_API_SECRET correct for your new app?");
             return res.status(400).send("HMAC validation failed");
         }
 
         console.log("✅ HMAC validation successful");
 
-        // --- STEP 5: Exchange code for access token
+        // --- STEP 5: Authorization code ko access token me convert karo
+        // Ye access token se aap Shopify API calls kar sakte ho
         const tokenResponse = await axios.post(
             `https://${shop}/admin/oauth/access_token`,
             {
-                client_id: SHOPIFY_API_KEY,
+                client_id: client_id,
                 client_secret: SHOPIFY_API_SECRET,
-                code,
+                code, // Temporary code jo Shopify ne diya
             }
         );
 
         const accessToken = tokenResponse.data.access_token;
-        console.log("🔑 Access token received:", accessToken ? "Yes" : "No");
+        console.log("accessToken_______________", accessToken);
+        if (!accessToken) {
+            return res.status(400).send("Failed to get access token");
+        }
 
-        // --- STEP 6: Save shop info to MongoDB
+        // --- STEP 6: Shop information database me save karo
+        // Access token ko store karo taaki baad me API calls kar sako
         let shopDoc = await shopModel.findOne({ shop });
 
         if (shopDoc) {
+            // Agar shop pehle se exist karta hai, update karo
             shopDoc.accessToken = accessToken;
             shopDoc.installedAt = new Date();
             await shopDoc.save();
             console.log("✅ Updated existing shop:", shop);
         } else {
+            // Naya shop add karo
             await new shopModel({
                 shop,
                 accessToken,
@@ -177,12 +195,13 @@ const authCallback = async (req, res) => {
             console.log("✅ Added new shop:", shop);
         }
 
-        // --- STEP 7: Redirect to your frontend dashboard
-        const redirectUrl = `https://agora-ui-git-main-rohits-projects-f44a0e3e.vercel.app/dashboard/home?shop=${shop}`;
+        // --- STEP 7: User ko frontend dashboard par redirect karo
+        // IMPORTANT: Sirf ek hi response send karo - redirect karo, send() nahi
+        const redirectUrl = `https://shopifyconsultant-app.vercel.app?shop=${encodeURIComponent(shop)}`;
         console.log("➡️ Redirecting to:", redirectUrl);
         return res.redirect(redirectUrl);
     } catch (error) {
-        console.error("❌ Auth callback error:", error.response?.data || error.message);
+        console.error(" Auth callback error:", error || error);
         return res.status(500).send("Failed to complete authentication");
     }
 };
@@ -194,7 +213,6 @@ const shopifyLogin = async (req, res) => {
         if (!hmac || !shop || !timestamp) {
             return res.status(400).send("Missing required query params");
         }
-
         const params = { ...req.query };
         delete params['hmac'];
         const message = Object.keys(params).sort().map(k => `${k}=${params[k]}`).join('&');
@@ -202,7 +220,6 @@ const shopifyLogin = async (req, res) => {
         if (generatedHash !== hmac) {
             return res.status(400).send("HMAC validation failed");
         }
-
         // Optionally verify shop exists in DB (installed app)
         const shopData = await shopModel.findOne({ shop: shop });
         if (!shopData) {
@@ -211,12 +228,13 @@ const shopifyLogin = async (req, res) => {
 
         // Issue JWT for your frontend to consume
         const token = JWT.sign({ shop }, JWT_SRCURITE_KEY, { expiresIn: '2h' });
-        const frontend = process.env.FRONTEND_URL || 'https://agora-ui-v2.netlify.app/home';
+        const frontend = 'https://shopifyconsultant-app.vercel.app/home';
 
         const redirectUrl = `${frontend}?shop=${encodeURIComponent(shop)}&token=${encodeURIComponent(token)}`;
-        return res.redirect(302, redirectUrl);
+        console.log("➡️ Redirecting to:", redirectUrl);
+        return res.redirect(redirectUrl);
     } catch (err) {
-        console.error(err.response?.data || err.message);
+        console.error(err || err);
         return res.status(500).send("Failed to login via Shopify");
     }
 }
@@ -277,10 +295,7 @@ const proxyThemeAssetsController = async (req, res) => {
             <meta charset="UTF-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <title>Agora App</title>
-
-            
           </head>`;
-
         const sectionFetch = typeof jarFetch === "function"
             ? (url) => jarFetch(url)
             : (url) => fetchWithSession(url).then(r => r.text());
@@ -289,7 +304,6 @@ const proxyThemeAssetsController = async (req, res) => {
             sectionFetch(makeUrl(`https://${shop}/?section_id=header`)),
             sectionFetch(makeUrl(`https://${shop}/?section_id=footer`))
         ]);
-
         const pageHtml = `
           <!DOCTYPE html>
           <html>
@@ -330,17 +344,14 @@ const proxyThemeAssetsController = async (req, res) => {
 */
 const proxyShopifyConsultantPage = async (req, res) => {
     try {
-        console.log("proxyShopifyConsultantPage");
         const shop = req.query.shop
         const themeId = req.query.theme_id;
-        console.log("shop", shop,);
         const cookieHeader = req.headers.cookie || "";
         const userAgent = req.headers["user-agent"] || "node";
         const makeUrl = (base) => themeId ? `${base}${base.includes("?") ? "&" : "?"}theme_id=${themeId}` : base;
         const fetchWithSession = (url) => fetch(url, { headers: { Cookie: cookieHeader, "User-Agent": userAgent }, redirect: "manual" });
 
         let homeResp = await fetchWithSession(makeUrl(`https://${shop}/`));
-
         if (homeResp.status >= 300 && homeResp.status < 400) {
             const storefrontPassword = process.env.STOREFRONT_PASSWORD || 1;
             if (storefrontPassword && wrapper && CookieJar && axios) {
@@ -367,7 +378,6 @@ const proxyShopifyConsultantPage = async (req, res) => {
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <title>Agora App</title>
           </head>`;
-
         const sectionFetch = typeof jarFetch === "function"
             ? (url) => jarFetch(url)
             : (url) => fetchWithSession(url).then(r => r.text());

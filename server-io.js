@@ -38,15 +38,13 @@ const ioServer = (server) => {
                 const callerConsultant = await User.findById(toUid).select("fees").lean();
 
                 const callCost = callerConsultant.fees;
-                console.log("callCost", callCost);
+              
                 if (!caller || Number(caller.walletBalance) < callCost) {
                     console.log(" Insufficient balance, Please recharge your wallet.");
                     socket.emit("call-failed", { message: "Insufficient balance. Call cannot be connected." });
                     return;
                 }
-
                 const receiverSocketId = onlineUsers[toUid];
-
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("incoming-call", {
                         fromUid,
@@ -61,10 +59,7 @@ const ioServer = (server) => {
 
             }
         });
-
         socket.on("call-accepted", async ({ toUid, fromUid, type, channelName }) => {
-            console.log("call-accepted received:", { fromUid, toUid, type, channelName });
-
             try {
                 await HistroyMW(toUid, fromUid, type);
             } catch (error) {
@@ -95,13 +90,10 @@ const ioServer = (server) => {
                         }
                         return;
                     }
-                    console.log("fromObjectId", fromObjectId);
                     const currentUser = await User.findById(fromObjectId).select("walletBalance").lean();
                     const numericBalance = Number(currentUser && currentUser.walletBalance);
-                    console.log("Current user balance:", numericBalance, "Rate:", rate);
 
                     if (!currentUser || Number.isNaN(numericBalance)) {
-                        console.log("Caller not found or walletBalance not numeric");
                         clearInterval(intervalId);
                         if (callerSocketId) {
                             io.to(callerSocketId).emit("call-ended", { reason: "Caller not found" });
@@ -114,9 +106,7 @@ const ioServer = (server) => {
                         if (callerSocketId) {
                             io.to(callerSocketId).emit("call-ended", { reason: "Insufficient balance" });
                         }
-                        // if (receiverSocketId) {
-                        //     io.to(receiverSocketId).emit("call-ended", { reason: "Insufficient balance" });
-                        // }
+                      
                         return;
                     }
 
@@ -126,21 +116,12 @@ const ioServer = (server) => {
                         { new: true }
                     ).lean();
 
-                    // const updatedReceiver = await User.findOneAndUpdate(
-                    //     { _id: toUid, walletBalance: { $gte: rate } },
-                    //     { $inc: { walletBalance: -rate } },
-                    //     { new: true }
-                    // );
-                    console.log("updatedCaller", updatedCaller);
-
                     if (!updatedCaller) {
                         clearInterval(intervalId);
                         if (callerSocketId) {
                             io.to(callerSocketId).emit("call-ended", { reason: "Insufficient balance" });
                         }
-                        // if (receiverSocketId) {
-                        //     io.to(receiverSocketId).emit("call-ended", { reason: "Insufficient balance" });
-                        // }
+                        
                         return;
                     }
 
@@ -154,12 +135,7 @@ const ioServer = (server) => {
         });
 
         socket.on("call-rejected", ({ toUid, fromUid }) => {
-            console.log(` Call-rejected received:`, { toUid, fromUid });
-            console.log(` Online users:`, onlineUsers);
-
             const callerSocketId = onlineUsers[toUid];
-            console.log(` Caller socket ID for ${toUid}:`, callerSocketId);
-
             if (callerSocketId) {
                 io.to(callerSocketId).emit("call-rejected", { fromUid });
                 console.log(` Call rejected by ${fromUid} for caller ${toUid}`);
@@ -169,7 +145,7 @@ const ioServer = (server) => {
         });
 
         socket.on("call-ended", async ({ fromUid, toUid }) => {
-          
+        
             try {
            
                 const conversation = await Conversation.findOne({ 
@@ -187,7 +163,7 @@ const ioServer = (server) => {
                         durationSeconds: durationSeconds
                     });
                     
-                    console.log(` Conversation ended: Duration ${durationSeconds} seconds`);
+                   
                 } else {
                     console.log(" No active conversation found to end");
                 }
@@ -195,7 +171,7 @@ const ioServer = (server) => {
                 console.error(" Error updating conversation:", error);
             }
             
-            // clearInterval(socket.callIntervalId);
+            
             const receiverSocketId = onlineUsers[toUid];
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit("call-ended", { fromUid });
@@ -204,8 +180,6 @@ const ioServer = (server) => {
 
         
         socket.on("disconnect", async () => {
-
-            
             for (let uid in onlineUsers) {
                 if (!mongoose.Types.ObjectId.isValid(uid)) {
                     console.log(" Invalid uid received:", uid);

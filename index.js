@@ -14,34 +14,14 @@ const server = http.createServer(app);
 const { ioServer } = require("./server-io");
 const { razerPayRoute } = require("./Routes/razerPayRoute");
 const shopifyRoute = require("./Routes/shopifyRoute");
-// let axios, wrapper, CookieJar;
-// try {
-//   axios = require("axios");
-//   wrapper = require("axios-cookiejar-support").wrapper;
-//   CookieJar = require("tough-cookie").CookieJar;
-// } catch (e) {
-//   // Optional deps not installed; auto-login will be disabled
-// }
-
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// Shopify CSP headers to allow embedding in admin dashboard
-// app.use((req, res, next) => {
-//     res.setHeader("Content-Security-Policy", "frame-ancestors https://admin.shopify.com https://*.myshopify.com;");
-//     res.setHeader("X-Frame-Options", "ALLOWALL");
-//     res.setHeader("X-Content-Type-Options", "nosniff");
-//     res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-//     next();
-// });
-
-
 const videoCallRouter = require("./Routes/videoCallRotes");
 const { signinSignupRouter } = require("./Routes/signin-signupRoute");
 const { userDetailsRouter } = require("./Routes/userDetailsRoutes");
-const bookAppointmentRoute = require("./Routes/bookAppointmentRoute");
 const { consultantRoute } = require("./Routes/consultantRoute");
 const { employRoute } = require("./Routes/employRutes");
 
@@ -50,11 +30,14 @@ app.use("/api/video-call", videoCallRouter);
 app.use("/api/auth", signinSignupRouter);
 app.use("/api/users", userDetailsRouter);
 app.use("/api/razerpay-create-order", razerPayRoute)
-app.use("/api-consltor", bookAppointmentRoute)
 app.use("/api-consultant", consultantRoute)
 app.use("/api-employee", employRoute)
-app.use("/apps", shopifyRoute);
-app.use("/app", shopifyRoute); // Also mount at /app for backwards compatibility
+
+/** Shopify Routes */
+app.use("/app", shopifyRoute);
+app.use("/local-consultant/public/app", shopifyRoute);
+app.use("/local-consultant/public/apps", shopifyRoute);
+
 
 
 ioServer(server);
@@ -62,3 +45,7 @@ ioServer(server);
 server.listen(PORT, () => {
   console.log(` Server running on port ${PORT}`);
 });
+
+
+
+// https://admin.shopify.com/store/saini-dev/oauth/authorize?SHOPIFY_API_KEY=569d15bd4d003d0ff174b2fdcfa8c59b&scope=read_customers,write_customers&redirect_uri=http://localhost:5001/local-consultant/public/app/app/install

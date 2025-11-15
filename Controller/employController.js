@@ -1,15 +1,15 @@
 const mongoose = require("mongoose");
-const {User} = require("../Modal/userSchema");
+const { User } = require("../Modal/userSchema");
 const bcrypt = require("bcrypt");
 
 const employController = async (req, res) => {
     try {
         const { fullname, email, password, role, address, city, state, zip, country, dateOfBirth, } = req.body;
-        console.log(req.body);
+
         // if (!fullname || !email || !password || !role) {
         //     return res.status(400).json({ message: "All fields are required" });
         // }
-        const user = await User.findOne({ email: email });  
+        const user = await User.findOne({ email: email });
         if (user) {
             return res.status(400).json({ message: "User already exists" });
         }

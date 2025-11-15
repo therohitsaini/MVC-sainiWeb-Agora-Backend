@@ -37,7 +37,7 @@ const HistroyMW = async (toUid, fromUid, type) => {
          });
          
          await conversation.save();
-         console.log(`✅ Conversation created: Consultant ${consultant.fullname} talking to User ${user.fullname}`);
+         console.log(` Conversation created: Consultant ${consultant.fullname} talking to User ${user.fullname}`);
       }
 
    } catch (error) {
