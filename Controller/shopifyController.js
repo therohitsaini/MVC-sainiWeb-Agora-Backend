@@ -17,8 +17,8 @@ try {
 }
 
 
-const client_id = process.env.SHOPIFY_CLIENT_ID || "1844b97873b270b025334fd34790185c";
-const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET || "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";
+const client_id = process.env.SHOPIFY_CLIENT_ID 
+const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET 
 const SCOPES = process.env.SHOPIFY_SCOPES || "read_customers,read_products";
 const APP_URL = process.env.APP_URL || "http://localhost:5001";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
