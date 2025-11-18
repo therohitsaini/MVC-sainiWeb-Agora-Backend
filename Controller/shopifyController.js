@@ -107,11 +107,11 @@ const authCallback = async (req, res) => {
         console.log("🔁 Auth callback triggered");
 
         // Shopify se aaye huye query parameters extract karo
-        const { shop, hmac, code } = req.query;
+        const { shop, hmac, code,host } = req.query;
         console.log("shop", shop);
         console.log("hmac", hmac);
         console.log("code", code);
-
+        console.log("host___Update___", host);
         // --- STEP 1: Required parameters check karo
         if (!shop || !hmac || !code) {
             console.log("❌ Missing required parameters");
@@ -197,7 +197,8 @@ const authCallback = async (req, res) => {
 
         // --- STEP 7: User ko frontend dashboard par redirect karo
         // IMPORTANT: Sirf ek hi response send karo - redirect karo, send() nahi
-        const redirectUrl = `https://shopifyconsultant-app.vercel.app?shop=${encodeURIComponent(shop)}`;
+        // https://shopifyconsultant-app.vercel.app
+        const redirectUrl = `https://shopifyconsultant-app.vercel.app/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
         console.log("➡️ Redirecting to:", redirectUrl);
         return res.redirect(redirectUrl);
     } catch (error) {

@@ -230,6 +230,32 @@ const getConsultantAllUserHistory = async (request, response) => {
     }
 }
 
+/**
+ * delete consultant
+ * @param {string} id 
+ * @returns {Promise<{success: boolean, message: string}>}
+ */
+const deleteConsultant = async (request, response) => {
+    try {
+        const { id } = request.params;
+        console.log("id", id);
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return response.status(400).json({ message: 'Invalid consultant ID' });
+        }
+        if (!id) {
+            return response.status(400).json({ message: 'Consultant ID is required' });
+        }
+        const deleteConsultant = await User.findByIdAndDelete(id);
+        // console.log("deleteConsultant", deleteConsultant);
+        if (!deleteConsultant) {
+            return response.status(400).json({ message: 'Consultant not found' });
+        }
+        return response.status(200).send({ success: true, message: 'Consultant deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        return response.status(500).json({ message: 'Server error' });
+    }
+}
 
 module.exports = {
     consultantController,
@@ -238,5 +264,6 @@ module.exports = {
     getConsultantById,
     getConsultantHistory,
     getConsultantAllUser,
-    getConsultantAllUserHistory
+    getConsultantAllUserHistory,
+    deleteConsultant
 }

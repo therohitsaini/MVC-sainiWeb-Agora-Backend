@@ -5,7 +5,8 @@ const { consultantController,
    getConsultantById,
    getConsultantHistory,
    getConsultantAllUser,
-   getConsultantAllUserHistory
+   getConsultantAllUserHistory,
+   deleteConsultant
 } = require("../Controller/consultantController")
 const consultantRoute = express.Router()
 
@@ -18,6 +19,6 @@ consultantRoute.get("/consultantid/:id", getConsultantById)
 consultantRoute.get("/consultant-history/:id", getConsultantHistory)
 consultantRoute.get("/consultant-all-user/:id", getConsultantAllUser)
 consultantRoute.get("/consultant-all-user-history", getConsultantAllUserHistory)
-
+consultantRoute.delete('/delete-consultant/:id', deleteConsultant);
 module.exports = { consultantRoute }
 
