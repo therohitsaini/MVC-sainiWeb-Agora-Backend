@@ -12,7 +12,7 @@ URL: https://admin.shopify.com/store/your-store/apps
 1. User Shopify Admin Panel me jata hai
 2. "Apps" section me jata hai
 3. App ko install karne ke liye click karta hai
-4. Shopify redirect karta hai: `https://test-consultant-backend.onrender.com/app/install?shop=rohit-12345839.myshopify.com`
+4. Shopify redirect karta hai: `https://sainiweb-agora-backend.onrender.com/app/install?shop=rohit-12345839.myshopify.com`
 
 ---
 

@@ -198,7 +198,7 @@ const authCallback = async (req, res) => {
         // --- STEP 7: User ko frontend dashboard par redirect karo
         // IMPORTANT: Sirf ek hi response send karo - redirect karo, send() nahi
         // https://shopifyconsultant-app.vercel.app
-        const redirectUrl = `https://shopifyconsultant-app.vercel.app/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+        const redirectUrl = `https://shopify-consultant.vercel.app/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
         console.log("➡️ Redirecting to:", redirectUrl);
         return res.redirect(redirectUrl);
     } catch (error) {
