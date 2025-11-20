@@ -187,12 +187,11 @@ const authCallback = async (req, res) => {
 
         console.log("Shop ID:", shopId);
         console.log("Owner Email:", ownerEmail);
-        console.log("shopInfo", shopInfo)
         let shopDoc = await shopModel.findOne({ shop });
 
         if (shopDoc) {
             shopDoc.accessToken = accessToken;
-            shopDoc.shopId = shopId;
+            shopDoc?.shopId = shopId;
             shopDoc.email = ownerEmail;
             shopDoc.installedAt = new Date();
             await shopDoc.save();
