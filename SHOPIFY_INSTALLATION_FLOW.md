@@ -245,7 +245,7 @@ GET /app/callback   → authCallback()
 ## 📝 Testing the Flow
 
 ### **Manual Test:**
-1. Browser me jao: `http://localhost:5001/app/install?shop=your-store.myshopify.com`
+1. Browser me jao: `https://sainiweb-agora-backend.onrender.com/app/install?shop=your-store.myshopify.com`
 2. Shopify OAuth page par redirect hoga
 3. Permissions approve karo
 4. Callback URL par automatically redirect hoga

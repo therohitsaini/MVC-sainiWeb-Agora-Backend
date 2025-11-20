@@ -155,7 +155,7 @@ const authCallback = async (req, res) => {
 User clicks "Install" button
   ↓
 Shopify automatically calls:
-GET http://localhost:5001/app/install?shop=rohit-12345839.myshopify.com
+GET https://sainiweb-agora-backend.onrender.com/app/install?shop=rohit-12345839.myshopify.com
   ↓
 installShopifyApp() function executes
 ```

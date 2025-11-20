@@ -191,20 +191,21 @@ const authCallback = async (req, res) => {
         let shopDoc = await shopModel.findOne({ shop });
 
         if (shopDoc) {
-            // Agar shop pehle se exist karta hai, update karo
             shopDoc.accessToken = accessToken;
+            shopDoc.shopId = shopId;
+            shopDoc.email = ownerEmail;
             shopDoc.installedAt = new Date();
             await shopDoc.save();
-            console.log("✅ Updated existing shop:", shop);
         } else {
-            // Naya shop add karo
             await new shopModel({
                 shop,
                 accessToken,
+                shopId,
+                email: ownerEmail,
                 installedAt: new Date(),
             }).save();
-            console.log("✅ Added new shop:", shop);
         }
+
 
         // --- STEP 7: User ko frontend dashboard par redirect karo
         // IMPORTANT: Sirf ek hi response send karo - redirect karo, send() nahi
