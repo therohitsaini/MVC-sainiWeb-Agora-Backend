@@ -17,8 +17,8 @@ try {
 }
 
 
-const client_id = process.env.SHOPIFY_CLIENT_ID 
-const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET 
+const client_id = process.env.SHOPIFY_CLIENT_ID
+const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET
 const SCOPES = process.env.SHOPIFY_SCOPES || "read_customers,read_products";
 const APP_URL = process.env.APP_URL || "http://localhost:5001";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
@@ -105,9 +105,9 @@ const installShopifyApp = (req, res) => {
 const authCallback = async (req, res) => {
     try {
         console.log("🔁 Auth callback triggered");
-
+        console.log("req.query", req.query);
         // Shopify se aaye huye query parameters extract karo
-        const { shop, hmac, code,host } = req.query;
+        const { shop, hmac, code, host } = req.query;
         console.log("shop", shop);
         console.log("hmac", hmac);
         console.log("code", code);
@@ -174,9 +174,20 @@ const authCallback = async (req, res) => {
         if (!accessToken) {
             return res.status(400).send("Failed to get access token");
         }
+        const shopInfo = await axios.get(
+            `https://${shop}/admin/api/2024-01/shop.json`,
+            {
+                headers: {
+                    "X-Shopify-Access-Token": accessToken
+                }
+            }
+        );
+        const shopId = shopInfo.data.shop.id;
+        const ownerEmail = shopInfo.data.shop.email;
 
-        // --- STEP 6: Shop information database me save karo
-        // Access token ko store karo taaki baad me API calls kar sako
+        console.log("Shop ID:", shopId);
+        console.log("Owner Email:", ownerEmail);
+        console.log("shopInfo", shopInfo)
         let shopDoc = await shopModel.findOne({ shop });
 
         if (shopDoc) {

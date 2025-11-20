@@ -118,7 +118,12 @@ const registerUserSchema = new mongoose.Schema(
         },
         consultantStatus: {
             type: Boolean,
-           
+
+        },
+        profileImage: {
+            type: String,
+            // required: true,
+            default: null,
         },
 
         // Shopify

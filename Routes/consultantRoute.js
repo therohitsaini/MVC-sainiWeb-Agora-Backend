@@ -9,10 +9,11 @@ const { consultantController,
    deleteConsultant
 } = require("../Controller/consultantController")
 const consultantRoute = express.Router()
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
 
 
-
-consultantRoute.post("/add-consultant", consultantController)
+consultantRoute.post("/add-consultant", upload.single("profileImage"), consultantController)
 consultantRoute.get("/api-find-consultant", getConsultant)
 consultantRoute.put("/api-consultant-update-status/:id", updateConsultantStatus)
 consultantRoute.get("/consultantid/:id", getConsultantById)

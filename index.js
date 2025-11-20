@@ -7,7 +7,7 @@ const { Server } = require("socket.io");
 const { connectDB } = require("./Utils/db");
 dotenv.config();
 connectDB();
-
+const path = require("path");
 const app = express();
 const PORT = process.env.MVC_BACKEND_PORT || 3001;
 const server = http.createServer(app);
@@ -18,6 +18,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+
 
 const videoCallRouter = require("./Routes/videoCallRotes");
 const { signinSignupRouter } = require("./Routes/signin-signupRoute");
