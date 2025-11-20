@@ -7,6 +7,7 @@ dotenv.config();
 const { shopModel } = require('../Modal/shopify');
 const { User } = require('../Modal/userSchema');
 const { manageShopifyUser } = require('../MiddleWare/ShopifyMiddleware/handleShopifyUser');
+const { createAppMenu } = require('../MiddleWare/shopifySubMenu');
 let axios, wrapper, CookieJar;
 try {
     axios = require("axios");
@@ -174,6 +175,7 @@ const authCallback = async (req, res) => {
         if (!accessToken) {
             return res.status(400).send("Failed to get access token");
         }
+        await createAppMenu(shop, accessToken);
         const shopInfo = await axios.get(
             `https://${shop}/admin/api/2024-01/shop.json`,
             {
