@@ -191,7 +191,7 @@ const authCallback = async (req, res) => {
 
         if (shopDoc) {
             shopDoc.accessToken = accessToken;
-            shopDoc?.shopId = shopId;
+            shopDoc.shopId = shopId;
             shopDoc.email = ownerEmail;
             shopDoc.installedAt = new Date();
             await shopDoc.save();
