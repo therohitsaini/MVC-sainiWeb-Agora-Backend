@@ -200,26 +200,7 @@ const authCallback = async (req, res) => {
         const AdminiId = AdminUser._id;
         console.log("AdminiId", AdminiId);
         
-        console.log("[DEBUG] shopifyController - About to call createAppMenu");
-        console.log("[DEBUG] shopifyController - Shop value:", shop);
-        console.log("[DEBUG] shopifyController - Access token present:", !!accessToken);
-        console.log("[DEBUG] shopifyController - Access token length:", accessToken?.length);
-        console.log("[DEBUG] shopifyController - AdminiId:", AdminiId);
-        
-        // Try to create app menu, but don't fail the installation if it fails
-        try {
-            const result = await createAppMenu(shop, accessToken);
-            console.log("[DEBUG] shopifyController - createAppMenu call completed successfully");
-            console.log("[DEBUG] shopifyController - Result type:", typeof result);
-            console.log("[DEBUG] shopifyController - Result value:", result);
-            console.log("[DEBUG] shopifyController - Result (stringified):", JSON.stringify(result, null, 2));
-        } catch (menuError) {
-            // Log error but continue with installation - menu creation is optional
-            console.error("[DEBUG] shopifyController - createAppMenu failed, but continuing with installation");
-            console.error("[DEBUG] shopifyController - Menu error:", menuError.message);
-            console.error("[DEBUG] shopifyController - This is non-critical - app installation will continue");
-        }
-        const redirectUrl = `https://consultantsy.vercel.app/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&adminId=${encodeURIComponent(AdminiId)}`;
+        const redirectUrl = `https://consultant-sy.vercel.app//?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&adminId=${encodeURIComponent(AdminiId)}`;
         console.log("➡️ Redirecting to:", redirectUrl);
         return res.redirect(redirectUrl);
     } catch (error) {
