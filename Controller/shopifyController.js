@@ -200,7 +200,7 @@ const authCallback = async (req, res) => {
         const AdminiId = AdminUser._id;
         console.log("AdminiId", AdminiId);
         
-        const redirectUrl = `https://consultant-sy.vercel.app//?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&adminId=${encodeURIComponent(AdminiId)}`;
+        const redirectUrl = `https://consultantsy.vercel.app/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&adminId=${encodeURIComponent(AdminiId)}`;
         console.log("➡️ Redirecting to:", redirectUrl);
         return res.redirect(redirectUrl);
     } catch (error) {
