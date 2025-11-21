@@ -129,7 +129,7 @@ const consultantController = async (req, res) => {
             !body.licenseIdNumber ||
             !body.yearOfExperience ||
             !body.chargingPerMinute ||
-            !body.languages ||
+            // !body.languages ||
             !body.displayName ||
             !body.gender ||
             !body.houseNumber ||
