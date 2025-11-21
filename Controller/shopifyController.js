@@ -138,18 +138,6 @@ const authCallback = async (req, res) => {
             .update(message)
             .digest("hex");
 
-        console.log("🧮 Generated HMAC:", generatedHmac);
-        console.log("📦 Received HMAC:", hmac);
-        console.log("🔍 Message used for validation:", message);
-        console.log("📝 Sorted keys:", sortedKeys.join(", "));
-        console.log("🔑 Secret used (first 10 chars):", SHOPIFY_API_SECRET.substring(0, 10) + "...");
-        console.log("🔑 Secret used (full length):", SHOPIFY_API_SECRET.length, "characters");
-        console.log("📋 All query params:", JSON.stringify(req.query, null, 2));
-
-        // Additional debugging: Check if secrets match
-        console.log("🔍 Client ID:", client_id);
-        console.log("🔍 Secret starts with:", SHOPIFY_API_SECRET.substring(0, 5));
-
         // --- STEP 4: HMAC compare karo (security verification)
         // Agar match nahi kiya to request fake/unauthorized hai
         if (generatedHmac.toLowerCase() !== hmac.toLowerCase()) {
@@ -187,8 +175,6 @@ const authCallback = async (req, res) => {
         const shopId = shopInfo.data.shop.id;
         const ownerEmail = shopInfo.data.shop.email;
 
-        console.log("Shop ID:", shopId);
-        console.log("Owner Email:", ownerEmail);
         let shopDoc = await shopModel.findOne({ shop });
 
         if (shopDoc) {
@@ -207,11 +193,14 @@ const authCallback = async (req, res) => {
             }).save();
         }
 
+        const AdminUser = await shopModel.findOne({ shop: shop });
+        if (!AdminUser) {
+            return res.status(400).send("Admin user not found");
+        }
+        const AdminiId = AdminUser._id;
+        console.log("AdminiId", AdminiId);
 
-        // --- STEP 7: User ko frontend dashboard par redirect karo
-        // IMPORTANT: Sirf ek hi response send karo - redirect karo, send() nahi
-        // https://shopifyconsultant-app.vercel.app
-        const redirectUrl = `https://consultant-lemon-psi.vercel.app//?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}`;
+        const redirectUrl = `https://consultantsy.vercel.app/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&adminId=${encodeURIComponent(AdminiId)}`;
         console.log("➡️ Redirecting to:", redirectUrl);
         return res.redirect(redirectUrl);
     } catch (error) {

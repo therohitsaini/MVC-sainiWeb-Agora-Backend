@@ -215,8 +215,9 @@ const consultantController = async (req, res) => {
 // }
 const getConsultant = async (req, res) => {
     try {
-        let consultants = await User.find({ userType: "consultant" }).select("-password");
 
+        let consultants = await User.find({ userType: "consultant" }).select("-password");
+        // console.log("consultants", consultants);
         consultants = consultants.map(item => {
             return {
                 ...item._doc,
