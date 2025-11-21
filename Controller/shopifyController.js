@@ -163,7 +163,7 @@ const authCallback = async (req, res) => {
         if (!accessToken) {
             return res.status(400).send("Failed to get access token");
         }
-        await createAppMenu(shop, accessToken);
+
         const shopInfo = await axios.get(
             `https://${shop}/admin/api/2024-01/shop.json`,
             {
@@ -199,7 +199,7 @@ const authCallback = async (req, res) => {
         }
         const AdminiId = AdminUser._id;
         console.log("AdminiId", AdminiId);
-
+        await createAppMenu(shop, accessToken);
         const redirectUrl = `https://consultantsy.vercel.app/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&adminId=${encodeURIComponent(AdminiId)}`;
         console.log("➡️ Redirecting to:", redirectUrl);
         return res.redirect(redirectUrl);

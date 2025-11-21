@@ -1,45 +1,36 @@
-const { default: axios } = require("axios");
+const axios = require("axios");
 
 const createAppMenu = async (shop, accessToken) => {
     try {
-        // 1️⃣ Create section
+        // 1. Create Section in Admin
         const sectionRes = await axios.post(
             `https://${shop}/admin/api/2024-10/app_sections.json`,
-            { title: "Consultant App" },
+            {
+                app_section: { title: "Consultant App" }  // Sidebar Title
+            },
             { headers: { "X-Shopify-Access-Token": accessToken } }
         );
 
         const sectionId = sectionRes.data.app_section.id;
+        console.log("sectionId", sectionId);
 
-        // 2️⃣ Add Dashboard link
+        // 2. Add a Link inside Section
         await axios.post(
-            `https://${shop}/admin/api/2024-10/app_links.json`,
+            `https://${shop}/admin/api/2024-10/app_sections/${sectionId}/links.json`,
             {
-                title: "Dashboard",
-                url: "https://shopify-consultant.vercel.app/dashboard",
-                type: "APP",
-                position: 1,
-                app_section_id: sectionId
+                app_link: {
+                    title: "Dashboard",
+                    target: "app",
+                    url: "https://your-app-url.com/dashboard"
+                }
             },
             { headers: { "X-Shopify-Access-Token": accessToken } }
         );
 
-        // 3️⃣ Add Settings link
-        await axios.post(
-            `https://${shop}/admin/api/2024-10/app_links.json`,
-            {
-                title: "Consultant List",
-                url: "https://shopify-consultant.vercel.app/consultant-list",
-                type: "APP",
-                position: 2,
-                app_section_id: sectionId
-            },
-            { headers: { "X-Shopify-Access-Token": accessToken } }
-        );
-
-        console.log("Shopify App Menu Created Successfully");
-    } catch (e) {
-        console.log("Menu Error", e?.response?.data);
+        console.log("App menu added successfully!");
+    } catch (err) {
+        console.error(err.response?.data || err.message);
     }
 }
-module.exports = { createAppMenu }
+
+module.exports = { createAppMenu };
