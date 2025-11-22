@@ -14,6 +14,9 @@ const registerUserSchema = new mongoose.Schema(
             lowercase: true,
             trim: true,
         },
+        shop_id: {
+            type: String,
+        },
         password: {
             type: String,
             trim: true,

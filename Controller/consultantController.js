@@ -10,114 +10,23 @@ const path = require("path");
 
 const randomAgoraUid = Math.floor(Math.random() * 1000000000);
 
-// const consultantController = async (req, res) => {
-
-//     try {
-//         const body = req.body;
-//         const file = req.file;
-//         console.log("file", file);
-//         console.log("body", body);
-//         if (!body.fullName
-//             || !body.email
-//             || !body.password
-//             || !body.phoneNumber
-//             || !body.profession ||
-//             !body.specialization ||
-//             !body.licenseIdNumber ||
-//             !body.yearOfExperience ||
-//             !body.chargingPerMinute ||
-//             !body.languages ||
-//             !body.displayName ||
-//             !body.gender ||
-//             !body.houseNumber
-//             || !body.streetArea
-//             || !body.landmark
-//             || !body.address
-//             || !body.pincode
-//             || !body.dateOfBirth
-//             || !body.pancardNumber
-//         ) {
-//             return res.status(400).json({ success: false, message: "All fields are required" });
-//         }
-//         // const { fullName, email, phone, profession, specialization, licenseNo, experience, fees, bio, password, language } = req.body;
-//         // if (!fullName || fullName.trim() === "") {
-//         //     return res.status(400).json({ success: false, message: "Full name is required" });
-//         // }
-//         // if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-//         //     return res.status(400).json({ success: false, message: "Valid email is required" });
-//         // }
-//         // if (!password || password.trim() === "") {
-//         //     return res.status(400).json({ success: false, message: "Password is required" });
-//         // }
-
-//         // if (!phone || !/^\d{10,15}$/.test(phone)) {
-//         //     return res.status(400).json({ success: false, message: "Valid phone number (10-15 digits) is required" });
-//         // }
-
-//         // if (!profession || profession.trim() === "") {
-//         //     return res.status(400).json({ success: false, message: "Profession is required" });
-//         // }
-
-//         // if (!specialization || specialization.trim() === "") {
-//         //     return res.status(400).json({ success: false, message: "Specialization is required" });
-//         // }
-
-//         // if (!licenseNo || licenseNo.trim() === "") {
-//         //     return res.status(400).json({ success: false, message: "License number is required" });
-//         // }
-
-//         // if (experience === undefined || isNaN(experience) || experience < 0) {
-//         //     return res.status(400).json({ success: false, message: "Valid experience (>=0) is required" });
-//         // }
-
-//         // if (fees === undefined || isNaN(fees) || fees < 0) {
-//         //     return res.status(400).json({ success: false, message: "Valid fees (>=0) is required" });
-//         // }
-//         const hashPassword = await bcrypt.hash(body.password, 10)
-//         const consultantDetails = new User({
-//             fullname: body.fullName,
-//             email: body.email,
-//             phone: body.phoneNumber,
-//             password: hashPassword,
-//             profession: body.profession,
-//             specialization: body.specialization,
-//             licenseNo: body.licenseIdNumber,
-//             experience: body.yearOfExperience,
-//             fees: body.chargingPerMinute,
-//             language: body.languages,
-//             displayName: body.displayName,
-//             gender: body.gender,
-//             houseNumber: body.houseNumber,
-//             streetArea: body.streetArea,
-//             landmark: body.landmark,
-//             address: body.address,
-//             pincode: body.pincode,
-//             dateOfBirth: body.dateOfBirth,
-//             pan_cardNumber: body.pancardNumber,
-//             isActive: true,
-//             userType: "consultant",
-//             consultantStatus: false,
-//             agoraUid: randomAgoraUid
-//             // consultantStatus: true,
-//             // isActive: true,
-//         });
-
-//         // await consultantDetails.save();
-//         res.status(201).json({ success: true, message: "Consultant created successfully" });
-//     } catch (error) {
-//         res.status(500).json({ success: false, message: error.message });
-//     }
-// };
-
-
-
-
 const consultantController = async (req, res) => {
     try {
+        const { shop_id } = req.params;
         const body = req.body;
         const file = req.file;
-        console.log("file", file);
-        console.log("body", body);
+        if (!mongoose.Types.ObjectId.isValid(shop_id)) {
+            return res
+                .status(400)
+                .json({ success: false, message: "Invalid shop ID" });
+        }
+
+
+        if (!shop_id) {
+            return res
+                .status(400)
+                .json({ success: false, message: "Shop not found" });
+        }
 
         if (
             !body.fullName ||
@@ -165,6 +74,7 @@ const consultantController = async (req, res) => {
         const imageURL = savePath;
         const hashPassword = await bcrypt.hash(body.password, 10);
         const consultantDetails = new User({
+            shop_id: shop_id,
             fullname: body.fullName,
             email: body.email,
             phone: body.phoneNumber,
@@ -201,23 +111,15 @@ const consultantController = async (req, res) => {
 };
 
 
-// const getConsultant = async (req, res) => {
-//     try {
-//         const findConsultant = await User.find({ userType: "consultant" }).select("-password")
-//         if (!findConsultant) {
-//             return res.status(400).send({ message: "Consultant is undifind..??" })
-//         }
-//         return res.status(200).send({ success: true, findConsultant })
-
-//     } catch (error) {
-//         console.log(error)
-//     }
-// }
 const getConsultant = async (req, res) => {
     try {
-
-        let consultants = await User.find({ userType: "consultant" }).select("-password");
-        // console.log("consultants", consultants);
+        const { shop_id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(shop_id)) {
+            return res
+                .status(400)
+                .json({ success: false, message: "Invalid shop ID" });
+        }
+        let consultants = await User.find({ userType: "consultant", shop_id: shop_id }).select("-password");
         consultants = consultants.map(item => {
             return {
                 ...item._doc,
