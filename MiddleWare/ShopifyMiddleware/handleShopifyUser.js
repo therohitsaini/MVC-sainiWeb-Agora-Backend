@@ -53,7 +53,7 @@ const manageShopifyUser = async (shop, customerId) => {
             } else {
                 // Combine firstName and lastName for fullname, handle null/undefined
                 const fullname = [customer.firstName, customer.lastName].filter(Boolean).join(' ') || 'Shopify Customer';
-                
+
                 const newUser = new User({
                     shopifyCustomerId: id,
                     shop_id: "690c374f605cb8b946503ccb",
@@ -64,9 +64,9 @@ const manageShopifyUser = async (shop, customerId) => {
                     createdAt: customer.createdAt,
                     numberOfOrders: customer.numberOfOrders
                 });
-                
+
                 await newUser.save();
-                return { success: true, message: "Customer created successfully", userId: newUser._id };
+                return { success: true, message: "Customer created successfully", shop_id: newUser.shop_id };
             }
         }
         return { success: false, message: "Customer not found in Shopify" };
