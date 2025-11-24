@@ -34,26 +34,21 @@ const registerUserSchema = new mongoose.Schema(
 
         displayName: {
             type: String,
-            required: true,
         },
 
         phone: {
             type: String,
-            required: true,
         },
 
         // Consultant Details
         experience: {
             type: String,
-            required: true,
         },
         fees: {
             type: String,
-            required: true,
         },
         language: {
             type: Array,
-            required: true,
         },
         bio: {
             type: String,
@@ -61,39 +56,31 @@ const registerUserSchema = new mongoose.Schema(
         },
         gender: {
             type: String,
-            required: true,
         },
 
         // Address Fields
         houseNumber: {
             type: String,
-            required: true,
         },
         streetArea: {
             type: String,
-            required: true,
         },
         landmark: {
             type: String,
-            required: true,
         },
         address: {
             type: String,
-            required: true,
         },
         pincode: {
             type: String,
-            required: true,
         },
 
         dateOfBirth: {
             type: Date,
-            required: true,
         },
 
         pan_cardNumber: {
             type: String,
-            required: true,
         },
 
         // User-specific

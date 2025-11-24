@@ -51,12 +51,15 @@ const manageShopifyUser = async (shop, customerId) => {
             if (user) {
                 return { success: true, message: "Customer already exists", userId: user._id };
             } else {
+                // Combine firstName and lastName for fullname, handle null/undefined
+                const fullname = [customer.firstName, customer.lastName].filter(Boolean).join(' ') || 'Shopify Customer';
+                
                 const newUser = new User({
                     shopifyCustomerId: id,
                     shop_id: "690c374f605cb8b946503ccb",
                     userType: "customer",
                     email: customer.email,
-                    fullname: customer.firstName,
+                    fullname: fullname,
                     walletBalance: 100,
                     createdAt: customer.createdAt,
                     numberOfOrders: customer.numberOfOrders
@@ -66,10 +69,11 @@ const manageShopifyUser = async (shop, customerId) => {
                 return { success: true, message: "Customer created successfully", userId: newUser._id };
             }
         }
+        return { success: false, message: "Customer not found in Shopify" };
 
     } catch (error) {
         console.error("Error fetching customer:", error.response?.data || error.message);
-
+        return { success: false, message: error.message || "Error registering customer", error: error.response?.data || error.message };
     }
 }
 
