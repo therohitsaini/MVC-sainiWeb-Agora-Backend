@@ -6,7 +6,7 @@ const { deleteConsultant } = require('../Controller/consultantController');
 shopifyRoute.get('/install', installShopifyApp);
 shopifyRoute.get('/callback', authCallback);
 shopifyRoute.get('/login', shopifyLogin);
-shopifyRoute.get('/agora', proxyThemeAssetsController);
+shopifyRoute.get('/consultant-theme', proxyThemeAssetsController);
 shopifyRoute.get('/agora/consultant-registration', proxyShopifyConsultantPage);
 
 
