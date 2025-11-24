@@ -199,7 +199,7 @@ const authCallback = async (req, res) => {
         }
         const AdminiId = AdminUser._id;
         console.log("AdminiId", AdminiId);
-        
+        // https://projectable-eely-minerva.ngrok-free.dev/
         const redirectUrl = `https://projectable-eely-minerva.ngrok-free.dev/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&adminId=${encodeURIComponent(AdminiId)}`;
         console.log("➡️ Redirecting to:", redirectUrl);
         return res.redirect(redirectUrl);
@@ -276,6 +276,7 @@ const proxyThemeAssetsController = async (req, res) => {
 
         if (homeResp.status >= 300 && homeResp.status < 400) {
             const storefrontPassword = process.env.STOREFRONT_PASSWORD || 1;
+
             if (storefrontPassword && wrapper && CookieJar && axios) {
                 const jar = new CookieJar();
                 const client = wrapper(axios.create({ jar, withCredentials: true, headers: { "User-Agent": userAgent } }));
@@ -284,8 +285,10 @@ const proxyThemeAssetsController = async (req, res) => {
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
                     maxRedirects: 0, validateStatus: () => true
                 });
+
                 homeResp = await client.get(makeUrl(`https://${shop}/`));
                 var jarFetch = async (url) => (await client.get(url)).data;
+                
             } else {
                 return res.status(401).send("Storefront locked. Enter password or use preview.");
             }
@@ -322,7 +325,7 @@ const proxyThemeAssetsController = async (req, res) => {
               <main style="min-height:70vh;">
                   ${headerHtml}
               <iframe 
-                  src="https://agora-ui-nine.vercel.app/home?customerId=${customerId}" 
+                  src="https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${customerId}" 
                   style="border:none;width:100%;height:100vh;display:block;"
                 ></iframe>
                   ${footerHtml}
