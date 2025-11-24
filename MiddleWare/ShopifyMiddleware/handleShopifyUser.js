@@ -61,6 +61,7 @@ const manageShopifyUser = async (shop, customerId) => {
                     createdAt: customer.createdAt,
                     numberOfOrders: customer.numberOfOrders
                 });
+                
                 await newUser.save();
                 return { success: true, message: "Customer created successfully", userId: newUser._id };
             }
