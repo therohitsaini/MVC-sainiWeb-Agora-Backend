@@ -7,6 +7,7 @@ dotenv.config();
 const { shopModel } = require("../../Modal/shopify");
 const { User } = require("../../Modal/userSchema");
 const axios = require("axios");
+const { ShopfiyUsers } = require("../../Modal/shopfiyUsers");
 
 
 
@@ -19,7 +20,7 @@ const manageShopifyUser = async (shop, customerId) => {
         if (!shopDoc) {
             console.log("shopDoc not found");
             return null;
-        }                              
+        }
         const accessToken = shopDoc.accessToken;
         console.log("accessToken", accessToken);
 
@@ -51,8 +52,10 @@ const manageShopifyUser = async (shop, customerId) => {
             if (user) {
                 return { success: true, message: "Customer already exists", userId: user._id };
             } else {
-                const newUser = new User({
+                const newUser = new ShopfiyUsers({
                     shopifyCustomerId: id,
+                    shop_id: "690c374f605cb8b946503ccb",
+                    userType: "customer",
                     email: customer.email,
                     fullname: customer.firstName,
                     walletBalance: 100,
