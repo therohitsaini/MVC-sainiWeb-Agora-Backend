@@ -44,7 +44,8 @@ const callSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// Model already exists check karo - duplicate model name se bachne ke liye
 // Create and export the Call model
-const Call = mongoose.model("Call", callSchema);
+const Call = mongoose.models.Call || mongoose.model("Call", callSchema);
 
 module.exports = Call;

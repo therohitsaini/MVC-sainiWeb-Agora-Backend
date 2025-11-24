@@ -7,6 +7,7 @@ const shop = new mongoose.Schema({
     installedAt: { type: Date, default: Date.now }
 });
 
-const shopModel = mongoose.model('shopifyShop', shop);
+// Model already exists check karo - duplicate model name se bachne ke liye
+const shopModel = mongoose.models.shopifyShop || mongoose.model('shopifyShop', shop);
 
 module.exports = { shopModel }

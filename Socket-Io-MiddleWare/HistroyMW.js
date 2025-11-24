@@ -1,6 +1,6 @@
 
 const { Conversation } = require("../Modal/Histroy");
-const User = require("../Modal/userSchema");
+const { User } = require("../Modal/userSchema");
 
 const HistroyMW = async (toUid, fromUid, type) => {
    try {

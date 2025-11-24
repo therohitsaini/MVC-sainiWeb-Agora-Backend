@@ -43,6 +43,7 @@ const ConversationSchema = new mongoose.Schema(
 ConversationSchema.index({ consultantId: 1, startTime: -1 });
 ConversationSchema.index({ userId: 1, startTime: -1 });
 
-const Conversation = mongoose.model("Conversation", ConversationSchema);
+// Model already exists check karo - duplicate model name se bachne ke liye
+const Conversation = mongoose.models.Conversation || mongoose.model("Conversation", ConversationSchema);
 
 module.exports = { Conversation };

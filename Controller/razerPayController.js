@@ -3,7 +3,7 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 // aapke DB ka model
 const dotenv = require('dotenv');
-const User = require('../Modal/userSchema');
+const { User } = require('../Modal/userSchema');
 dotenv.config();
 
 

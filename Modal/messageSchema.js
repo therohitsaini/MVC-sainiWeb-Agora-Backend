@@ -37,7 +37,8 @@ const MessageSchema = new mongoose.Schema(
 
 MessageSchema.index({ conversationId: 1, createdAt: 1 });
 
-const Message = mongoose.model("Message", MessageSchema);
+// Model already exists check karo - duplicate model name se bachne ke liye
+const Message = mongoose.models.Message || mongoose.model("Message", MessageSchema);
 
 module.exports = { Message };
 
