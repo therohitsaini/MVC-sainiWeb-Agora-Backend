@@ -258,6 +258,7 @@ const proxyThemeAssetsController = async (req, res) => {
         if (shop && customerId) {
             try {
                 const result = await manageShopifyUser(shop, customerId);
+                console.log("result", result);
                 if (result.success) {
                     console.log("✅ Customer registration:", result.message, result.userId ? `userId: ${result.userId}` : '');
                 } else {
@@ -318,13 +319,12 @@ const proxyThemeAssetsController = async (req, res) => {
 
                 <script>
                     const customerId = "${customerId}";
-                    
                 </script>
             
              
               <main style="min-height:70vh;">
                   ${headerHtml}
-                  https://projectable-eely-minerva.ngrok-free.dev/
+              
               <iframe 
                   src="https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${customerId}" 
                   style="border:none;width:100%;height:100vh;display:block;"
