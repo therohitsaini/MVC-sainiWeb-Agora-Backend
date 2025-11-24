@@ -52,7 +52,7 @@ const manageShopifyUser = async (shop, customerId) => {
             if (user) {
                 return { success: true, message: "Customer already exists", userId: user._id };
             } else {
-                const newUser = new ShopfiyUsers({
+                const newUser = new User({
                     shopifyCustomerId: id,
                     shop_id: "690c374f605cb8b946503ccb",
                     userType: "customer",

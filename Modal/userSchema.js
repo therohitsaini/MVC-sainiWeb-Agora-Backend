@@ -104,20 +104,18 @@ const registerUserSchema = new mongoose.Schema(
         },
         walletBalance: {
             type: Number,
-            default: 0
+           
         },
 
         profession: {
             type: String,
-            required: true,
+                
         },
         specialization: {
             type: String,
-            required: true,
         },
         licenseNo: {
             type: String,
-            required: true,
         },
         consultantStatus: {
             type: Boolean,
