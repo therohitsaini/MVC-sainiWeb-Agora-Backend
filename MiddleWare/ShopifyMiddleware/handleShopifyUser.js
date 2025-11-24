@@ -7,7 +7,6 @@ dotenv.config();
 const { shopModel } = require("../../Modal/shopify");
 const { User } = require("../../Modal/userSchema");
 const axios = require("axios");
-const { ShopfiyUsers } = require("../../Modal/shopfiyUsers");
 
 
 
