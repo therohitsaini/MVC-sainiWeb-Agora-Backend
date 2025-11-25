@@ -7,7 +7,7 @@ shopifyRoute.get('/install', installShopifyApp);
 shopifyRoute.get('/callback', authCallback);
 shopifyRoute.get('/login', shopifyLogin);
 shopifyRoute.get('/consultant-theme', proxyThemeAssetsController);
-shopifyRoute.get('/agora/consultant-registration', proxyShopifyConsultantPage);
+shopifyRoute.get('/consultant-theme/login', proxyShopifyConsultantPage);
 
 
 module.exports = shopifyRoute;

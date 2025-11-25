@@ -290,6 +290,35 @@ const deleteConsultant = async (request, response) => {
     }
 }
 
+/**
+ * get consultant by shop id and consultant id 
+ * @param {string} shop_id 
+ * @returns {Promise<{success: boolean, message: string, consultants: User[]}>}
+ */
+const getConsultantByShopIdAndConsultantId = async (request, response) => {
+    try {
+        const { shop_id, consultant_id } = request.params;
+        console.log("shop_id", shop_id);
+        console.log("consultant_id", consultant_id);
+        if (!mongoose.Types.ObjectId.isValid(shop_id)) {
+            return response.status(400).json({ message: 'Invalid shop ID' });
+        }
+        if (!mongoose.Types.ObjectId.isValid(consultant_id)) {
+            return response.status(400).json({ message: 'Invalid consultant ID' });
+        }
+        if (!consultant_id || !shop_id) {
+            return response.status(400).json({ message: 'Consultant Shop  ID is required' });
+        }
+        const consultant = await User.findOne({ _id: consultant_id, shop_id: shop_id });
+        console.log("consultant", consultant);
+
+        return response.status(200).send({ success: true, consultant });
+    }
+    catch (error) {
+        console.error(error);
+        return response.status(500).json({ message: 'Server error' });
+    }
+}
 
 
 
@@ -303,5 +332,6 @@ module.exports = {
     getConsultantHistory,
     getConsultantAllUser,
     getConsultantAllUserHistory,
-    deleteConsultant
+    deleteConsultant,
+    getConsultantByShopIdAndConsultantId
 }
