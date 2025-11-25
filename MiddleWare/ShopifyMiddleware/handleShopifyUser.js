@@ -47,6 +47,8 @@ const manageShopifyUser = async (shop, customerId) => {
             const id = customer.id.split('/').pop();
             console.log("id", id);
             const user = await User.findOne({ shopifyCustomerId: id });
+            const getShop = await shopModel.findOne({ shop: shop });
+            console.log("getShop_______", getShop._id);
             console.log("user_______", user);
             if (user) {
                 return { success: true, message: "Customer already exists", userId: user._id };
