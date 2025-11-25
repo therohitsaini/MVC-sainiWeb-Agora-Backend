@@ -15,6 +15,7 @@ const consultantController = async (req, res) => {
         const { shop_id } = req.params;
         const body = req.body;
         const file = req.file;
+        console.log("body", body);
         if (!mongoose.Types.ObjectId.isValid(shop_id)) {
             return res
                 .status(400)
@@ -109,6 +110,49 @@ const consultantController = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+/**
+ * login consultant
+ * @param {login} req 
+ * @param {*} res 
+ * @returns 
+ */
+
+const loginConsultant = async (request, response) => {
+    try {
+        const body = request.body
+
+        console.log("body", body);
+
+        let find_User = await User.findOne({ email: body.email })
+
+
+        if (!find_User) {
+            return response.status(400).send({ massage: "Incrrect Details ...!" })
+        }
+        console.log("find_User", find_User);
+
+        // if (find_User.consultantStatus === false) {
+        //     return response.status(403).send({ massage: "Your account is blocked. Please contact administrator." })
+        // }
+
+        // const compairPassword = await bcrypt.compare(body.password, find_User.password)
+
+        // if (!compairPassword) {
+        //     return response.status(400).send({ massage: "Incrrect password ... ! " })
+        // }
+        // const Token = JWT.sign(find_User, JWT_SRCURITE_KEY, { expiresIn: '10h' })
+        // console.log("Token", Token);
+
+        return response.send({ massage: "Sign in successfully ", userData: find_User })
+
+    } catch (err) {
+        return response.status(400).send({ massage: "Server Error ...!", err })
+
+    }
+}
+
+
 
 
 const getConsultant = async (req, res) => {
@@ -333,5 +377,6 @@ module.exports = {
     getConsultantAllUser,
     getConsultantAllUserHistory,
     deleteConsultant,
-    getConsultantByShopIdAndConsultantId
+    getConsultantByShopIdAndConsultantId,
+    loginConsultant
 }
