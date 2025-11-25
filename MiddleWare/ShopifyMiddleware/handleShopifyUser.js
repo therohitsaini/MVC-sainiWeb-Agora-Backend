@@ -41,15 +41,14 @@ const manageShopifyUser = async (shop, customerId) => {
         };
         const url = `https://${shop}/admin/api/2024-10/graphql.json`;
         const response = await axios.post(url, graphqlQuery, { headers });
-   
+
         if (response.data.data.customer) {
             const customer = response.data.data.customer;
             const id = customer.id.split('/').pop();
             console.log("id", id);
             const user = await User.findOne({ shopifyCustomerId: id });
             const getShop = await shopModel.findOne({ shop: shop });
-            console.log("getShop_______", getShop._id);
-            console.log("user_______", user);
+         
             if (user) {
                 return { success: true, message: "Customer already exists", userId: user._id };
             } else {
@@ -58,7 +57,7 @@ const manageShopifyUser = async (shop, customerId) => {
 
                 const newUser = new User({
                     shopifyCustomerId: id,
-                    shop_id: "690c374f605cb8b946503ccb",
+                    shop_id: getShop._id,
                     userType: "customer",
                     email: customer.email,
                     fullname: fullname,
@@ -68,7 +67,7 @@ const manageShopifyUser = async (shop, customerId) => {
                 });
 
                 await newUser.save();
-                console.log("newUser__________", newUser);
+             
                 return { success: true, message: "Customer created successfully", shop_id: newUser.shop_id };
             }
         }
