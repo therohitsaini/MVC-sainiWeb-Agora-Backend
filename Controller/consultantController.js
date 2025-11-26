@@ -153,8 +153,6 @@ const loginConsultant = async (request, response) => {
 }
 
 
-
-
 const getConsultant = async (req, res) => {
     try {
         const { shop_id } = req.params;
