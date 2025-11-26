@@ -255,9 +255,11 @@ const proxyThemeAssetsController = async (req, res) => {
         const shop = req.query.shop
         const themeId = req.query.theme_id;
         const customerId = req.query.logged_in_customer_id;
+        let userId;
         if (shop && customerId) {
             try {
                 const result = await manageShopifyUser(shop, customerId);
+                userId = result;
                 console.log("result", result);
                 if (result.success) {
                     console.log("✅ Customer registration:", result.message, result.userId ? `userId: ${result.userId}` : '');
@@ -289,11 +291,12 @@ const proxyThemeAssetsController = async (req, res) => {
 
                 homeResp = await client.get(makeUrl(`https://${shop}/`));
                 var jarFetch = async (url) => (await client.get(url)).data;
-                
+
             } else {
                 return res.status(401).send("Storefront locked. Enter password or use preview.");
             }
         }
+        console.log("userId", userId);
 
         const homeHtml = typeof homeResp.data === "string" ? homeResp.data : (await homeResp.text());
         const headMatch = homeHtml.match(/<head[\s\S]*?<\/head>/i);
@@ -346,6 +349,7 @@ const proxyThemeAssetsController = async (req, res) => {
  * 1. GET /apps/agora/consultant-registration?shop=store.myshopify.com
  * 2. GET /apps/agora/consultant-registration?shop=store.myshopify.com&theme_id=1234567890
 */
+
 const proxyShopifyConsultantPage = async (req, res) => {
     try {
         const shop = req.query.shop
