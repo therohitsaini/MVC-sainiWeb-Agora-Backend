@@ -271,6 +271,8 @@ const proxyThemeAssetsController = async (req, res) => {
             }
         }
 
+        const shopDocId = await shopModel.findOne({ shop: shop });
+        console.log("userId__shop", shopDocId._id);
         const cookieHeader = req.headers.cookie || "";
         const userAgent = req.headers["user-agent"] || "node";
         const makeUrl = (base) => themeId ? `${base}${base.includes("?") ? "&" : "?"}theme_id=${themeId}` : base;
@@ -279,7 +281,6 @@ const proxyThemeAssetsController = async (req, res) => {
 
         if (homeResp.status >= 300 && homeResp.status < 400) {
             const storefrontPassword = process.env.STOREFRONT_PASSWORD || 1;
-
             if (storefrontPassword && wrapper && CookieJar && axios) {
                 const jar = new CookieJar();
                 const client = wrapper(axios.create({ jar, withCredentials: true, headers: { "User-Agent": userAgent } }));
@@ -319,20 +320,17 @@ const proxyThemeAssetsController = async (req, res) => {
           <html>
             ${headHtml}
             <body style="margin:0;padding:0;">
-
                 <script>
                     const customerId = "${customerId}";
                 </script>
               <main style="min-height:70vh;">
                   ${headerHtml}
               <iframe 
-                  src="https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${"692438d4b0783677e6de61cb"}" 
+                  src="https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${userId.userId}&shopid=${shopDocId._id}" 
                   style="border:none;width:100%;height:100vh;display:block;"
                 ></iframe>
                   ${footerHtml}
               </main>
-            
-           
             </body>
           </html>
           `;

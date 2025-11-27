@@ -14,7 +14,6 @@ const axios = require("axios");
 
 const manageShopifyUser = async (shop, customerId) => {
     try {
-        console.log("shop", shop, customerId);
         const shopDoc = await shopModel.findOne({ shop: shop });
         if (!shopDoc) {
             console.log("shopDoc not found");
