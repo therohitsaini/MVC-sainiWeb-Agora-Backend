@@ -8,7 +8,8 @@ const { consultantController,
    getConsultantAllUserHistory,
    deleteConsultant,
    getConsultantByShopIdAndConsultantId,
-   loginConsultant
+   loginConsultant,
+   getChatListByShopIdAndConsultantId
 } = require("../Controller/consultantController")
 const consultantRoute = express.Router()
 const multer = require("multer");
@@ -25,6 +26,7 @@ consultantRoute.get("/consultant-all-user-history", getConsultantAllUserHistory)
 consultantRoute.delete('/delete-consultant/:id', deleteConsultant);
 consultantRoute.get("/consultant-by-shop-id-and-consultant-id/:shop_id/:consultant_id", getConsultantByShopIdAndConsultantId);
 consultantRoute.post("/login-consultant", loginConsultant);
+consultantRoute.get("/get/chat-list/:shop_id/:consultant_id", getChatListByShopIdAndConsultantId);
 
 
 module.exports = { consultantRoute }

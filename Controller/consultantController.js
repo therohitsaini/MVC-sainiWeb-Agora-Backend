@@ -6,6 +6,7 @@ const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
+const { ChatList } = require("../Modal/chatListSchema");
 
 
 const randomAgoraUid = Math.floor(Math.random() * 1000000000);
@@ -182,7 +183,7 @@ const getConsultant = async (req, res) => {
 const updateConsultantStatus = async (request, response) => {
     try {
         const { id } = request.params;
-    
+
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return response.status(400).json({ message: 'Invalid consultant ID' });
         }
@@ -193,7 +194,7 @@ const updateConsultantStatus = async (request, response) => {
         if (!consultant) {
             return res.status(404).json({ message: "Consultant not found" });
         }
-      
+
 
         // Toggle ONLY consultantStatus
         consultant.consultantStatus = !consultant.consultantStatus;
@@ -313,7 +314,7 @@ const getConsultantAllUserHistory = async (request, response) => {
 const deleteConsultant = async (request, response) => {
     try {
         const { id } = request.params;
-       
+
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return response.status(400).json({ message: 'Invalid consultant ID' });
         }
@@ -340,7 +341,9 @@ const deleteConsultant = async (request, response) => {
 const getConsultantByShopIdAndConsultantId = async (request, response) => {
     try {
         const { shop_id, consultant_id } = request.params;
-       
+        console.log("shop_id", shop_id);
+        console.log("consultant_id", consultant_id);
+
         if (!mongoose.Types.ObjectId.isValid(shop_id)) {
             return response.status(400).json({ message: 'Invalid shop ID' });
         }
@@ -351,11 +354,36 @@ const getConsultantByShopIdAndConsultantId = async (request, response) => {
             return response.status(400).json({ message: 'Consultant Shop  ID is required' });
         }
         const consultant = await User.findOne({ _id: consultant_id, shop_id: shop_id });
-   
+
 
         return response.status(200).send({ success: true, consultant });
     }
     catch (error) {
+        console.error(error);
+        return response.status(500).json({ message: 'Server error' });
+    }
+}
+
+
+/**
+ * get chat list by shop id and consultant id
+ * @param {string} shop_id 
+ * @param {string} consultant_id 
+ * @returns {Promise<{success: boolean, message: string, chatList: ChatList[]}>}
+ */
+const getChatListByShopIdAndConsultantId = async (request, response) => {
+    try {
+        const { shop_id, consultant_id } = request.params;
+        if (!mongoose.Types.ObjectId.isValid(shop_id)) {
+            return response.status(400).json({ message: 'Invalid shop ID' });
+        }
+        const chatList = await ChatList.find({ shop_id: shop_id, receiverId: consultant_id }).populate("senderId")
+        console.log("chatList", chatList);
+        if (!chatList) {
+            return response.status(400).json({ message: 'Chat list not found' });
+        }
+        return response.status(200).send({ success: true, message: 'Chat list fetched successfully', chatList });
+    } catch (error) {
         console.error(error);
         return response.status(500).json({ message: 'Server error' });
     }
@@ -375,5 +403,6 @@ module.exports = {
     getConsultantAllUserHistory,
     deleteConsultant,
     getConsultantByShopIdAndConsultantId,
-    loginConsultant
+    loginConsultant,
+    getChatListByShopIdAndConsultantId
 }
