@@ -5,6 +5,7 @@ const { default: mongoose } = require("mongoose");
 const { Conversation } = require("./Modal/Histroy");
 const { HistroyMW } = require("./Socket-Io-MiddleWare/HistroyMW");
 const { Message } = require("./Modal/messageSchema");
+const { ChatList } = require("./Modal/chatListSchema");
 
 
 const ioServer = (server) => {
@@ -33,6 +34,62 @@ const ioServer = (server) => {
                 console.log("🔥 User not found:", user_Id);
             }
         });
+        socket.on("sendMessage", async (data) => {
+            console.log("MESSAGE RECEIVED:", data);
+
+            const { senderId, receiverId, shop_id, text, timestamp } = data;
+
+            if (!senderId || !receiverId || !shop_id) {
+                console.log(" Missing required IDs");
+                return;
+            }
+            const existingChat = await ChatList.findOne({
+                senderId,
+                receiverId,
+                shop_id
+            });
+
+            if (!existingChat) {
+                console.log("🟢 Chat does NOT exist → creating new ChatList");
+
+                await ChatList.create({
+                    senderId,
+                    receiverId,
+                    shop_id,
+                    lastMessage: text,
+                    lastMessageTime: timestamp
+                });
+            } else {
+                console.log("🟡 Chat already exists → SKIPPING create");
+
+                // Optional: Only update last message time
+                await ChatList.updateOne(
+                    { _id: existingChat._id },
+                    { lastMessage: text, lastMessageTime: timestamp }
+                );
+            }
+
+            // After validation + ChatList create/update → send msg to receiver
+            // const receiverSocketId = users[receiverId];
+
+            // if (receiverSocketId) {
+            //     io.to(receiverSocketId).emit("receiveMessage", {
+            //         senderId,
+            //         text,
+            //         timestamp
+            //     });
+            // }
+
+            // // Also send back to sender UI
+            // io.to(users[senderId]).emit("receiveMessage", {
+            //     senderId,
+            //     text,
+            //     timestamp
+            // });
+
+        });
+
+
 
         // socket.on("call-user", async ({ toUid, fromUid, type, channelName }) => {
         //     try {

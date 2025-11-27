@@ -182,7 +182,7 @@ const getConsultant = async (req, res) => {
 const updateConsultantStatus = async (request, response) => {
     try {
         const { id } = request.params;
-        console.log("id", id);
+    
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return response.status(400).json({ message: 'Invalid consultant ID' });
         }
@@ -193,7 +193,7 @@ const updateConsultantStatus = async (request, response) => {
         if (!consultant) {
             return res.status(404).json({ message: "Consultant not found" });
         }
-        console.log("consultant", consultant);
+      
 
         // Toggle ONLY consultantStatus
         consultant.consultantStatus = !consultant.consultantStatus;
@@ -313,7 +313,7 @@ const getConsultantAllUserHistory = async (request, response) => {
 const deleteConsultant = async (request, response) => {
     try {
         const { id } = request.params;
-        console.log("id", id);
+       
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return response.status(400).json({ message: 'Invalid consultant ID' });
         }
@@ -340,8 +340,7 @@ const deleteConsultant = async (request, response) => {
 const getConsultantByShopIdAndConsultantId = async (request, response) => {
     try {
         const { shop_id, consultant_id } = request.params;
-        console.log("shop_id", shop_id);
-        console.log("consultant_id", consultant_id);
+       
         if (!mongoose.Types.ObjectId.isValid(shop_id)) {
             return response.status(400).json({ message: 'Invalid shop ID' });
         }
@@ -352,7 +351,7 @@ const getConsultantByShopIdAndConsultantId = async (request, response) => {
             return response.status(400).json({ message: 'Consultant Shop  ID is required' });
         }
         const consultant = await User.findOne({ _id: consultant_id, shop_id: shop_id });
-        console.log("consultant", consultant);
+   
 
         return response.status(200).send({ success: true, consultant });
     }
