@@ -6,6 +6,7 @@ const { Conversation } = require("./Modal/Histroy");
 const { HistroyMW } = require("./Socket-Io-MiddleWare/HistroyMW");
 const { Message } = require("./Modal/messageSchema");
 const { ChatList } = require("./Modal/chatListSchema");
+const { MessageModal } = require("./Modal/messageSchema");
 
 
 const ioServer = (server) => {
@@ -68,6 +69,26 @@ const ioServer = (server) => {
                     { lastMessage: text, lastMessageTime: timestamp }
                 );
             }
+            try {
+                const receiverSocketId = onlineUsers[receiverId];
+                const savedChat = new MessageModal({
+                    senderId: senderId,
+                    receiverId: receiverId,
+                    shop_id: shop_id,
+                    text: text,
+                    timestamp: timestamp,
+                    isRead: false
+                });
+
+                await savedChat.save();
+                console.log("✅ Message saved to DB:", savedChat);
+                if (receiverSocketId) {
+                    io.to(receiverSocketId).emit("receiveMessage", savedChat);
+                }
+            } catch (error) {
+                console.error("❌ Error saving message:", error);
+            }
+
 
             // After validation + ChatList create/update → send msg to receiver
             // const receiverSocketId = users[receiverId];

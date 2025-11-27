@@ -341,8 +341,7 @@ const deleteConsultant = async (request, response) => {
 const getConsultantByShopIdAndConsultantId = async (request, response) => {
     try {
         const { shop_id, consultant_id } = request.params;
-        console.log("shop_id", shop_id);
-        console.log("consultant_id", consultant_id);
+    
 
         if (!mongoose.Types.ObjectId.isValid(shop_id)) {
             return response.status(400).json({ message: 'Invalid shop ID' });
@@ -374,20 +373,53 @@ const getConsultantByShopIdAndConsultantId = async (request, response) => {
 const getChatListByShopIdAndConsultantId = async (request, response) => {
     try {
         const { shop_id, consultant_id } = request.params;
+     
         if (!mongoose.Types.ObjectId.isValid(shop_id)) {
             return response.status(400).json({ message: 'Invalid shop ID' });
         }
-        const chatList = await ChatList.find({ shop_id: shop_id, receiverId: consultant_id }).populate("senderId")
-        console.log("chatList", chatList);
+        const chatList = await ChatList.find({ shop_id: shop_id, receiverId: consultant_id }).populate("senderId").populate("receiverId").populate("shop_id");
         if (!chatList) {
             return response.status(400).json({ message: 'Chat list not found' });
         }
-        return response.status(200).send({ success: true, message: 'Chat list fetched successfully', chatList });
+
+        const payload = chatList.map(item => {
+            return {
+                chatListId: item._id,
+
+                sender: {
+                    id: item.senderId?._id,
+                    fullname: item.senderId?.fullname,
+                    profileImage: item.senderId?.profileImage,
+                    email: item.senderId?.email,
+                    isActive: item.senderId?.isActive
+                },
+
+                receiver: {
+                    id: item.receiverId?._id,
+                    fullname: item.receiverId?.fullname,
+                    profileImage: item.receiverId?.profileImage,
+                },
+
+                shop: {
+                    id: item.shop_id?._id,
+                    shop: item.shop_id?.shop
+                },
+
+                lastMessage: item.lastMessage,
+
+                updatedAt: item.updatedAt,
+                createdAt: item.createdAt
+            };
+        });
+
+        return response.status(200).send({ success: true, message: 'Chat list fetched successfully', payload });
     } catch (error) {
         console.error(error);
         return response.status(500).json({ message: 'Server error' });
     }
 }
+
+
 
 
 

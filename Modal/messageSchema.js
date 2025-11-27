@@ -1,45 +1,27 @@
-const mongoose = require("mongoose");
+const mongoose = require("mongoose")
 
-const MessageSchema = new mongoose.Schema(
-    {
-        conversationId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Conversation",
-            required: true
-        },
-        senderId: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true
-        },
-        receiverId: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true
-        },
-        type: {
-            type: String,
-            enum: ["text", "image", "file"],
-            default: "text"
-        },
-        content: {
-            type: String,
-            trim: true,
-            default: ""
-        },
-        status: {
-            type: String,
-            enum: ["sent", "delivered", "read"],
-            default: "sent"
-        },
-        readAt: { type: Date }
+const messageSchema = new mongoose.Schema({
+    senderId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ragisterUser",
+        required: true,
     },
-    { timestamps: true }
-);
+    receiverId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ragisterUser",
+        required: true,
+    },
+    shop_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "shopifyShop",
+        required: true,
+    },
+    text: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now },
+    isRead: { type: Boolean, default: false },
+});
 
-MessageSchema.index({ conversationId: 1, createdAt: 1 });
+const MessageModal = mongoose.model("Message", messageSchema);
 
-// Model already exists check karo - duplicate model name se bachne ke liye
-const Message = mongoose.models.Message || mongoose.model("Message", MessageSchema);
-
-module.exports = { Message };
-
+module.exports = { MessageModal }
 

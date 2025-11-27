@@ -35,6 +35,7 @@ const { signinSignupRouter } = require("./Routes/signin-signupRoute");
 const { userDetailsRouter } = require("./Routes/userDetailsRoutes");
 const { consultantRoute } = require("./Routes/consultantRoute");
 const { employRoute } = require("./Routes/employRutes");
+const chatRoutes = require("./Routes/chatRoutes");
 
 
 app.use("/api/video-call", videoCallRouter);
@@ -48,6 +49,9 @@ app.use("/api-employee", employRoute)
 app.use("/app", shopifyRoute);
 app.use("/local-consultant/public/app", shopifyRoute);
 app.use("/local-consultant/public/apps", shopifyRoute);
+
+/** Chat Routes */
+app.use("/api/chat", chatRoutes);
 
 
 ioServer(server);
