@@ -326,7 +326,7 @@ const proxyThemeAssetsController = async (req, res) => {
               <main style="min-height:70vh;">
                   ${headerHtml}
               <iframe 
-                  src="https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${userId.userId}&shopid=${shopDocId._id}" 
+                  src="https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || ''}" 
                   style="border:none;width:100%;height:100vh;display:block;"
                 ></iframe>
                   ${footerHtml}
