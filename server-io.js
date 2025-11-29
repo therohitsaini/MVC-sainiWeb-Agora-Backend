@@ -39,6 +39,7 @@ const ioServer = (server) => {
             console.log("MESSAGE RECEIVED:", data);
 
             const { senderId, receiverId, shop_id, text, timestamp } = data;
+            console.log("get sender Ids", senderId, receiverId, shop_id, text)
 
             if (!senderId || !receiverId || !shop_id) {
                 console.log(" Missing required IDs");
@@ -82,10 +83,10 @@ const ioServer = (server) => {
 
                 await savedChat.save();
                 console.log("✅ Message saved to DB:", savedChat);
-                if (receiverSocketId) {
+            
                     io.to(receiverSocketId).emit("receiveMessage", savedChat);
-                }
-            } catch (error) {
+           
+            } catch (error) {   
                 console.error("❌ Error saving message:", error);
             }
 

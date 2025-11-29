@@ -341,7 +341,7 @@ const deleteConsultant = async (request, response) => {
 const getConsultantByShopIdAndConsultantId = async (request, response) => {
     try {
         const { shop_id, consultant_id } = request.params;
-    
+
 
         if (!mongoose.Types.ObjectId.isValid(shop_id)) {
             return response.status(400).json({ message: 'Invalid shop ID' });
@@ -373,7 +373,9 @@ const getConsultantByShopIdAndConsultantId = async (request, response) => {
 const getChatListByShopIdAndConsultantId = async (request, response) => {
     try {
         const { shop_id, consultant_id } = request.params;
-     
+
+        console.log("_________", shop_id, consultant_id)
+
         if (!mongoose.Types.ObjectId.isValid(shop_id)) {
             return response.status(400).json({ message: 'Invalid shop ID' });
         }
