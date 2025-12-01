@@ -314,21 +314,36 @@ const proxyThemeAssetsController = async (req, res) => {
             sectionFetch(makeUrl(`https://${shop}/?section_id=header`)),
             sectionFetch(makeUrl(`https://${shop}/?section_id=footer`))
         ]);
+
+        // Fetch consultant cards HTML from external app (no iframe)
+        const consultantUrl = `https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || ''}`;
+        let consultantHtml = '';
+        try {
+            const consultantResp = await axios.get(consultantUrl);
+            consultantHtml = consultantResp.data || '';
+
+            // If the external app returns a full HTML document, strip outer shells
+            consultantHtml = consultantHtml
+                .replace(/<!DOCTYPE html>/gi, '')
+                .replace(/<\/?html[^>]*>/gi, '')
+                .replace(/<\/?head[^>]*>[\s\S]*?<\/head>/gi, '')
+                .replace(/<\/?body[^>]*>/gi, '');
+        } catch (err) {
+            console.error("Error fetching consultant-cards HTML:", err.message || err);
+            consultantHtml = '<div>Failed to load consultant content.</div>';
+        }
+
         const pageHtml = `
           <!DOCTYPE html>
           <html>
             ${headHtml}
             <body style="margin:0;padding:0;">
-                <script>
-                    const customerId = "${customerId}";
-                </script>
               <main style="min-height:70vh;">
-                  ${headerHtml}
-              <iframe 
-                  src="https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || ''}" 
-                  style="border:none;width:100%;height:100vh;display:block;"
-                ></iframe>
-                  ${footerHtml}
+                ${headerHtml}
+                <div id="agora-consultant-root">
+                  ${consultantHtml}
+                </div>
+                ${footerHtml}
               </main>
             </body>
           </html>
