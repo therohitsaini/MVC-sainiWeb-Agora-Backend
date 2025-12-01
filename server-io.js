@@ -84,7 +84,8 @@ const ioServer = (server) => {
                 await savedChat.save();
                 console.log("✅ Message saved to DB:", savedChat);
             
-                    io.to(receiverSocketId).emit("receiveMessage", savedChat);
+                    io.emit("receiveMessage", savedChat);
+                    // .to(receiverSocketId)
            
             } catch (error) {   
                 console.error("❌ Error saving message:", error);

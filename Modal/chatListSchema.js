@@ -19,6 +19,10 @@ const ChatListSchema = new mongoose.Schema(
         },
         lastMessage: {
             type: String
+        },
+        isRequest: {
+            type: Boolean,
+            // default: false
         }
     },
     { timestamps: true }

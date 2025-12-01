@@ -374,7 +374,6 @@ const getChatListByShopIdAndConsultantId = async (request, response) => {
     try {
         const { shop_id, consultant_id } = request.params;
 
-        console.log("_________", shop_id, consultant_id)
 
         if (!mongoose.Types.ObjectId.isValid(shop_id)) {
             return response.status(400).json({ message: 'Invalid shop ID' });
@@ -383,6 +382,7 @@ const getChatListByShopIdAndConsultantId = async (request, response) => {
         if (!chatList) {
             return response.status(400).json({ message: 'Chat list not found' });
         }
+
 
         const payload = chatList.map(item => {
             return {
@@ -406,14 +406,14 @@ const getChatListByShopIdAndConsultantId = async (request, response) => {
                     id: item.shop_id?._id,
                     shop: item.shop_id?.shop
                 },
-
+                isRequest: item.isRequest,
                 lastMessage: item.lastMessage,
 
                 updatedAt: item.updatedAt,
                 createdAt: item.createdAt
             };
         });
-
+   
         return response.status(200).send({ success: true, message: 'Chat list fetched successfully', payload });
     } catch (error) {
         console.error(error);
