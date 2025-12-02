@@ -410,8 +410,9 @@ const proxyThemeAssetsController = async (req, res) => {
             sectionFetch(makeUrl(`https://${shop}/?section_id=footer`))
         ]);
 
-        // Fetch consultant cards HTML from external app (no iframe)
-        const consultantUrl = `https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || ''}`;
+        // Fetch consultant cards HTML from your ngrok SPA root (no iframe)
+        // We load the root ("/") with a view query so React can route to /consultant-cards client-side.
+        const consultantUrl = `https://projectable-eely-minerva.ngrok-free.dev/consultant-cards&customerId=${userId?.userId || ''}&shopid=${shopDocId._id || ''}`;
         let consultantHtml = '';
         try {
             const consultantResp = await axios.get(consultantUrl);
