@@ -320,12 +320,12 @@ const shopifyLogin = async (req, res) => {
 //         const reactAppPath = "/consultant-cards";
 //         const customerIdParam = userId?.userId || '';
 //         const shopIdParam = shopDocId?._id || '';
-
+        
 //         // React App ka HTML fetch karo (scripts, styles, aur body content extract karne ke liye)
 //         let reactAppStyles = '';
 //         let reactAppScripts = '';
 //         let reactAppBodyContent = '';
-
+        
 //         // Try multiple paths (React app different paths pe ho sakti hai)
 //         const possiblePaths = [
 //             reactAppPath,                    // /consultant-cards
@@ -334,11 +334,11 @@ const shopifyLogin = async (req, res) => {
 //             '/',                             // Root
 //             '/index.html'                    // Root index
 //         ];
-
+        
 //         let reactAppFullUrl = '';
 //         let reactHtml = '';
 //         let fetchSuccess = false;
-
+        
 //         // Try each path until we get valid React HTML
 //         for (const path of possiblePaths) {
 //             reactAppFullUrl = `${reactAppBaseUrl}${path}`;
@@ -350,19 +350,19 @@ const shopifyLogin = async (req, res) => {
 //                         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
 //                     }
 //                 });
-
+                
 //                 console.log("React app response status:", reactResponse.status);
-
+                
 //                 if (reactResponse.ok) {
 //                     const fetchedHtml = await reactResponse.text();
 //                     console.log("React HTML fetched, length:", fetchedHtml.length);
-
+                    
 //                     // Check if it's actually React HTML or error page
 //                     // Better detection: Check for React root div and scripts
 //                     const hasReactRoot = fetchedHtml.includes('id="root"') || 
 //                                         fetchedHtml.includes("id='root'") ||
 //                                         fetchedHtml.match(/<div[^>]*id\s*=\s*["']root["'][^>]*>/i);
-
+                    
 //                     // Check for React app scripts (not ngrok error scripts)
 //                     const hasReactScripts = fetchedHtml.includes('main.js') ||
 //                                            fetchedHtml.includes('bundle.js') ||
@@ -370,17 +370,17 @@ const shopifyLogin = async (req, res) => {
 //                                            fetchedHtml.includes('/static/js/') ||
 //                                            fetchedHtml.includes('/assets/') ||
 //                                            fetchedHtml.match(/<script[^>]*src[^>]*>/i);
-
+                    
 //                     // Check for ngrok error scripts (these should be filtered out)
 //                     const hasNgrokErrorScripts = fetchedHtml.includes('cdn.ngrok.com/static/js/error.js') ||
 //                                                 fetchedHtml.includes('cdn.ngrok.com/static/compiled/js/allerrors.js');
-
+                    
 //                     // Valid React HTML if it has root div and scripts (even if ngrok error scripts are present)
 //                     const isValidReactHTML = hasReactRoot && hasReactScripts;
-
+                    
 //                     // Pure error page: has ngrok error scripts but no React root/scripts
 //                     const isPureErrorPage = hasNgrokErrorScripts && !hasReactRoot && !hasReactScripts;
-
+                    
 //                     if (isValidReactHTML) {
 //                         // Valid React HTML found! (ngrok error scripts ko baad me filter karenge)
 //                         reactHtml = fetchedHtml;
@@ -404,7 +404,7 @@ const shopifyLogin = async (req, res) => {
 //                 console.warn("Error:", pathError.message);
 //             }
 //         }
-
+        
 //         // Process the fetched HTML if we got valid React HTML
 //         if (fetchSuccess && reactHtml) {
 //                     // Only process if it's not an error page
@@ -413,13 +413,13 @@ const shopifyLogin = async (req, res) => {
 //                     } else {
 //                         console.warn("⚠️ HTML structure might be invalid");
 //                     }
-
+                    
 //                     // Extract head content (styles, meta tags, etc.)
 //                 const headMatch = reactHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
 //                 let headScripts = '';
 //                 if (headMatch) {
 //                     const headContent = headMatch[1];
-
+                    
 //                     // Extract scripts from head (React apps me scripts head me bhi ho sakte hain)
 //                     const headScriptMatches = headContent.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
 //                     console.log("Found script tags in head:", headScriptMatches.length);
@@ -452,7 +452,7 @@ const shopifyLogin = async (req, res) => {
 //                         })
 //                         .join('\n');
 //                     console.log("Head scripts after filtering:", headScripts.length > 0 ? "Found" : "None");
-
+                    
 //                     // Extract link tags (CSS files)
 //                     const linkMatches = headContent.match(/<link[^>]*>/gi) || [];
 //                     reactAppStyles = linkMatches
@@ -469,33 +469,33 @@ const shopifyLogin = async (req, res) => {
 //                         })
 //                         .join('\n');
 //                 }
-
+                
 //                 // Extract body content (React app ka actual HTML content)
 //                 const bodyMatch = reactHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
 //                 if (bodyMatch) {
 //                     const bodyContent = bodyMatch[1];
-
+                    
 //                     // Extract all script tags from body (pehle scripts extract karo)
 //                     const bodyScriptMatches = bodyContent.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
 //                     console.log("Found script tags in body:", bodyScriptMatches.length);
-
+                    
 //                     // Combine head and body scripts
 //                     const allScriptMatches = [...(headScripts ? [headScripts] : []), ...bodyScriptMatches];
 //                     console.log("Total script tags found (head + body):", allScriptMatches.length);
-
+                    
 //                     if (allScriptMatches.length === 0) {
 //                         console.warn("⚠️ No script tags found in React app (head or body)!");
 //                         console.warn("React HTML preview (first 500 chars):", reactHtml.substring(0, 500));
 //                     }
-
+                    
 //                     // Process all scripts (head + body)
 //                     const processedScripts = [];
-
+                    
 //                     // Process head scripts (already processed, just add)
 //                     if (headScripts) {
 //                         processedScripts.push(headScripts);
 //                     }
-
+                    
 //                     // Process body scripts (filter out ngrok error scripts)
 //                     bodyScriptMatches
 //                         .filter(script => {
@@ -513,7 +513,7 @@ const shopifyLogin = async (req, res) => {
 //                         .forEach((script, index) => {
 //                             const scriptPreview = script.substring(0, 100);
 //                             console.log("Processing body script " + (index + 1) + ":", scriptPreview);
-
+                            
 //                             // Relative URLs ko absolute me convert karo
 //                             const srcMatch = script.match(/src=["']([^"']+)["']/i);
 //                             if (srcMatch) {
@@ -534,16 +534,16 @@ const shopifyLogin = async (req, res) => {
 //                                 processedScripts.push(script);
 //                             }
 //                         });
-
+                    
 //                     reactAppScripts = processedScripts.join('\n');
 //                     console.log("Total scripts length:", reactAppScripts.length);
 //                     console.log("Total processed scripts count:", processedScripts.length);
-
+                    
 //                     // Check if we have React app scripts (not just ngrok errors)
 //                     const hasReactScripts = reactAppScripts.length > 0 && 
 //                                            !reactAppScripts.includes('cdn.ngrok.com') &&
 //                                            !reactAppScripts.includes('error.js');
-
+                    
 //                     if (!hasReactScripts) {
 //                         console.error("❌ WARNING: No React app scripts found! Only ngrok error scripts were extracted.");
 //                         console.error("This means React app HTML me actual React scripts nahi hain.");
@@ -555,20 +555,20 @@ const shopifyLogin = async (req, res) => {
 //                     } else {
 //                         console.log("✅ React app scripts found!");
 //                     }
-
+                    
 //                     if (reactAppScripts.length > 0) {
 //                         console.log("First 200 chars of scripts:", reactAppScripts.substring(0, 200));
 //                     }
-
+                    
 //                     // Body content extract karo (scripts ko remove karke)
 //                     // React app ka actual HTML content (jo root div me hai)
 //                     reactAppBodyContent = bodyContent
 //                         .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '') // Scripts remove
 //                         .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '') // Noscript remove
 //                         .trim();
-
+                    
 //                     console.log("Body content extracted, length:", reactAppBodyContent.length);
-
+                    
 //                     // Agar body content me root div hai, to uske andar ka content extract karo
 //                     const rootDivMatch = reactAppBodyContent.match(/<div[^>]*id=["']root["'][^>]*>([\s\S]*?)<\/div>/i);
 //                     if (rootDivMatch) {
@@ -591,7 +591,7 @@ const shopifyLogin = async (req, res) => {
 //             reactAppScripts = '';
 //             reactAppBodyContent = '<div style="padding:20px;text-align:center;"><h3>⚠️ React App Not Available</h3><p>Could not fetch React app from any path.</p><p>Base URL: ' + reactAppBaseUrl + '</p><p>Please check React app server and ngrok tunnel.</p></div>';
 //         }
-
+        
 //         // Fallback: Agar scripts nahi mile, to common React build paths try karo
 //         if (!reactAppScripts || reactAppScripts.length === 0) {
 //             console.warn("⚠️ No scripts found, trying fallback paths...");
@@ -603,7 +603,7 @@ const shopifyLogin = async (req, res) => {
 //                 '/main.js',
 //                 '/bundle.js'
 //             ];
-
+            
 //             const fallbackScripts = commonScriptPaths
 //                 .map(path => {
 //                     const fullPath = path.startsWith('/') 
@@ -612,7 +612,7 @@ const shopifyLogin = async (req, res) => {
 //                     return `<script src="${fullPath}"></script>`;
 //                 })
 //                 .join('\n');
-
+            
 //             console.log("Fallback scripts generated:", fallbackScripts);
 //             // Note: Fallback scripts ko use mat karo automatically, sirf log karo
 //             // Kyunki ye wrong ho sakte hain
@@ -639,7 +639,7 @@ const shopifyLogin = async (req, res) => {
 //                 </script>
 //               <main style="min-height:70vh;">
 //                   ${headerHtml}
-
+                  
 //                   <!-- React App Container - React app yaha mount hoga (no iframe) -->
 //                   <div id="root" style="width:100%;min-height:70vh;">
 //                       ${reactAppBodyContent || `
@@ -649,13 +649,13 @@ const shopifyLogin = async (req, res) => {
 //                           </div>
 //                       `}
 //                   </div>
-
+                  
 //                   ${footerHtml}
 //               </main>
-
+              
 //               <!-- React App Scripts - Load React bundle dynamically -->
 //               ${reactAppScripts || '<!-- No scripts found -->'}
-
+              
 //               <!-- Enhanced Debugging aur Error Handling -->
 //               <script>
 //                   console.log('=== React App Loading Debug ===');
@@ -663,7 +663,7 @@ const shopifyLogin = async (req, res) => {
 //                   console.log('React App Full URL:', '${reactAppFullUrl}');
 //                   console.log('Scripts found:', ${reactAppScripts ? 'true' : 'false'});
 //                   console.log('Scripts length:', ${reactAppScripts ? reactAppScripts.length : 0});
-
+                  
 //                   // Script loading errors catch karo
 //                   window.addEventListener('error', function(e) {
 //                       console.error('=== Script Loading Error ===');
@@ -672,35 +672,35 @@ const shopifyLogin = async (req, res) => {
 //                       console.error('Line:', e.lineno);
 //                       console.error('Column:', e.colno);
 //                       console.error('Stack:', e.error ? e.error.stack : 'No stack');
-
+                      
 //                       // CORS error check
 //                       if (e.message.includes('CORS') || e.message.includes('cross-origin')) {
 //                           console.error('❌ CORS Error detected! React app server me CORS enable karo.');
 //                       }
-
+                      
 //                       // Network error check
 //                       if (e.message.includes('Failed to fetch') || e.message.includes('network')) {
 //                           console.error('❌ Network Error! Scripts load nahi ho rahe.');
 //                       }
 //                   }, true);
-
+                  
 //                   // Unhandled promise rejections
 //                   window.addEventListener('unhandledrejection', function(e) {
 //                       console.error('=== Unhandled Promise Rejection ===');
 //                       console.error('Reason:', e.reason);
 //                   });
-
+                  
 //                   // React app load hone ke baad check karo
 //                   window.addEventListener('load', function() {
 //                       console.log('=== Page Loaded ===');
 //                       const root = document.getElementById('root');
 //                       console.log('Root element:', root);
 //                       console.log('Root innerHTML length:', root ? root.innerHTML.length : 0);
-
+                      
 //                       // Check karo ki scripts load hue ya nahi
 //                       const allScripts = document.querySelectorAll('script[src]');
 //                       console.log('Total script tags with src:', allScripts.length);
-
+                      
 //                       allScripts.forEach(function(script, index) {
 //                           console.log(\`Script \${index + 1}:\`, script.src);
 //                           script.addEventListener('error', function() {
@@ -710,14 +710,14 @@ const shopifyLogin = async (req, res) => {
 //                               console.log(\`✅ Script loaded: \${script.src}\`);
 //                           });
 //                       });
-
+                      
 //                       // Check React availability
 //                       setTimeout(function() {
 //                           console.log('=== React Check (after 2s) ===');
 //                           console.log('React available:', typeof window.React !== 'undefined');
 //                           console.log('ReactDOM available:', typeof window.ReactDOM !== 'undefined');
 //                           console.log('Root content:', root ? root.innerHTML.substring(0, 200) : 'No root');
-
+                          
 //                           // Agar React app mount nahi hua after 5 seconds
 //                           if (root && (root.innerHTML.includes('Loading...') || root.innerHTML.trim() === '')) {
 //                               console.error('❌ React app mount nahi hua. Possible issues:');
@@ -726,7 +726,7 @@ const shopifyLogin = async (req, res) => {
 //                               console.error('3. CORS issues ho sakte hain - check network tab');
 //                               console.error('4. React app ka build path different hai');
 //                               console.error('5. Scripts me relative paths issue ho sakta hai');
-
+                              
 //                               // Try to manually check script URLs
 //                               console.log('\\n=== Checking Script URLs ===');
 //                               allScripts.forEach(function(script) {
@@ -947,7 +947,6 @@ const proxyThemeAssetsController = async (req, res) => {
                   ${headerHtml}
               <iframe 
                   src="https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || ''}" 
-                  style="border:none;width:100%;height:100vh;display:block;"
                 ></iframe>
                   ${footerHtml}
               </main>
