@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { MessageModal } = require("../Modal/messageSchema");
+const { ChatList } = require("../Modal/chatListSchema");
 
 const getChatHistory = async (request, response) => {
     try {
@@ -38,6 +39,25 @@ const getChatHistory = async (request, response) => {
 };
 
 
-module.exports = {
-    getChatHistory
-}   
+const getUserInRecentChat = async (request, response) => {
+    try {
+        const { shopId, userId, consultantId } = request.params;
+        if (!mongoose.Types.ObjectId.isValid(shopId) ||
+            !mongoose.Types.ObjectId.isValid(userId) ||
+            !mongoose.Types.ObjectId.isValid(consultantId)) {
+            return response.status(400).json({ message: "Invalid IDs" });
+        }
+        const userInRecentChat = await ChatList.findOne({ shop_id: shopId, senderId: userId, receiverId: consultantId });
+        if (!userInRecentChat) {
+            return response.status(400).json({ message: "User not found in recent chat" });
+        }
+        userInRecentChat.isRequest = true;
+        await userInRecentChat.save();
+        return response.status(200).json({ success: true, message: "User found in recent chat", });
+    } catch (error) {
+        console.error(error);
+        return response.status(500).json({ message: "Server error" });
+    }
+};
+
+module.exports = { getChatHistory, getUserInRecentChat };

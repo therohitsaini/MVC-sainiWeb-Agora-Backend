@@ -935,20 +935,35 @@ const proxyThemeAssetsController = async (req, res) => {
             sectionFetch(makeUrl(`https://${shop}/?section_id=header`)),
             sectionFetch(makeUrl(`https://${shop}/?section_id=footer`))
         ]);
+
+        // React/MUI widget URL (single JS bundle that mounts into #agora-root)
+        const widgetUrl = process.env.REACT_WIDGET_URL
+            || "https://projectable-eely-minerva.ngrok-free.dev/agora-widget.js";
+
         const pageHtml = `
           <!DOCTYPE html>
           <html>
             ${headHtml}
             <body style="margin:0;padding:0;">
-                <script>
-                    const customerId = "${customerId}";
-                </script>
               <main style="min-height:70vh;">
                   ${headerHtml}
-              <iframe 
-                  src="https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || ''}" 
-                  style="border:none;width:100%;height:100vh;display:block;"
-                ></iframe>
+
+                  <!-- React/MUI Agora widget (no iframe) -->
+                  <div id="agora-root" style="width:100%;min-height:70vh;"></div>
+
+                  <!-- Data pass for widget -->
+                  <script>
+                    window.AGORA_CONFIG = {
+                      customerId: "${userId?.userId || ""}",
+                      shopId: "${shopDocId?._id || ""}",
+                      shop: "${shop || ""}",
+                      customerIdRaw: "${customerId || ""}"
+                    };
+                  </script>
+
+                  <!-- External React widget bundle -->
+                  <script src="${widgetUrl}"></script>
+
                   ${footerHtml}
               </main>
             </body>
