@@ -316,17 +316,19 @@ const proxyThemeAssetsController = async (req, res) => {
         ]);
 
         // React App URL - iframe ke bina directly load karo
-        const reactAppBaseUrl = process.env.REACT_APP_URL || "https://projectable-eely-minerva.ngrok-free.dev/consultant-cards";
+        const reactAppBaseUrl = process.env.REACT_APP_URL || "https://projectable-eely-minerva.ngrok-free.dev";
         const reactAppPath = "/consultant-cards";
         const reactAppFullUrl = `${reactAppBaseUrl}${reactAppPath}`;
         const customerIdParam = userId?.userId || '';
         const shopIdParam = shopDocId?._id || '';
         
-        // React App ka HTML fetch karo (scripts, styles extract karne ke liye)
+        // React App ka HTML fetch karo (scripts, styles, aur body content extract karne ke liye)
         let reactAppStyles = '';
         let reactAppScripts = '';
+        let reactAppBodyContent = '';
         
         try {
+            console.log("Fetching React app from:", reactAppFullUrl);
             const reactResponse = await fetch(reactAppFullUrl, {
                 headers: {
                     'User-Agent': userAgent,
@@ -334,8 +336,11 @@ const proxyThemeAssetsController = async (req, res) => {
                 }
             });
             
+            console.log("React app response status:", reactResponse.status);
+            
             if (reactResponse.ok) {
                 const reactHtml = await reactResponse.text();
+                console.log("React HTML fetched, length:", reactHtml.length);
                 
                 // Extract head content (styles, meta tags, etc.)
                 const headMatch = reactHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
@@ -358,12 +363,14 @@ const proxyThemeAssetsController = async (req, res) => {
                         .join('\n');
                 }
                 
-                // Extract body scripts (React bundle, etc.)
+                // Extract body content (React app ka actual HTML content)
                 const bodyMatch = reactHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
                 if (bodyMatch) {
                     const bodyContent = bodyMatch[1];
-                    // Extract all script tags
+                    
+                    // Extract all script tags (pehle scripts extract karo)
                     const scriptMatches = bodyContent.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
+                    console.log("Found script tags:", scriptMatches.length);
                     reactAppScripts = scriptMatches
                         .map(script => {
                             // Relative URLs ko absolute me convert karo
@@ -372,15 +379,38 @@ const proxyThemeAssetsController = async (req, res) => {
                                 const absoluteUrl = srcMatch[1].startsWith('/') 
                                     ? `${reactAppBaseUrl}${srcMatch[1]}`
                                     : `${reactAppBaseUrl}/${srcMatch[1]}`;
+                                console.log("Converting script URL:", srcMatch[1], "->", absoluteUrl);
                                 return script.replace(srcMatch[1], absoluteUrl);
                             }
                             return script;
                         })
                         .join('\n');
+                    console.log("Total scripts length:", reactAppScripts.length);
+                    
+                    // Body content extract karo (scripts ko remove karke)
+                    // React app ka actual HTML content (jo root div me hai)
+                    reactAppBodyContent = bodyContent
+                        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '') // Scripts remove
+                        .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '') // Noscript remove
+                        .trim();
+                    
+                    console.log("Body content extracted, length:", reactAppBodyContent.length);
+                    
+                    // Agar body content me root div hai, to uske andar ka content extract karo
+                    const rootDivMatch = reactAppBodyContent.match(/<div[^>]*id=["']root["'][^>]*>([\s\S]*?)<\/div>/i);
+                    if (rootDivMatch) {
+                        reactAppBodyContent = rootDivMatch[1];
+                        console.log("Root div content extracted");
+                    }
+                } else {
+                    console.warn("Body tag not found in React HTML");
                 }
+            } else {
+                console.error("React app response not OK:", reactResponse.status, reactResponse.statusText);
             }
         } catch (error) {
             console.error("Error fetching React app HTML:", error.message);
+            console.error("Stack:", error.stack);
         }
 
         const pageHtml = `
@@ -407,23 +437,41 @@ const proxyThemeAssetsController = async (req, res) => {
                   
                   <!-- React App Container - React app yaha mount hoga (no iframe) -->
                   <div id="root" style="width:100%;min-height:70vh;">
-                      <!-- Loading state -->
-                      <div style="display:flex;justify-content:center;align-items:center;min-height:50vh;">
-                          <p>Loading...</p>
-                      </div>
+                      ${reactAppBodyContent || `
+                          <!-- Loading state - Agar body content nahi mila -->
+                          <div style="display:flex;justify-content:center;align-items:center;min-height:50vh;">
+                              <p>Loading...</p>
+                          </div>
+                      `}
                   </div>
                   
                   ${footerHtml}
               </main>
               
               <!-- React App Scripts - Load React bundle dynamically -->
-              ${reactAppScripts}
+              ${reactAppScripts || '<!-- No scripts found -->'}
               
-              <!-- Test ke liye - Simple loading check -->
+              <!-- Debugging aur Error Handling -->
               <script>
-                  // React app load hone ke baad simple log
+                  console.log('React App Base URL:', '${reactAppBaseUrl}');
+                  console.log('React App Full URL:', '${reactAppFullUrl}');
+                  console.log('Scripts loaded:', ${reactAppScripts ? 'true' : 'false'});
+                  
+                  // React app load hone ke baad check karo
                   window.addEventListener('load', function() {
-                      console.log('React app scripts loaded');
+                      console.log('Page loaded');
+                      console.log('Root element:', document.getElementById('root'));
+                      
+                      // Agar React app mount nahi hua after 3 seconds
+                      setTimeout(function() {
+                          const root = document.getElementById('root');
+                          if (root && root.innerHTML.includes('Loading...')) {
+                              console.error('React app mount nahi hua. Possible issues:');
+                              console.error('1. Scripts properly load nahi hue');
+                              console.error('2. React app ka base path wrong hai');
+                              console.error('3. CORS issues ho sakte hain');
+                          }
+                      }, 3000);
                   });
               </script>
             </body>
