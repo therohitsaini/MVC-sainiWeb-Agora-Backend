@@ -945,11 +945,29 @@ const proxyThemeAssetsController = async (req, res) => {
                 </script>
               <main style="min-height:70vh;">
                   ${headerHtml}
-              <iframe 
-                  src="https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || ''}" 
-                ></iframe>
+                  <!-- Iframe without its own scrollbar: height is controlled from inside via postMessage -->
+                  <iframe 
+                    id="agora-frame"
+                    src="https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || ''}" 
+                    style="border:none;width:100%;display:block;overflow:hidden;"
+                  ></iframe>
                   ${footerHtml}
               </main>
+
+              <!-- Listen for height messages from React app and resize iframe -->
+              <script>
+                window.addEventListener("message", function (event) {
+                  try {
+                    if (!event || !event.data || event.data.type !== "AGORA_IFRAME_HEIGHT") return;
+                    var iframe = document.getElementById("agora-frame");
+                    if (iframe && event.data.height && Number(event.data.height) > 0) {
+                      iframe.style.height = Number(event.data.height) + "px";
+                    }
+                  } catch (e) {
+                    console.error("Error handling AGORA_IFRAME_HEIGHT message", e);
+                  }
+                });
+              </script>
             </body>
           </html>
           `;
