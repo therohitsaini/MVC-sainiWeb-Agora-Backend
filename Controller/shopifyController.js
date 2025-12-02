@@ -358,21 +358,45 @@ const proxyThemeAssetsController = async (req, res) => {
                     console.log("React HTML fetched, length:", fetchedHtml.length);
                     
                     // Check if it's actually React HTML or error page
-                    const isErrorPage = fetchedHtml.includes('error.js') || 
-                                       fetchedHtml.includes('cdn.ngrok.com/static/js/error.js') ||
-                                       (fetchedHtml.includes('ngrok') && fetchedHtml.includes('error')) ||
-                                       (fetchedHtml.includes('404') && fetchedHtml.includes('Not Found')) ||
-                                       (fetchedHtml.includes('This site can') && fetchedHtml.includes('t be reached'));
+                    // Better detection: Check for React root div and scripts
+                    const hasReactRoot = fetchedHtml.includes('id="root"') || 
+                                        fetchedHtml.includes("id='root'") ||
+                                        fetchedHtml.match(/<div[^>]*id\s*=\s*["']root["'][^>]*>/i);
                     
-                    if (!isErrorPage) {
-                        // Valid React HTML found!
+                    // Check for React app scripts (not ngrok error scripts)
+                    const hasReactScripts = fetchedHtml.includes('main.js') ||
+                                           fetchedHtml.includes('bundle.js') ||
+                                           fetchedHtml.includes('index.js') ||
+                                           fetchedHtml.includes('/static/js/') ||
+                                           fetchedHtml.includes('/assets/') ||
+                                           fetchedHtml.match(/<script[^>]*src[^>]*>/i);
+                    
+                    // Check for ngrok error scripts (these should be filtered out)
+                    const hasNgrokErrorScripts = fetchedHtml.includes('cdn.ngrok.com/static/js/error.js') ||
+                                                fetchedHtml.includes('cdn.ngrok.com/static/compiled/js/allerrors.js');
+                    
+                    // Valid React HTML if it has root div and scripts (even if ngrok error scripts are present)
+                    const isValidReactHTML = hasReactRoot && hasReactScripts;
+                    
+                    // Pure error page: has ngrok error scripts but no React root/scripts
+                    const isPureErrorPage = hasNgrokErrorScripts && !hasReactRoot && !hasReactScripts;
+                    
+                    if (isValidReactHTML) {
+                        // Valid React HTML found! (ngrok error scripts ko baad me filter karenge)
                         reactHtml = fetchedHtml;
                         fetchSuccess = true;
                         console.log("✅ Valid React HTML found at:", reactAppFullUrl);
+                        console.log("Has React root:", hasReactRoot);
+                        console.log("Has React scripts:", hasReactScripts);
+                        console.log("Has ngrok error scripts:", hasNgrokErrorScripts, "(will be filtered)");
                         console.log("React HTML preview (first 500 chars):", reactHtml.substring(0, 500));
                         break; // Exit loop, we found valid HTML
+                    } else if (isPureErrorPage) {
+                        console.warn("⚠️ Pure error page detected at:", reactAppFullUrl, "- trying next path...");
                     } else {
-                        console.warn("⚠️ Error page detected at:", reactAppFullUrl, "- trying next path...");
+                        console.warn("⚠️ No valid React HTML at:", reactAppFullUrl, "- trying next path...");
+                        console.warn("  - Has React root:", hasReactRoot);
+                        console.warn("  - Has React scripts:", hasReactScripts);
                     }
                 }
             } catch (pathError) {
