@@ -344,13 +344,31 @@ const proxyThemeAssetsController = async (req, res) => {
                 console.log("React HTML preview (first 1000 chars):", reactHtml.substring(0, 1000));
                 
                 // Check if it's actually React HTML or error page
-                if (reactHtml.includes('<!DOCTYPE html>') || reactHtml.includes('<html')) {
-                    console.log("✅ Valid HTML structure found");
-                } else {
-                    console.warn("⚠️ HTML structure might be invalid");
-                }
+                const isErrorPage = reactHtml.includes('error.js') || 
+                                   reactHtml.includes('cdn.ngrok.com/static/js/error.js') ||
+                                   reactHtml.includes('ngrok') && reactHtml.includes('error') ||
+                                   reactHtml.includes('404') && reactHtml.includes('Not Found') ||
+                                   reactHtml.includes('This site can') && reactHtml.includes('t be reached');
                 
-                // Extract head content (styles, meta tags, etc.)
+                if (isErrorPage) {
+                    console.error("❌ ERROR: ngrok error page detected! React app URL wrong hai ya ngrok tunnel down hai.");
+                    console.error("Please check:");
+                    console.error("1. React app URL sahi hai: " + reactAppFullUrl);
+                    console.error("2. ngrok tunnel running hai ya nahi");
+                    console.error("3. React app server running hai ya nahi");
+                    console.error("4. React app path correct hai ya nahi (/consultant-cards)");
+                    // Don't process error page, return early
+                    reactAppScripts = '';
+                    reactAppBodyContent = '<div style="padding:20px;text-align:center;"><h3>⚠️ React App Not Available</h3><p>Please check React app URL and ngrok tunnel.</p><p>URL: ' + reactAppFullUrl + '</p></div>';
+                } else {
+                    // Only process if it's not an error page
+                    if (reactHtml.includes('<!DOCTYPE html>') || reactHtml.includes('<html')) {
+                        console.log("✅ Valid HTML structure found");
+                    } else {
+                        console.warn("⚠️ HTML structure might be invalid");
+                    }
+                    
+                    // Extract head content (styles, meta tags, etc.)
                 const headMatch = reactHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
                 let headScripts = '';
                 if (headMatch) {
@@ -469,6 +487,7 @@ const proxyThemeAssetsController = async (req, res) => {
                 } else {
                     console.warn("Body tag not found in React HTML");
                 }
+                } // End of else block (only process if not error page)
             } else {
                 console.error("React app response not OK:", reactResponse.status, reactResponse.statusText);
             }
