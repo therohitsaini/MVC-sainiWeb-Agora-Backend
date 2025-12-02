@@ -314,22 +314,118 @@ const proxyThemeAssetsController = async (req, res) => {
             sectionFetch(makeUrl(`https://${shop}/?section_id=header`)),
             sectionFetch(makeUrl(`https://${shop}/?section_id=footer`))
         ]);
+
+        // React App URL - iframe ke bina directly load karo
+        const reactAppBaseUrl = process.env.REACT_APP_URL || "https://projectable-eely-minerva.ngrok-free.dev/consultant-cards";
+        const reactAppPath = "/consultant-cards";
+        const reactAppFullUrl = `${reactAppBaseUrl}${reactAppPath}`;
+        const customerIdParam = userId?.userId || '';
+        const shopIdParam = shopDocId?._id || '';
+        
+        // React App ka HTML fetch karo (scripts, styles extract karne ke liye)
+        let reactAppStyles = '';
+        let reactAppScripts = '';
+        
+        try {
+            const reactResponse = await fetch(reactAppFullUrl, {
+                headers: {
+                    'User-Agent': userAgent,
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                }
+            });
+            
+            if (reactResponse.ok) {
+                const reactHtml = await reactResponse.text();
+                
+                // Extract head content (styles, meta tags, etc.)
+                const headMatch = reactHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+                if (headMatch) {
+                    const headContent = headMatch[1];
+                    // Extract link tags (CSS files)
+                    const linkMatches = headContent.match(/<link[^>]*>/gi) || [];
+                    reactAppStyles = linkMatches
+                        .map(link => {
+                            // Relative URLs ko absolute me convert karo
+                            const hrefMatch = link.match(/href=["']([^"']+)["']/i);
+                            if (hrefMatch && !hrefMatch[1].startsWith('http')) {
+                                const absoluteUrl = hrefMatch[1].startsWith('/') 
+                                    ? `${reactAppBaseUrl}${hrefMatch[1]}`
+                                    : `${reactAppBaseUrl}/${hrefMatch[1]}`;
+                                return link.replace(hrefMatch[1], absoluteUrl);
+                            }
+                            return link;
+                        })
+                        .join('\n');
+                }
+                
+                // Extract body scripts (React bundle, etc.)
+                const bodyMatch = reactHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+                if (bodyMatch) {
+                    const bodyContent = bodyMatch[1];
+                    // Extract all script tags
+                    const scriptMatches = bodyContent.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
+                    reactAppScripts = scriptMatches
+                        .map(script => {
+                            // Relative URLs ko absolute me convert karo
+                            const srcMatch = script.match(/src=["']([^"']+)["']/i);
+                            if (srcMatch && !srcMatch[1].startsWith('http')) {
+                                const absoluteUrl = srcMatch[1].startsWith('/') 
+                                    ? `${reactAppBaseUrl}${srcMatch[1]}`
+                                    : `${reactAppBaseUrl}/${srcMatch[1]}`;
+                                return script.replace(srcMatch[1], absoluteUrl);
+                            }
+                            return script;
+                        })
+                        .join('\n');
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching React app HTML:", error.message);
+        }
+
         const pageHtml = `
           <!DOCTYPE html>
           <html>
             ${headHtml}
+            ${reactAppStyles}
             <body style="margin:0;padding:0;">
                 <script>
-                    const customerId = "${customerId}";
+                    // Test ke liye - Data passing optional (comment out kar sakte ho)
+                    // Agar data chahiye to uncomment karo
+                    /*
+                    window.SHOPIFY_APP_DATA = {
+                        customerId: "${customerIdParam}",
+                        shopId: "${shopIdParam}",
+                        shop: "${shop || ''}",
+                        customerIdRaw: "${customerId || ''}",
+                        reactAppUrl: "${reactAppBaseUrl}"
+                    };
+                    */
                 </script>
               <main style="min-height:70vh;">
                   ${headerHtml}
-              <iframe 
-                  src="https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || ''}" 
-                  style="border:none;width:100%;height:100vh;display:block;"
-                ></iframe>
+                  
+                  <!-- React App Container - React app yaha mount hoga (no iframe) -->
+                  <div id="root" style="width:100%;min-height:70vh;">
+                      <!-- Loading state -->
+                      <div style="display:flex;justify-content:center;align-items:center;min-height:50vh;">
+                          <p>Loading...</p>
+                      </div>
+                  </div>
+                  
                   ${footerHtml}
               </main>
+              
+              <!-- React App Scripts - Load React bundle dynamically -->
+              ${reactAppScripts}
+              
+              <!-- Test ke liye - Simple loading check -->
+              <script>
+                  // React app load hone ke baad simple log
+                  window.addEventListener('load', function() {
+                      console.log('React app scripts loaded');
+                  });
+              </script>
             </body>
           </html>
           `;
