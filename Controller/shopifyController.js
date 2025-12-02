@@ -341,11 +341,41 @@ const proxyThemeAssetsController = async (req, res) => {
             if (reactResponse.ok) {
                 const reactHtml = await reactResponse.text();
                 console.log("React HTML fetched, length:", reactHtml.length);
+                console.log("React HTML preview (first 1000 chars):", reactHtml.substring(0, 1000));
+                
+                // Check if it's actually React HTML or error page
+                if (reactHtml.includes('<!DOCTYPE html>') || reactHtml.includes('<html')) {
+                    console.log("✅ Valid HTML structure found");
+                } else {
+                    console.warn("⚠️ HTML structure might be invalid");
+                }
                 
                 // Extract head content (styles, meta tags, etc.)
                 const headMatch = reactHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+                let headScripts = '';
                 if (headMatch) {
                     const headContent = headMatch[1];
+                    
+                    // Extract scripts from head (React apps me scripts head me bhi ho sakte hain)
+                    const headScriptMatches = headContent.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
+                    console.log("Found script tags in head:", headScriptMatches.length);
+                    headScripts = headScriptMatches
+                        .map((script, index) => {
+                            const srcMatch = script.match(/src=["']([^"']+)["']/i);
+                            if (srcMatch) {
+                                const originalSrc = srcMatch[1];
+                                if (!originalSrc.startsWith('http')) {
+                                    const absoluteUrl = originalSrc.startsWith('/') 
+                                        ? `${reactAppBaseUrl}${originalSrc}`
+                                        : `${reactAppBaseUrl}/${originalSrc}`;
+                                    console.log("Converting head script URL:", originalSrc, "->", absoluteUrl);
+                                    return script.replace(originalSrc, absoluteUrl);
+                                }
+                            }
+                            return script;
+                        })
+                        .join('\n');
+                    
                     // Extract link tags (CSS files)
                     const linkMatches = headContent.match(/<link[^>]*>/gi) || [];
                     reactAppStyles = linkMatches
@@ -368,39 +398,54 @@ const proxyThemeAssetsController = async (req, res) => {
                 if (bodyMatch) {
                     const bodyContent = bodyMatch[1];
                     
-                    // Extract all script tags (pehle scripts extract karo)
-                    const scriptMatches = bodyContent.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
-                    console.log("Found script tags:", scriptMatches.length);
+                    // Extract all script tags from body (pehle scripts extract karo)
+                    const bodyScriptMatches = bodyContent.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
+                    console.log("Found script tags in body:", bodyScriptMatches.length);
                     
-                    if (scriptMatches.length === 0) {
-                        console.warn("⚠️ No script tags found in React app body!");
+                    // Combine head and body scripts
+                    const allScriptMatches = [...(headScripts ? [headScripts] : []), ...bodyScriptMatches];
+                    console.log("Total script tags found (head + body):", allScriptMatches.length);
+                    
+                    if (allScriptMatches.length === 0) {
+                        console.warn("⚠️ No script tags found in React app (head or body)!");
+                        console.warn("React HTML preview (first 500 chars):", reactHtml.substring(0, 500));
                     }
                     
-                    reactAppScripts = scriptMatches
-                        .map((script, index) => {
-                            const scriptPreview = script.substring(0, 100);
-                            console.log("Processing script " + (index + 1) + ":", scriptPreview);
-                            
-                            // Relative URLs ko absolute me convert karo
-                            const srcMatch = script.match(/src=["']([^"']+)["']/i);
-                            if (srcMatch) {
-                                const originalSrc = srcMatch[1];
-                                if (!originalSrc.startsWith('http')) {
-                                    const absoluteUrl = originalSrc.startsWith('/') 
-                                        ? `${reactAppBaseUrl}${originalSrc}`
-                                        : `${reactAppBaseUrl}/${originalSrc}`;
-                                    console.log("Converting script URL:", originalSrc, "->", absoluteUrl);
-                                    return script.replace(originalSrc, absoluteUrl);
-                                } else {
-                                    console.log("Script already has absolute URL:", originalSrc);
-                                }
+                    // Process all scripts (head + body)
+                    const processedScripts = [];
+                    
+                    // Process head scripts (already processed, just add)
+                    if (headScripts) {
+                        processedScripts.push(headScripts);
+                    }
+                    
+                    // Process body scripts
+                    bodyScriptMatches.forEach((script, index) => {
+                        const scriptPreview = script.substring(0, 100);
+                        console.log("Processing body script " + (index + 1) + ":", scriptPreview);
+                        
+                        // Relative URLs ko absolute me convert karo
+                        const srcMatch = script.match(/src=["']([^"']+)["']/i);
+                        if (srcMatch) {
+                            const originalSrc = srcMatch[1];
+                            if (!originalSrc.startsWith('http')) {
+                                const absoluteUrl = originalSrc.startsWith('/') 
+                                    ? `${reactAppBaseUrl}${originalSrc}`
+                                    : `${reactAppBaseUrl}/${originalSrc}`;
+                                console.log("Converting body script URL:", originalSrc, "->", absoluteUrl);
+                                processedScripts.push(script.replace(originalSrc, absoluteUrl));
                             } else {
-                                // Inline script (no src attribute)
-                                console.log("Inline script found (no src)");
+                                console.log("Body script already has absolute URL:", originalSrc);
+                                processedScripts.push(script);
                             }
-                            return script;
-                        })
-                        .join('\n');
+                        } else {
+                            // Inline script (no src attribute)
+                            console.log("Inline body script found (no src)");
+                            processedScripts.push(script);
+                        }
+                    });
+                    
+                    reactAppScripts = processedScripts.join('\n');
                     console.log("Total scripts length:", reactAppScripts.length);
                     if (reactAppScripts.length > 0) {
                         console.log("First 200 chars of scripts:", reactAppScripts.substring(0, 200));
@@ -430,6 +475,32 @@ const proxyThemeAssetsController = async (req, res) => {
         } catch (error) {
             console.error("Error fetching React app HTML:", error.message);
             console.error("Stack:", error.stack);
+        }
+        
+        // Fallback: Agar scripts nahi mile, to common React build paths try karo
+        if (!reactAppScripts || reactAppScripts.length === 0) {
+            console.warn("⚠️ No scripts found, trying fallback paths...");
+            const commonScriptPaths = [
+                '/static/js/main.js',
+                '/static/js/bundle.js',
+                '/assets/index.js',
+                '/index.js',
+                '/main.js',
+                '/bundle.js'
+            ];
+            
+            const fallbackScripts = commonScriptPaths
+                .map(path => {
+                    const fullPath = path.startsWith('/') 
+                        ? `${reactAppBaseUrl}${path}`
+                        : `${reactAppBaseUrl}/${path}`;
+                    return `<script src="${fullPath}"></script>`;
+                })
+                .join('\n');
+            
+            console.log("Fallback scripts generated:", fallbackScripts);
+            // Note: Fallback scripts ko use mat karo automatically, sirf log karo
+            // Kyunki ye wrong ho sakte hain
         }
 
         const pageHtml = `
