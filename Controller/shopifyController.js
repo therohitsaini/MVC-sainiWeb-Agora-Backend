@@ -318,7 +318,6 @@ const proxyThemeAssetsController = async (req, res) => {
         // React App URL - iframe ke bina directly load karo
         const reactAppBaseUrl = process.env.REACT_APP_URL || "https://projectable-eely-minerva.ngrok-free.dev";
         const reactAppPath = "/consultant-cards";
-        const reactAppFullUrl = `${reactAppBaseUrl}${reactAppPath}`;
         const customerIdParam = userId?.userId || '';
         const shopIdParam = shopDocId?._id || '';
         
@@ -327,40 +326,63 @@ const proxyThemeAssetsController = async (req, res) => {
         let reactAppScripts = '';
         let reactAppBodyContent = '';
         
-        try {
-            console.log("Fetching React app from:", reactAppFullUrl);
-            const reactResponse = await fetch(reactAppFullUrl, {
-                headers: {
-                    'User-Agent': userAgent,
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        // Try multiple paths (React app different paths pe ho sakti hai)
+        const possiblePaths = [
+            reactAppPath,                    // /consultant-cards
+            reactAppPath + '/',              // /consultant-cards/
+            reactAppPath + '/index.html',    // /consultant-cards/index.html
+            '/',                             // Root
+            '/index.html'                    // Root index
+        ];
+        
+        let reactAppFullUrl = '';
+        let reactHtml = '';
+        let fetchSuccess = false;
+        
+        // Try each path until we get valid React HTML
+        for (const path of possiblePaths) {
+            reactAppFullUrl = `${reactAppBaseUrl}${path}`;
+            try {
+                console.log("Trying to fetch React app from:", reactAppFullUrl);
+                const reactResponse = await fetch(reactAppFullUrl, {
+                    headers: {
+                        'User-Agent': userAgent,
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                    }
+                });
+                
+                console.log("React app response status:", reactResponse.status);
+                
+                if (reactResponse.ok) {
+                    const fetchedHtml = await reactResponse.text();
+                    console.log("React HTML fetched, length:", fetchedHtml.length);
+                    
+                    // Check if it's actually React HTML or error page
+                    const isErrorPage = fetchedHtml.includes('error.js') || 
+                                       fetchedHtml.includes('cdn.ngrok.com/static/js/error.js') ||
+                                       (fetchedHtml.includes('ngrok') && fetchedHtml.includes('error')) ||
+                                       (fetchedHtml.includes('404') && fetchedHtml.includes('Not Found')) ||
+                                       (fetchedHtml.includes('This site can') && fetchedHtml.includes('t be reached'));
+                    
+                    if (!isErrorPage) {
+                        // Valid React HTML found!
+                        reactHtml = fetchedHtml;
+                        fetchSuccess = true;
+                        console.log("✅ Valid React HTML found at:", reactAppFullUrl);
+                        console.log("React HTML preview (first 500 chars):", reactHtml.substring(0, 500));
+                        break; // Exit loop, we found valid HTML
+                    } else {
+                        console.warn("⚠️ Error page detected at:", reactAppFullUrl, "- trying next path...");
+                    }
                 }
-            });
-            
-            console.log("React app response status:", reactResponse.status);
-            
-            if (reactResponse.ok) {
-                const reactHtml = await reactResponse.text();
-                console.log("React HTML fetched, length:", reactHtml.length);
-                console.log("React HTML preview (first 1000 chars):", reactHtml.substring(0, 1000));
-                
-                // Check if it's actually React HTML or error page
-                const isErrorPage = reactHtml.includes('error.js') || 
-                                   reactHtml.includes('cdn.ngrok.com/static/js/error.js') ||
-                                   reactHtml.includes('ngrok') && reactHtml.includes('error') ||
-                                   reactHtml.includes('404') && reactHtml.includes('Not Found') ||
-                                   reactHtml.includes('This site can') && reactHtml.includes('t be reached');
-                
-                if (isErrorPage) {
-                    console.error("❌ ERROR: ngrok error page detected! React app URL wrong hai ya ngrok tunnel down hai.");
-                    console.error("Please check:");
-                    console.error("1. React app URL sahi hai: " + reactAppFullUrl);
-                    console.error("2. ngrok tunnel running hai ya nahi");
-                    console.error("3. React app server running hai ya nahi");
-                    console.error("4. React app path correct hai ya nahi (/consultant-cards)");
-                    // Don't process error page, return early
-                    reactAppScripts = '';
-                    reactAppBodyContent = '<div style="padding:20px;text-align:center;"><h3>⚠️ React App Not Available</h3><p>Please check React app URL and ngrok tunnel.</p><p>URL: ' + reactAppFullUrl + '</p></div>';
-                } else {
+            } catch (pathError) {
+                console.warn("Error fetching from path:", path, "- trying next path...");
+                console.warn("Error:", pathError.message);
+            }
+        }
+        
+        // Process the fetched HTML if we got valid React HTML
+        if (fetchSuccess && reactHtml) {
                     // Only process if it's not an error page
                     if (reactHtml.includes('<!DOCTYPE html>') || reactHtml.includes('<html')) {
                         console.log("✅ Valid HTML structure found");
@@ -532,13 +554,18 @@ const proxyThemeAssetsController = async (req, res) => {
                 } else {
                     console.warn("Body tag not found in React HTML");
                 }
-                } // End of else block (only process if not error page)
-            } else {
-                console.error("React app response not OK:", reactResponse.status, reactResponse.statusText);
-            }
-        } catch (error) {
-            console.error("Error fetching React app HTML:", error.message);
-            console.error("Stack:", error.stack);
+        } else {
+            // No valid React HTML found after trying all paths
+            console.error("❌ ERROR: Could not fetch valid React app HTML from any path!");
+            console.error("Tried paths:", possiblePaths);
+            console.error("Base URL:", reactAppBaseUrl);
+            console.error("Please check:");
+            console.error("1. React app server running hai ya nahi");
+            console.error("2. ngrok tunnel running hai ya nahi");
+            console.error("3. React app URL sahi hai: " + reactAppBaseUrl);
+            console.error("4. React app path correct hai ya nahi");
+            reactAppScripts = '';
+            reactAppBodyContent = '<div style="padding:20px;text-align:center;"><h3>⚠️ React App Not Available</h3><p>Could not fetch React app from any path.</p><p>Base URL: ' + reactAppBaseUrl + '</p><p>Please check React app server and ngrok tunnel.</p></div>';
         }
         
         // Fallback: Agar scripts nahi mile, to common React build paths try karo
