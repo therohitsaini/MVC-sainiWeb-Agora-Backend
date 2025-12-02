@@ -556,7 +556,7 @@ const proxyThemeAssetsController = async (req, res) => {
                 }
         } else {
             // No valid React HTML found after trying all paths
-            console.error("❌ ERROR: Could not fetch valid React app HTML from any path!");
+          
             console.error("Tried paths:", possiblePaths);
             console.error("Base URL:", reactAppBaseUrl);
             console.error("Please check:");
