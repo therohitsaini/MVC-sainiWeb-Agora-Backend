@@ -371,21 +371,40 @@ const proxyThemeAssetsController = async (req, res) => {
                     // Extract all script tags (pehle scripts extract karo)
                     const scriptMatches = bodyContent.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
                     console.log("Found script tags:", scriptMatches.length);
+                    
+                    if (scriptMatches.length === 0) {
+                        console.warn("⚠️ No script tags found in React app body!");
+                    }
+                    
                     reactAppScripts = scriptMatches
-                        .map(script => {
+                        .map((script, index) => {
+                            const scriptPreview = script.substring(0, 100);
+                            console.log("Processing script " + (index + 1) + ":", scriptPreview);
+                            
                             // Relative URLs ko absolute me convert karo
                             const srcMatch = script.match(/src=["']([^"']+)["']/i);
-                            if (srcMatch && !srcMatch[1].startsWith('http')) {
-                                const absoluteUrl = srcMatch[1].startsWith('/') 
-                                    ? `${reactAppBaseUrl}${srcMatch[1]}`
-                                    : `${reactAppBaseUrl}/${srcMatch[1]}`;
-                                console.log("Converting script URL:", srcMatch[1], "->", absoluteUrl);
-                                return script.replace(srcMatch[1], absoluteUrl);
+                            if (srcMatch) {
+                                const originalSrc = srcMatch[1];
+                                if (!originalSrc.startsWith('http')) {
+                                    const absoluteUrl = originalSrc.startsWith('/') 
+                                        ? `${reactAppBaseUrl}${originalSrc}`
+                                        : `${reactAppBaseUrl}/${originalSrc}`;
+                                    console.log("Converting script URL:", originalSrc, "->", absoluteUrl);
+                                    return script.replace(originalSrc, absoluteUrl);
+                                } else {
+                                    console.log("Script already has absolute URL:", originalSrc);
+                                }
+                            } else {
+                                // Inline script (no src attribute)
+                                console.log("Inline script found (no src)");
                             }
                             return script;
                         })
                         .join('\n');
                     console.log("Total scripts length:", reactAppScripts.length);
+                    if (reactAppScripts.length > 0) {
+                        console.log("First 200 chars of scripts:", reactAppScripts.substring(0, 200));
+                    }
                     
                     // Body content extract karo (scripts ko remove karke)
                     // React app ka actual HTML content (jo root div me hai)
@@ -451,27 +470,94 @@ const proxyThemeAssetsController = async (req, res) => {
               <!-- React App Scripts - Load React bundle dynamically -->
               ${reactAppScripts || '<!-- No scripts found -->'}
               
-              <!-- Debugging aur Error Handling -->
+              <!-- Enhanced Debugging aur Error Handling -->
               <script>
+                  console.log('=== React App Loading Debug ===');
                   console.log('React App Base URL:', '${reactAppBaseUrl}');
                   console.log('React App Full URL:', '${reactAppFullUrl}');
-                  console.log('Scripts loaded:', ${reactAppScripts ? 'true' : 'false'});
+                  console.log('Scripts found:', ${reactAppScripts ? 'true' : 'false'});
+                  console.log('Scripts length:', ${reactAppScripts ? reactAppScripts.length : 0});
+                  
+                  // Script loading errors catch karo
+                  window.addEventListener('error', function(e) {
+                      console.error('=== Script Loading Error ===');
+                      console.error('Error:', e.message);
+                      console.error('Source:', e.filename || e.src || 'unknown');
+                      console.error('Line:', e.lineno);
+                      console.error('Column:', e.colno);
+                      console.error('Stack:', e.error ? e.error.stack : 'No stack');
+                      
+                      // CORS error check
+                      if (e.message.includes('CORS') || e.message.includes('cross-origin')) {
+                          console.error('❌ CORS Error detected! React app server me CORS enable karo.');
+                      }
+                      
+                      // Network error check
+                      if (e.message.includes('Failed to fetch') || e.message.includes('network')) {
+                          console.error('❌ Network Error! Scripts load nahi ho rahe.');
+                      }
+                  }, true);
+                  
+                  // Unhandled promise rejections
+                  window.addEventListener('unhandledrejection', function(e) {
+                      console.error('=== Unhandled Promise Rejection ===');
+                      console.error('Reason:', e.reason);
+                  });
                   
                   // React app load hone ke baad check karo
                   window.addEventListener('load', function() {
-                      console.log('Page loaded');
-                      console.log('Root element:', document.getElementById('root'));
+                      console.log('=== Page Loaded ===');
+                      const root = document.getElementById('root');
+                      console.log('Root element:', root);
+                      console.log('Root innerHTML length:', root ? root.innerHTML.length : 0);
                       
-                      // Agar React app mount nahi hua after 3 seconds
+                      // Check karo ki scripts load hue ya nahi
+                      const allScripts = document.querySelectorAll('script[src]');
+                      console.log('Total script tags with src:', allScripts.length);
+                      
+                      allScripts.forEach(function(script, index) {
+                          console.log(\`Script \${index + 1}:\`, script.src);
+                          script.addEventListener('error', function() {
+                              console.error(\`❌ Script failed to load: \${script.src}\`);
+                          });
+                          script.addEventListener('load', function() {
+                              console.log(\`✅ Script loaded: \${script.src}\`);
+                          });
+                      });
+                      
+                      // Check React availability
                       setTimeout(function() {
-                          const root = document.getElementById('root');
-                          if (root && root.innerHTML.includes('Loading...')) {
-                              console.error('React app mount nahi hua. Possible issues:');
-                              console.error('1. Scripts properly load nahi hue');
+                          console.log('=== React Check (after 2s) ===');
+                          console.log('React available:', typeof window.React !== 'undefined');
+                          console.log('ReactDOM available:', typeof window.ReactDOM !== 'undefined');
+                          console.log('Root content:', root ? root.innerHTML.substring(0, 200) : 'No root');
+                          
+                          // Agar React app mount nahi hua after 5 seconds
+                          if (root && (root.innerHTML.includes('Loading...') || root.innerHTML.trim() === '')) {
+                              console.error('❌ React app mount nahi hua. Possible issues:');
+                              console.error('1. Scripts properly load nahi hue - check console errors above');
                               console.error('2. React app ka base path wrong hai');
-                              console.error('3. CORS issues ho sakte hain');
+                              console.error('3. CORS issues ho sakte hain - check network tab');
+                              console.error('4. React app ka build path different hai');
+                              console.error('5. Scripts me relative paths issue ho sakta hai');
+                              
+                              // Try to manually check script URLs
+                              console.log('\\n=== Checking Script URLs ===');
+                              allScripts.forEach(function(script) {
+                                  if (script.src) {
+                                      fetch(script.src, { method: 'HEAD' })
+                                          .then(function(response) {
+                                              console.log(\`✅ \${script.src} - Status: \${response.status}\`);
+                                          })
+                                          .catch(function(error) {
+                                              console.error(\`❌ \${script.src} - Error: \${error.message}\`);
+                                          });
+                                  }
+                              });
+                          } else {
+                              console.log('✅ React app successfully mounted!');
                           }
-                      }, 3000);
+                      }, 5000);
                   });
               </script>
             </body>
