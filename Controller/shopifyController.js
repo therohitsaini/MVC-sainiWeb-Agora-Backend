@@ -378,6 +378,18 @@ const proxyThemeAssetsController = async (req, res) => {
                     const headScriptMatches = headContent.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
                     console.log("Found script tags in head:", headScriptMatches.length);
                     headScripts = headScriptMatches
+                        .filter(script => {
+                            // Filter out ngrok error scripts
+                            const srcMatch = script.match(/src=["']([^"']+)["']/i);
+                            if (srcMatch) {
+                                const src = srcMatch[1];
+                                if (src.includes('cdn.ngrok.com') || src.includes('error.js') || src.includes('allerrors.js')) {
+                                    console.log("Filtering out ngrok error script:", src);
+                                    return false;
+                                }
+                            }
+                            return true;
+                        })
                         .map((script, index) => {
                             const srcMatch = script.match(/src=["']([^"']+)["']/i);
                             if (srcMatch) {
@@ -393,6 +405,7 @@ const proxyThemeAssetsController = async (req, res) => {
                             return script;
                         })
                         .join('\n');
+                    console.log("Head scripts after filtering:", headScripts.length > 0 ? "Found" : "None");
                     
                     // Extract link tags (CSS files)
                     const linkMatches = headContent.match(/<link[^>]*>/gi) || [];
@@ -437,34 +450,66 @@ const proxyThemeAssetsController = async (req, res) => {
                         processedScripts.push(headScripts);
                     }
                     
-                    // Process body scripts
-                    bodyScriptMatches.forEach((script, index) => {
-                        const scriptPreview = script.substring(0, 100);
-                        console.log("Processing body script " + (index + 1) + ":", scriptPreview);
-                        
-                        // Relative URLs ko absolute me convert karo
-                        const srcMatch = script.match(/src=["']([^"']+)["']/i);
-                        if (srcMatch) {
-                            const originalSrc = srcMatch[1];
-                            if (!originalSrc.startsWith('http')) {
-                                const absoluteUrl = originalSrc.startsWith('/') 
-                                    ? `${reactAppBaseUrl}${originalSrc}`
-                                    : `${reactAppBaseUrl}/${originalSrc}`;
-                                console.log("Converting body script URL:", originalSrc, "->", absoluteUrl);
-                                processedScripts.push(script.replace(originalSrc, absoluteUrl));
+                    // Process body scripts (filter out ngrok error scripts)
+                    bodyScriptMatches
+                        .filter(script => {
+                            // Filter out ngrok error scripts
+                            const srcMatch = script.match(/src=["']([^"']+)["']/i);
+                            if (srcMatch) {
+                                const src = srcMatch[1];
+                                if (src.includes('cdn.ngrok.com') || src.includes('error.js') || src.includes('allerrors.js')) {
+                                    console.log("Filtering out ngrok error script:", src);
+                                    return false;
+                                }
+                            }
+                            return true;
+                        })
+                        .forEach((script, index) => {
+                            const scriptPreview = script.substring(0, 100);
+                            console.log("Processing body script " + (index + 1) + ":", scriptPreview);
+                            
+                            // Relative URLs ko absolute me convert karo
+                            const srcMatch = script.match(/src=["']([^"']+)["']/i);
+                            if (srcMatch) {
+                                const originalSrc = srcMatch[1];
+                                if (!originalSrc.startsWith('http')) {
+                                    const absoluteUrl = originalSrc.startsWith('/') 
+                                        ? `${reactAppBaseUrl}${originalSrc}`
+                                        : `${reactAppBaseUrl}/${originalSrc}`;
+                                    console.log("Converting body script URL:", originalSrc, "->", absoluteUrl);
+                                    processedScripts.push(script.replace(originalSrc, absoluteUrl));
+                                } else {
+                                    console.log("Body script already has absolute URL:", originalSrc);
+                                    processedScripts.push(script);
+                                }
                             } else {
-                                console.log("Body script already has absolute URL:", originalSrc);
+                                // Inline script (no src attribute)
+                                console.log("Inline body script found (no src)");
                                 processedScripts.push(script);
                             }
-                        } else {
-                            // Inline script (no src attribute)
-                            console.log("Inline body script found (no src)");
-                            processedScripts.push(script);
-                        }
-                    });
+                        });
                     
                     reactAppScripts = processedScripts.join('\n');
                     console.log("Total scripts length:", reactAppScripts.length);
+                    console.log("Total processed scripts count:", processedScripts.length);
+                    
+                    // Check if we have React app scripts (not just ngrok errors)
+                    const hasReactScripts = reactAppScripts.length > 0 && 
+                                           !reactAppScripts.includes('cdn.ngrok.com') &&
+                                           !reactAppScripts.includes('error.js');
+                    
+                    if (!hasReactScripts) {
+                        console.error("❌ WARNING: No React app scripts found! Only ngrok error scripts were extracted.");
+                        console.error("This means React app HTML me actual React scripts nahi hain.");
+                        console.error("Possible issues:");
+                        console.error("1. React app URL wrong hai: " + reactAppFullUrl);
+                        console.error("2. React app properly serve nahi ho rahi");
+                        console.error("3. React app build path different hai");
+                        console.error("4. React app SPA hai aur scripts dynamically load hote hain");
+                    } else {
+                        console.log("✅ React app scripts found!");
+                    }
+                    
                     if (reactAppScripts.length > 0) {
                         console.log("First 200 chars of scripts:", reactAppScripts.substring(0, 200));
                     }
