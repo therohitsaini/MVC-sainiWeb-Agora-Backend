@@ -1140,6 +1140,5 @@ module.exports = {
     shopifyLogin,
     proxyThemeAssetsController,
     proxyShopifyConsultantPage,
-
-
+    proxyShopifyConsultantDashboard,
 }
