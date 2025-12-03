@@ -1344,45 +1344,16 @@ const proxyShopifyConsultantCards = async (req, res) => {
             reactAppHtml = '<div style="padding:20px;text-align:center;"><p>Error loading React app</p></div>';
         }
 
-        // Agar scripts nahi mile, to iframe use karo (fallback)
-        const useIframe = !reactAppScripts || reactAppScripts.length === 0;
-        
-        if (useIframe) {
-            console.warn("⚠️ No React scripts found, using iframe fallback");
-            const pageHtml = `
-          <!DOCTYPE html>
-          <html>
-            ${headHtml}
-            <body style="margin:0;padding:0;">
-              <main style="min-height:70vh;">
-                  ${headerHtml}
-                  <iframe 
-                      id="agora-frame"
-                      src="${reactAppFullUrl}"
-                      style="border:none;width:100%;display:block;overflow:hidden;"
-                  ></iframe>
-                  ${footerHtml}
-              </main>
-              <script>
-                  window.addEventListener("message", function (event) {
-                      try {
-                          if (!event || !event.data || event.data.type !== "AGORA_IFRAME_HEIGHT") return;
-                          var iframe = document.getElementById("agora-frame");
-                          if (iframe && event.data.height && Number(event.data.height) > 0) {
-                              iframe.style.height = Number(event.data.height) + "px";
-                          }
-                      } catch (e) {
-                          console.error("Error handling AGORA_IFRAME_HEIGHT message", e);
-                      }
-                  });
-              </script>
-            </body>
-          </html>
-          `;
-            return res.status(200).send(pageHtml);
+        // Agar scripts nahi mile, to warning de do (no iframe fallback)
+        if (!reactAppScripts || reactAppScripts.length === 0) {
+            console.error("❌ ERROR: No React scripts found! React app mount nahi hogi.");
+            console.error("Please check:");
+            console.error("1. React app URL sahi hai: " + reactAppFullUrl);
+            console.error("2. React app properly build hui hai");
+            console.error("3. React app scripts accessible hain");
         }
 
-        // Combine Shopify header/footer with React app content
+        // Combine Shopify header/footer with React app content (always use direct HTML injection, no iframe)
         const pageHtml = `
           <!DOCTYPE html>
           <html>
