@@ -1140,6 +1140,7 @@ const { fetchReactAppHTML } = require('../Utils/reactAppFetcher');
 
 const proxyShopifyConsultantCards = async (req, res) => {
     try {
+        console.log("proxyShopifyConsultantCards__________");
         const shop = req.query.shop;
         const frontendRoute = req.query.route || "/consultant-cards";
 
