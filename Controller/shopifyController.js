@@ -1220,11 +1220,45 @@ const proxyShopifyConsultantCards = async (req, res) => {
             if (reactResponse.ok) {
                 const reactHtml = await reactResponse.text();
                 console.log("React HTML fetched, length:", reactHtml.length);
+                console.log("React HTML preview (first 500 chars):", reactHtml.substring(0, 500));
 
-                // Extract head content (styles, meta tags, etc.)
+                // Extract head content (styles, meta tags, scripts, etc.)
                 const headMatch = reactHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+                let headScripts = '';
                 if (headMatch) {
                     const headContent = headMatch[1];
+                    
+                    // Extract scripts from head (React apps me scripts head me bhi ho sakte hain)
+                    const headScriptMatches = headContent.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
+                    console.log("Found script tags in head:", headScriptMatches.length);
+                    headScripts = headScriptMatches
+                        .filter(script => {
+                            const srcMatch = script.match(/src=["']([^"']+)["']/i);
+                            if (srcMatch) {
+                                const src = srcMatch[1];
+                                if (src.includes('cdn.ngrok.com') || src.includes('error.js')) {
+                                    console.log("Filtering out ngrok error script:", src);
+                                    return false;
+                                }
+                            }
+                            return true;
+                        })
+                        .map(script => {
+                            const srcMatch = script.match(/src=["']([^"']+)["']/i);
+                            if (srcMatch) {
+                                const originalSrc = srcMatch[1];
+                                if (!originalSrc.startsWith('http')) {
+                                    const absoluteUrl = originalSrc.startsWith('/') 
+                                        ? `${reactAppBaseUrl}${originalSrc}`
+                                        : `${reactAppBaseUrl}/${originalSrc}`;
+                                    console.log("Converting head script URL:", originalSrc, "->", absoluteUrl);
+                                    return script.replace(originalSrc, absoluteUrl);
+                                }
+                            }
+                            return script;
+                        })
+                        .join('\n');
+                    
                     // Extract link tags (CSS files)
                     const linkMatches = headContent.match(/<link[^>]*>/gi) || [];
                     reactAppStyles = linkMatches
@@ -1246,30 +1280,42 @@ const proxyShopifyConsultantCards = async (req, res) => {
                 if (bodyMatch) {
                     const bodyContent = bodyMatch[1];
                     
-                    // Extract scripts
-                    const scriptMatches = bodyContent.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
-                    reactAppScripts = scriptMatches
+                    // Extract scripts from body
+                    const bodyScriptMatches = bodyContent.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
+                    console.log("Found script tags in body:", bodyScriptMatches.length);
+                    
+                    // Combine head and body scripts
+                    const allScripts = [];
+                    if (headScripts) allScripts.push(headScripts);
+                    
+                    bodyScriptMatches
                         .filter(script => {
                             const srcMatch = script.match(/src=["']([^"']+)["']/i);
                             if (srcMatch) {
                                 const src = srcMatch[1];
                                 if (src.includes('cdn.ngrok.com') || src.includes('error.js')) {
+                                    console.log("Filtering out ngrok error script:", src);
                                     return false;
                                 }
                             }
                             return true;
                         })
-                        .map(script => {
+                        .forEach(script => {
                             const srcMatch = script.match(/src=["']([^"']+)["']/i);
                             if (srcMatch && !srcMatch[1].startsWith('http')) {
                                 const absoluteUrl = srcMatch[1].startsWith('/') 
                                     ? `${reactAppBaseUrl}${srcMatch[1]}`
                                     : `${reactAppBaseUrl}/${srcMatch[1]}`;
-                                return script.replace(srcMatch[1], absoluteUrl);
+                                console.log("Converting body script URL:", srcMatch[1], "->", absoluteUrl);
+                                allScripts.push(script.replace(srcMatch[1], absoluteUrl));
+                            } else {
+                                allScripts.push(script);
                             }
-                            return script;
-                        })
-                        .join('\n');
+                        });
+                    
+                    reactAppScripts = allScripts.join('\n');
+                    console.log("Total scripts extracted:", allScripts.length);
+                    console.log("Scripts length:", reactAppScripts.length);
 
                     // Extract body content (scripts ko remove karke)
                     reactAppHtml = bodyContent
@@ -1277,16 +1323,63 @@ const proxyShopifyConsultantCards = async (req, res) => {
                         .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '')
                         .trim();
 
+                    console.log("Body content extracted, length:", reactAppHtml.length);
+
                     // Root div content extract karo
                     const rootDivMatch = reactAppHtml.match(/<div[^>]*id=["']root["'][^>]*>([\s\S]*?)<\/div>/i);
                     if (rootDivMatch) {
                         reactAppHtml = rootDivMatch[1];
+                        console.log("Root div content extracted, length:", reactAppHtml.length);
+                    } else {
+                        console.warn("⚠️ Root div not found in React HTML, using full body content");
                     }
+                } else {
+                    console.warn("⚠️ Body tag not found in React HTML");
                 }
+            } else {
+                console.error("React app response not OK:", reactResponse.status, reactResponse.statusText);
             }
         } catch (error) {
             console.error("Error fetching React app:", error.message);
             reactAppHtml = '<div style="padding:20px;text-align:center;"><p>Error loading React app</p></div>';
+        }
+
+        // Agar scripts nahi mile, to iframe use karo (fallback)
+        const useIframe = !reactAppScripts || reactAppScripts.length === 0;
+        
+        if (useIframe) {
+            console.warn("⚠️ No React scripts found, using iframe fallback");
+            const pageHtml = `
+          <!DOCTYPE html>
+          <html>
+            ${headHtml}
+            <body style="margin:0;padding:0;">
+              <main style="min-height:70vh;">
+                  ${headerHtml}
+                  <iframe 
+                      id="agora-frame"
+                      src="${reactAppFullUrl}"
+                      style="border:none;width:100%;display:block;overflow:hidden;"
+                  ></iframe>
+                  ${footerHtml}
+              </main>
+              <script>
+                  window.addEventListener("message", function (event) {
+                      try {
+                          if (!event || !event.data || event.data.type !== "AGORA_IFRAME_HEIGHT") return;
+                          var iframe = document.getElementById("agora-frame");
+                          if (iframe && event.data.height && Number(event.data.height) > 0) {
+                              iframe.style.height = Number(event.data.height) + "px";
+                          }
+                      } catch (e) {
+                          console.error("Error handling AGORA_IFRAME_HEIGHT message", e);
+                      }
+                  });
+              </script>
+            </body>
+          </html>
+          `;
+            return res.status(200).send(pageHtml);
         }
 
         // Combine Shopify header/footer with React app content
@@ -1317,6 +1410,23 @@ const proxyShopifyConsultantCards = async (req, res) => {
               
               <!-- React App Scripts -->
               ${reactAppScripts}
+              
+              <!-- Debugging -->
+              <script>
+                  console.log('React App Scripts loaded:', ${reactAppScripts ? 'true' : 'false'});
+                  console.log('Root element:', document.getElementById('root'));
+                  
+                  window.addEventListener('load', function() {
+                      setTimeout(function() {
+                          const root = document.getElementById('root');
+                          if (root && (root.innerHTML.includes('Loading...') || root.innerHTML.trim() === '')) {
+                              console.error('❌ React app mount nahi hua. Check console for errors.');
+                          } else {
+                              console.log('✅ React app mounted successfully');
+                          }
+                      }, 3000);
+                  });
+              </script>
             </body>
           </html>
           `;
