@@ -1140,211 +1140,162 @@ const proxyShopifyConsultantDashboard = async (req, res) => {
 const proxyShopifyConsultantCards = async (req, res) => {
     try {
         const shop = req.query.shop;
-        const themeId = req.query.theme_id;
-        const customerId = req.query.logged_in_customer_id;
-        let userId;
-        
-        // Customer registration
-        if (shop && customerId) {
-            try {
-                const result = await manageShopifyUser(shop, customerId);
-                userId = result;
-                if (result.success) {
-                    console.log("✅ Customer registration:", result.message, result.userId ? `userId: ${result.userId}` : '');
-                }
-            } catch (error) {
-                console.error("❌ Error registering customer:", error.message);
-            }
+        const frontendRoute = req.query.route || "/consultant-cards";
+
+        if (!shop) {
+            return res.status(400).send("Shop parameter required");
         }
 
-        const shopDocId = await shopModel.findOne({ shop: shop });
-        const cookieHeader = req.headers.cookie || "";
-        const userAgent = req.headers["user-agent"] || "node";
-        const makeUrl = (base) => themeId ? `${base}${base.includes("?") ? "&" : "?"}theme_id=${themeId}` : base;
-        const fetchWithSession = (url) => fetch(url, { headers: { Cookie: cookieHeader, "User-Agent": userAgent }, redirect: "manual" });
+        // Step 1: Shopify header/footer fetch karo
+        const shopifyHeaderUrl = `https://${shop}/?section_id=header`;
+        const shopifyFooterUrl = `https://${shop}/?section_id=footer`;
 
-        // Shopify header/footer fetch karo
-        let homeResp = await fetchWithSession(makeUrl(`https://${shop}/`));
-        if (homeResp.status >= 300 && homeResp.status < 400) {
-            const storefrontPassword = process.env.STOREFRONT_PASSWORD || 1;
-            if (storefrontPassword && wrapper && CookieJar && axios) {
-                const jar = new CookieJar();
-                const client = wrapper(axios.create({ jar, withCredentials: true, headers: { "User-Agent": userAgent } }));
-                await client.get(`https://${shop}/password`).catch(() => { });
-                await client.post(`https://${shop}/password`, new URLSearchParams({ password: storefrontPassword }).toString(), {
-                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                    maxRedirects: 0, validateStatus: () => true
-                });
-                homeResp = await client.get(makeUrl(`https://${shop}/`));
-                var jarFetch = async (url) => (await client.get(url)).data;
-            } else {
-                return res.status(401).send("Storefront locked. Enter password or use preview.");
-            }
-        }
-
-        const homeHtml = typeof homeResp.data === "string" ? homeResp.data : (await homeResp.text());
-        const headMatch = homeHtml.match(/<head[\s\S]*?<\/head>/i);
-        const headHtml = headMatch ? headMatch[0] : `
-          <head>
-            <meta charset="UTF-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <title>Agora App</title>
-          </head>`;
-        const sectionFetch = typeof jarFetch === "function"
-            ? (url) => jarFetch(url)
-            : (url) => fetchWithSession(url).then(r => r.text());
-
-        const [headerHtml, footerHtml] = await Promise.all([
-            sectionFetch(makeUrl(`https://${shop}/?section_id=header`)),
-            sectionFetch(makeUrl(`https://${shop}/?section_id=footer`))
+        const [headerResponse, footerResponse] = await Promise.all([
+            fetch(shopifyHeaderUrl),
+            fetch(shopifyFooterUrl)
         ]);
 
-        // React App URL - /consultant-cards route fetch karo
-        const reactAppBaseUrl = process.env.REACT_APP_URL || "https://projectable-eely-minerva.ngrok-free.dev";
-        const reactAppPath = "/consultant-cards";
-        const reactAppFullUrl = `${reactAppBaseUrl}${reactAppPath}?customerId=${userId?.userId || ''}&shopid=${shopDocId?._id || ''}`;
-        
-        // React app ka root HTML bhi fetch karo (scripts usually root me hote hain)
-        const reactAppRootUrl = `${reactAppBaseUrl}/`;
+        const headerHtml = headerResponse.ok ? await headerResponse.text() : '';
+        const footerHtml = footerResponse.ok ? await footerResponse.text() : '';
 
-        let reactAppHtml = '';
-        let reactAppStyles = '';
-        let reactAppScripts = '';
+        // Step 2: Frontend route fetch karo
+        const frontendBaseUrl = process.env.REACT_APP_URL || "https://projectable-eely-minerva.ngrok-free.dev";
+        const frontendFullUrl = `${frontendBaseUrl}${frontendRoute}`;
 
-        try {
-            console.log("Fetching React app from:", reactAppFullUrl);
-            const reactResponse = await fetch(reactAppFullUrl, {
-                headers: {
-                    'User-Agent': userAgent,
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-                }
-            });
-            
-            // Root HTML bhi fetch karo scripts ke liye
-            let rootHtml = '';
-            try {
-                console.log("Fetching React app root HTML for scripts:", reactAppRootUrl);
-                const rootResponse = await fetch(reactAppRootUrl, {
-                    headers: {
-                        'User-Agent': userAgent,
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-                    }
-                });
-                if (rootResponse.ok) {
-                    rootHtml = await rootResponse.text();
-                    console.log("Root HTML fetched, length:", rootHtml.length);
-                }
-            } catch (rootError) {
-                console.warn("Could not fetch root HTML:", rootError.message);
+        console.log("Fetching frontend route:", frontendFullUrl);
+        const frontendResponse = await fetch(frontendFullUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            }
+        });
+
+        let frontendHtml = '';
+        let frontendStyles = '';
+        let frontendScripts = '';
+
+        if (frontendResponse.ok) {
+            const frontendFullHtml = await frontendResponse.text();
+            console.log("Frontend HTML fetched, length:", frontendFullHtml.length);
+            console.log("Frontend HTML preview (first 1000 chars):", frontendFullHtml.substring(0, 1000));
+
+            // Extract head content (styles, scripts, etc.)
+            const headMatch = frontendFullHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+            if (headMatch) {
+                const headContent = headMatch[1];
+                
+                // Extract link tags (CSS files)
+                const linkMatches = headContent.match(/<link[^>]*>/gi) || [];
+                frontendStyles = linkMatches
+                    .map(link => {
+                        const hrefMatch = link.match(/href=["']([^"']+)["']/i);
+                        if (hrefMatch && !hrefMatch[1].startsWith('http')) {
+                            const absoluteUrl = hrefMatch[1].startsWith('/') 
+                                ? `${frontendBaseUrl}${hrefMatch[1]}`
+                                : `${frontendBaseUrl}/${hrefMatch[1]}`;
+                            return link.replace(hrefMatch[1], absoluteUrl);
+                        }
+                        return link;
+                    })
+                    .join('\n');
+                
+                // Extract scripts from head
+                const headScriptMatches = headContent.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
+                const headScripts = headScriptMatches
+                    .filter(script => {
+                        const srcMatch = script.match(/src=["']([^"']+)["']/i);
+                        if (srcMatch) {
+                            const src = srcMatch[1];
+                            // Skip ngrok error scripts
+                            if (src.includes('cdn.ngrok.com') || src.includes('error.js')) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    })
+                    .map(script => {
+                        const srcMatch = script.match(/src=["']([^"']+)["']/i);
+                        if (srcMatch && !srcMatch[1].startsWith('http')) {
+                            const absoluteUrl = srcMatch[1].startsWith('/') 
+                                ? `${frontendBaseUrl}${srcMatch[1]}`
+                                : `${frontendBaseUrl}/${srcMatch[1]}`;
+                            return script.replace(srcMatch[1], absoluteUrl);
+                        }
+                        return script;
+                    })
+                    .join('\n');
+                
+                if (headScripts) frontendScripts += headScripts + '\n';
             }
 
-            if (reactResponse.ok) {
-                const reactHtml = await reactResponse.text();
-                console.log("React HTML fetched, length:", reactHtml.length);
-                console.log("React HTML preview (first 500 chars):", reactHtml.substring(0, 500));
-
-                // Extract head content (styles, meta tags, scripts, etc.)
-                const headMatch = reactHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
-                let headScripts = '';
-                if (headMatch) {
-                    const headContent = headMatch[1];
-                    
-                    // Extract scripts from head (React apps me scripts head me bhi ho sakte hain)
-                    const headScriptMatches = headContent.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
-                    console.log("Found script tags in head:", headScriptMatches.length);
-                    headScripts = headScriptMatches
-                        .filter(script => {
-                            const srcMatch = script.match(/src=["']([^"']+)["']/i);
-                            if (srcMatch) {
-                                const src = srcMatch[1];
-                                if (src.includes('cdn.ngrok.com') || src.includes('error.js')) {
-                                    console.log("Filtering out ngrok error script:", src);
-                                    return false;
-                                }
+            // Extract body content
+            const bodyMatch = frontendFullHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+            if (bodyMatch) {
+                const bodyContent = bodyMatch[1];
+                
+                // Extract scripts from body
+                const bodyScriptMatches = bodyContent.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
+                const bodyScripts = bodyScriptMatches
+                    .filter(script => {
+                        const srcMatch = script.match(/src=["']([^"']+)["']/i);
+                        if (srcMatch) {
+                            const src = srcMatch[1];
+                            if (src.includes('cdn.ngrok.com') || src.includes('error.js')) {
+                                return false;
                             }
-                            return true;
-                        })
-                        .map(script => {
-                            const srcMatch = script.match(/src=["']([^"']+)["']/i);
-                            if (srcMatch) {
-                                const originalSrc = srcMatch[1];
-                                if (!originalSrc.startsWith('http')) {
-                                    const absoluteUrl = originalSrc.startsWith('/') 
-                                        ? `${reactAppBaseUrl}${originalSrc}`
-                                        : `${reactAppBaseUrl}/${originalSrc}`;
-                                    console.log("Converting head script URL:", originalSrc, "->", absoluteUrl);
-                                    return script.replace(originalSrc, absoluteUrl);
-                                }
-                            }
-                            return script;
-                        })
-                        .join('\n');
-                    
-                    // Extract link tags (CSS files)
-                    const linkMatches = headContent.match(/<link[^>]*>/gi) || [];
-                    reactAppStyles = linkMatches
-                        .map(link => {
-                            const hrefMatch = link.match(/href=["']([^"']+)["']/i);
-                            if (hrefMatch && !hrefMatch[1].startsWith('http')) {
-                                const absoluteUrl = hrefMatch[1].startsWith('/') 
-                                    ? `${reactAppBaseUrl}${hrefMatch[1]}`
-                                    : `${reactAppBaseUrl}/${hrefMatch[1]}`;
-                                return link.replace(hrefMatch[1], absoluteUrl);
-                            }
-                            return link;
-                        })
-                        .join('\n');
+                        }
+                        return true;
+                    })
+                    .map(script => {
+                        const srcMatch = script.match(/src=["']([^"']+)["']/i);
+                        if (srcMatch && !srcMatch[1].startsWith('http')) {
+                            const absoluteUrl = srcMatch[1].startsWith('/') 
+                                ? `${frontendBaseUrl}${srcMatch[1]}`
+                                : `${frontendBaseUrl}/${srcMatch[1]}`;
+                            return script.replace(srcMatch[1], absoluteUrl);
+                        }
+                        return script;
+                    })
+                    .join('\n');
+                
+                if (bodyScripts) frontendScripts += bodyScripts + '\n';
+                
+                // Extract body HTML (scripts ko remove karke)
+                frontendHtml = bodyContent
+                    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+                    .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '')
+                    .trim();
+                
+                // Root div content extract karo
+                const rootDivMatch = frontendHtml.match(/<div[^>]*id=["']root["'][^>]*>([\s\S]*?)<\/div>/i);
+                if (rootDivMatch) {
+                    frontendHtml = rootDivMatch[1];
                 }
-
-                // Extract body content
-                const bodyMatch = reactHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-                if (bodyMatch) {
-                    const bodyContent = bodyMatch[1];
+            }
+            
+            console.log("Frontend scripts extracted:", frontendScripts.length > 0 ? `Yes (${frontendScripts.length} chars)` : "No");
+            console.log("Frontend styles extracted:", frontendStyles.length > 0 ? `Yes (${frontendStyles.length} chars)` : "No");
+            
+            // Agar scripts nahi mile, to root HTML se try karo
+            if (!frontendScripts || frontendScripts.length === 0) {
+                console.warn("⚠️ No scripts found in route HTML, trying root HTML...");
+                try {
+                    const rootUrl = `${frontendBaseUrl}/`;
+                    console.log("Fetching root HTML for scripts:", rootUrl);
+                    const rootResponse = await fetch(rootUrl, {
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0',
+                            'Accept': 'text/html'
+                        }
+                    });
                     
-                    // Extract scripts from body
-                    const bodyScriptMatches = bodyContent.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
-                    console.log("Found script tags in body:", bodyScriptMatches.length);
-                    
-                    // Combine head and body scripts
-                    const allScripts = [];
-                    if (headScripts) allScripts.push(headScripts);
-                    
-                    bodyScriptMatches
-                        .filter(script => {
-                            const srcMatch = script.match(/src=["']([^"']+)["']/i);
-                            if (srcMatch) {
-                                const src = srcMatch[1];
-                                if (src.includes('cdn.ngrok.com') || src.includes('error.js')) {
-                                    console.log("Filtering out ngrok error script:", src);
-                                    return false;
-                                }
-                            }
-                            return true;
-                        })
-                        .forEach(script => {
-                            const srcMatch = script.match(/src=["']([^"']+)["']/i);
-                            if (srcMatch && !srcMatch[1].startsWith('http')) {
-                                const absoluteUrl = srcMatch[1].startsWith('/') 
-                                    ? `${reactAppBaseUrl}${srcMatch[1]}`
-                                    : `${reactAppBaseUrl}/${srcMatch[1]}`;
-                                console.log("Converting body script URL:", srcMatch[1], "->", absoluteUrl);
-                                allScripts.push(script.replace(srcMatch[1], absoluteUrl));
-                            } else {
-                                allScripts.push(script);
-                            }
-                        });
-                    
-                    reactAppScripts = allScripts.join('\n');
-                    console.log("Total scripts extracted from route HTML:", allScripts.length);
-                    console.log("Scripts length:", reactAppScripts.length);
-                    
-                    // Agar scripts nahi mile route HTML se, to root HTML se try karo
-                    if ((!reactAppScripts || reactAppScripts.length === 0) && rootHtml) {
-                        console.log("No scripts in route HTML, trying root HTML...");
+                    if (rootResponse.ok) {
+                        const rootHtml = await rootResponse.text();
+                        console.log("Root HTML fetched, length:", rootHtml.length);
                         
                         // Root HTML se scripts extract karo
-                        const rootBodyMatch = rootHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
                         const rootHeadMatch = rootHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+                        const rootBodyMatch = rootHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
                         
                         const rootScripts = [];
                         
@@ -1357,10 +1308,13 @@ const proxyShopifyConsultantCards = async (req, res) => {
                                     const src = srcMatch[1];
                                     if (!src.includes('cdn.ngrok.com') && !src.includes('error.js')) {
                                         const absoluteUrl = src.startsWith('http') ? src : 
-                                            (src.startsWith('/') ? `${reactAppBaseUrl}${src}` : `${reactAppBaseUrl}/${src}`);
+                                            (src.startsWith('/') ? `${frontendBaseUrl}${src}` : `${frontendBaseUrl}/${src}`);
                                         rootScripts.push(`<script src="${absoluteUrl}"></script>`);
-                                        console.log("Found script in root head:", absoluteUrl);
+                                        console.log("✅ Found script in root head:", absoluteUrl);
                                     }
+                                } else {
+                                    // Inline script
+                                    rootScripts.push(script);
                                 }
                             });
                         }
@@ -1374,160 +1328,68 @@ const proxyShopifyConsultantCards = async (req, res) => {
                                     const src = srcMatch[1];
                                     if (!src.includes('cdn.ngrok.com') && !src.includes('error.js')) {
                                         const absoluteUrl = src.startsWith('http') ? src : 
-                                            (src.startsWith('/') ? `${reactAppBaseUrl}${src}` : `${reactAppBaseUrl}/${src}`);
+                                            (src.startsWith('/') ? `${frontendBaseUrl}${src}` : `${frontendBaseUrl}/${src}`);
                                         rootScripts.push(`<script src="${absoluteUrl}"></script>`);
-                                        console.log("Found script in root body:", absoluteUrl);
+                                        console.log("✅ Found script in root body:", absoluteUrl);
                                     }
                                 } else {
                                     // Inline script
                                     rootScripts.push(script);
-                                    console.log("Found inline script in root body");
                                 }
                             });
                         }
                         
                         if (rootScripts.length > 0) {
-                            reactAppScripts = rootScripts.join('\n');
+                            frontendScripts = rootScripts.join('\n');
                             console.log("✅ Scripts extracted from root HTML, total:", rootScripts.length);
+                        } else {
+                            console.error("❌ No scripts found in root HTML either!");
+                            console.error("Troubleshooting:");
+                            console.error("1. Check React app URL:", frontendBaseUrl);
+                            console.error("2. Browser me directly open karo:", frontendFullUrl);
+                            console.error("3. View Source karo aur script tags check karo");
+                            console.error("4. React app properly build hui hai ya nahi");
                         }
                     }
-
-                    // Extract body content (scripts ko remove karke)
-                    reactAppHtml = bodyContent
-                        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-                        .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '')
-                        .trim();
-
-                    console.log("Body content extracted, length:", reactAppHtml.length);
-
-                    // Root div content extract karo
-                    const rootDivMatch = reactAppHtml.match(/<div[^>]*id=["']root["'][^>]*>([\s\S]*?)<\/div>/i);
-                    if (rootDivMatch) {
-                        reactAppHtml = rootDivMatch[1];
-                        console.log("Root div content extracted, length:", reactAppHtml.length);
-                    } else {
-                        console.warn("⚠️ Root div not found in React HTML, using full body content");
-                    }
-                } else {
-                    console.warn("⚠️ Body tag not found in React HTML");
+                } catch (rootError) {
+                    console.error("Error fetching root HTML:", rootError.message);
                 }
-            } else {
-                console.error("React app response not OK:", reactResponse.status, reactResponse.statusText);
             }
-        } catch (error) {
-            console.error("Error fetching React app:", error.message);
-            reactAppHtml = '<div style="padding:20px;text-align:center;"><p>Error loading React app</p></div>';
+        } else {
+            frontendHtml = '<div style="padding:20px;text-align:center;"><p>Error loading content</p></div>';
+            console.error("Frontend response not OK:", frontendResponse.status, frontendResponse.statusText);
         }
 
-        // Agar scripts nahi mile, to common React build paths try karo
-        if (!reactAppScripts || reactAppScripts.length === 0) {
-            console.warn("⚠️ No scripts found after checking route + root HTML");
-            
-            // Duplicate fetch removed - already tried route + root HTML above
-            // No need to fetch again
-            try {
-                // Skip duplicate fetch - already tried above
-                const reactHtmlCheck = null;
-                
-                if (false && reactHtmlCheck) { // Disabled duplicate fetch
-                    // Extract all script src attributes from HTML
-                    const allScriptSrcs = reactHtmlCheck.match(/<script[^>]*src=["']([^"']+)["'][^>]*>/gi) || [];
-                    const foundScripts = [];
-                    
-                    allScriptSrcs.forEach(scriptTag => {
-                        const srcMatch = scriptTag.match(/src=["']([^"']+)["']/i);
-                        if (srcMatch) {
-                            let scriptPath = srcMatch[1];
-                            // Skip ngrok error scripts
-                            if (scriptPath.includes('cdn.ngrok.com') || scriptPath.includes('error.js')) {
-                                return;
-                            }
-                            
-                            // Convert relative to absolute
-                            if (!scriptPath.startsWith('http')) {
-                                scriptPath = scriptPath.startsWith('/') 
-                                    ? `${reactAppBaseUrl}${scriptPath}`
-                                    : `${reactAppBaseUrl}/${scriptPath}`;
-                            }
-                            
-                            foundScripts.push(`<script src="${scriptPath}"></script>`);
-                            console.log("Found script in HTML:", scriptPath);
-                        }
-                    });
-                    
-                    if (foundScripts.length > 0) {
-                        reactAppScripts = foundScripts.join('\n');
-                        console.log("✅ Scripts found in HTML, total:", foundScripts.length);
-                    }
-                }
-            } catch (fallbackError) {
-                console.error("Error in fallback script detection:", fallbackError.message);
-            }
-            
-            if (!reactAppScripts || reactAppScripts.length === 0) {
-                console.error("❌ ERROR: No React scripts found! React app mount nahi hogi.");
-                console.error("Please check:");
-                console.error("1. React app URL sahi hai: " + reactAppFullUrl);
-                console.error("2. React app properly build hui hai");
-                console.error("3. React app scripts accessible hain");
-                console.error("4. Browser me directly open karke check karo ki scripts load ho rahe hain");
-            }
-        }
+        // Step 3: Combine karo (with scripts and styles)
+        const combinedHtml = `
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Shopify App</title>
+                    ${frontendStyles}
+                </head>
+                <body style="margin:0;padding:0;">
+                    ${headerHtml}
+                    <main style="min-height:70vh;">
+                        <div id="root">
+                            ${frontendHtml || '<div style="padding:20px;">Loading...</div>'}
+                        </div>
+                    </main>
+                    ${footerHtml}
+                    ${frontendScripts}
+                </body>
+            </html>
+        `;
 
-        // Combine Shopify header/footer with React app content (always use direct HTML injection, no iframe)
-        const pageHtml = `
-          <!DOCTYPE html>
-          <html>
-            ${headHtml}
-            ${reactAppStyles}
-            <body style="margin:0;padding:0;">
-                <script>
-                    window.AGORA_CONFIG = {
-                        customerId: "${userId?.userId || ''}",
-                        shopId: "${shopDocId?._id || ''}",
-                        shop: "${shop || ''}",
-                        customerIdRaw: "${customerId || ''}"
-                    };
-                </script>
-              <main style="min-height:70vh;">
-                  ${headerHtml}
-                  
-                  <!-- React App Content -->
-                  <div id="root" style="width:100%;min-height:70vh;">
-                      ${reactAppHtml || '<div style="padding:20px;">Loading...</div>'}
-                  </div>
-                  
-                  ${footerHtml}
-              </main>
-              
-              <!-- React App Scripts -->
-              ${reactAppScripts}
-              
-              <!-- Debugging -->
-              <script>
-                  console.log('React App Scripts loaded:', ${reactAppScripts ? 'true' : 'false'});
-                  console.log('Root element:', document.getElementById('root'));
-                  
-                  window.addEventListener('load', function() {
-                      setTimeout(function() {
-                          const root = document.getElementById('root');
-                          if (root && (root.innerHTML.includes('Loading...') || root.innerHTML.trim() === '')) {
-                              console.error('❌ React app mount nahi hua. Check console for errors.');
-                          } else {
-                              console.log('✅ React app mounted successfully');
-                          }
-                      }, 3000);
-                  });
-              </script>
-            </body>
-          </html>
-          `;
-        return res.status(200).send(pageHtml);
-    } catch (e) {
-        console.error("/apps/agora/consultant-cards error:", e);
-        return res.status(500).send("Failed to compose Shopify header/footer with React app");
+        res.status(200).send(combinedHtml);
+
+    } catch (error) {
+        console.error("Error:", error);
+        res.status(500).send("Error combining Shopify and frontend content");
     }
-}
+};
 
 module.exports = {
     installShopifyApp,
