@@ -1178,30 +1178,43 @@ const proxyShopifyConsultantCards = async (req, res) => {
         const shopDocId = await shopModel.findOne({ shop: shop });
 
         // Step 3: Fetch React app HTML with absolute URLs
-        let reactAppHTML = '';
+        let reactAppHead = '';
+        let reactAppBody = '';
         try {
             console.log("Fetching React app HTML from:", frontendBaseUrl);
-            reactAppHTML = await fetchReactAppHTML(frontendBaseUrl);
+            const fullReactHTML = await fetchReactAppHTML(frontendBaseUrl);
             
-            // Inject config for React app
-            reactAppHTML = reactAppHTML.replace(
-                '<div id="root"></div>',
-                `<div id="root"></div>
-                <script>
-                    window.AGORA_CONFIG = {
-                        customerId: "${userId?.userId || ''}",
-                        shopId: "${shopDocId?._id || ''}",
-                        shop: "${shop || ''}",
-                        customerIdRaw: "${customerId || ''}"
-                    };
-                </script>`
-            );
+            // Extract head content (styles, meta tags, etc.)
+            const headMatch = fullReactHTML.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+            if (headMatch) {
+                reactAppHead = headMatch[1];
+            }
+            
+            // Extract body content
+            const bodyMatch = fullReactHTML.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+            if (bodyMatch) {
+                reactAppBody = bodyMatch[1];
+                
+                // Inject config for React app before root div
+                reactAppBody = reactAppBody.replace(
+                    '<div id="root"></div>',
+                    `<div id="root"></div>
+                    <script>
+                        window.AGORA_CONFIG = {
+                            customerId: "${userId?.userId || ''}",
+                            shopId: "${shopDocId?._id || ''}",
+                            shop: "${shop || ''}",
+                            customerIdRaw: "${customerId || ''}"
+                        };
+                    </script>`
+                );
+            }
             
             console.log("✅ React app HTML fetched and processed");
         } catch (error) {
             console.error('❌ React app fetch failed:', error.message);
             // Fallback to iframe
-            reactAppHTML = `
+            reactAppBody = `
                 <iframe 
                     id="agora-frame"
                     src="${frontendFullUrl}?customerId=${userId?.userId || ''}&shopid=${shopDocId?._id || ''}" 
@@ -1232,11 +1245,12 @@ const proxyShopifyConsultantCards = async (req, res) => {
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>Shopify App</title>
+                    ${reactAppHead}
                 </head>
                 <body style="margin:0;padding:0;">
                     ${headerHtml}
                     <main style="min-height:70vh;">
-                        ${reactAppHTML}
+                        ${reactAppBody}
                     </main>
                     ${footerHtml}
                 </body>
