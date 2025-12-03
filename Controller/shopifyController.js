@@ -1044,7 +1044,6 @@ const proxyShopifyConsultantPage = async (req, res) => {
                   style="border:none;width:100%;height:100vh;display:block;"
                 ></iframe>
               </main>
-          
             </body>
           </html>`;
         return res.status(200).send(pageHtml);
@@ -1134,6 +1133,200 @@ const proxyShopifyConsultantDashboard = async (req, res) => {
 
 
 
+/** Proxy for React App Consultant Cards with Shopify Header/Footer
+ * 1. GET /apps/agora/consultant-cards?shop=store.myshopify.com
+ * 2. React app ka /consultant-cards route fetch karke Shopify header/footer add karta hai
+ */
+const proxyShopifyConsultantCards = async (req, res) => {
+    try {
+        const shop = req.query.shop;
+        const themeId = req.query.theme_id;
+        const customerId = req.query.logged_in_customer_id;
+        let userId;
+        
+        // Customer registration
+        if (shop && customerId) {
+            try {
+                const result = await manageShopifyUser(shop, customerId);
+                userId = result;
+                if (result.success) {
+                    console.log("✅ Customer registration:", result.message, result.userId ? `userId: ${result.userId}` : '');
+                }
+            } catch (error) {
+                console.error("❌ Error registering customer:", error.message);
+            }
+        }
+
+        const shopDocId = await shopModel.findOne({ shop: shop });
+        const cookieHeader = req.headers.cookie || "";
+        const userAgent = req.headers["user-agent"] || "node";
+        const makeUrl = (base) => themeId ? `${base}${base.includes("?") ? "&" : "?"}theme_id=${themeId}` : base;
+        const fetchWithSession = (url) => fetch(url, { headers: { Cookie: cookieHeader, "User-Agent": userAgent }, redirect: "manual" });
+
+        // Shopify header/footer fetch karo
+        let homeResp = await fetchWithSession(makeUrl(`https://${shop}/`));
+        if (homeResp.status >= 300 && homeResp.status < 400) {
+            const storefrontPassword = process.env.STOREFRONT_PASSWORD || 1;
+            if (storefrontPassword && wrapper && CookieJar && axios) {
+                const jar = new CookieJar();
+                const client = wrapper(axios.create({ jar, withCredentials: true, headers: { "User-Agent": userAgent } }));
+                await client.get(`https://${shop}/password`).catch(() => { });
+                await client.post(`https://${shop}/password`, new URLSearchParams({ password: storefrontPassword }).toString(), {
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    maxRedirects: 0, validateStatus: () => true
+                });
+                homeResp = await client.get(makeUrl(`https://${shop}/`));
+                var jarFetch = async (url) => (await client.get(url)).data;
+            } else {
+                return res.status(401).send("Storefront locked. Enter password or use preview.");
+            }
+        }
+
+        const homeHtml = typeof homeResp.data === "string" ? homeResp.data : (await homeResp.text());
+        const headMatch = homeHtml.match(/<head[\s\S]*?<\/head>/i);
+        const headHtml = headMatch ? headMatch[0] : `
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>Agora App</title>
+          </head>`;
+        const sectionFetch = typeof jarFetch === "function"
+            ? (url) => jarFetch(url)
+            : (url) => fetchWithSession(url).then(r => r.text());
+
+        const [headerHtml, footerHtml] = await Promise.all([
+            sectionFetch(makeUrl(`https://${shop}/?section_id=header`)),
+            sectionFetch(makeUrl(`https://${shop}/?section_id=footer`))
+        ]);
+
+        // React App URL - /consultant-cards route fetch karo
+        const reactAppBaseUrl = process.env.REACT_APP_URL || "https://projectable-eely-minerva.ngrok-free.dev";
+        const reactAppPath = "/consultant-cards";
+        const reactAppFullUrl = `${reactAppBaseUrl}${reactAppPath}?customerId=${userId?.userId || ''}&shopid=${shopDocId?._id || ''}`;
+
+        let reactAppHtml = '';
+        let reactAppStyles = '';
+        let reactAppScripts = '';
+
+        try {
+            console.log("Fetching React app from:", reactAppFullUrl);
+            const reactResponse = await fetch(reactAppFullUrl, {
+                headers: {
+                    'User-Agent': userAgent,
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                }
+            });
+
+            if (reactResponse.ok) {
+                const reactHtml = await reactResponse.text();
+                console.log("React HTML fetched, length:", reactHtml.length);
+
+                // Extract head content (styles, meta tags, etc.)
+                const headMatch = reactHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+                if (headMatch) {
+                    const headContent = headMatch[1];
+                    // Extract link tags (CSS files)
+                    const linkMatches = headContent.match(/<link[^>]*>/gi) || [];
+                    reactAppStyles = linkMatches
+                        .map(link => {
+                            const hrefMatch = link.match(/href=["']([^"']+)["']/i);
+                            if (hrefMatch && !hrefMatch[1].startsWith('http')) {
+                                const absoluteUrl = hrefMatch[1].startsWith('/') 
+                                    ? `${reactAppBaseUrl}${hrefMatch[1]}`
+                                    : `${reactAppBaseUrl}/${hrefMatch[1]}`;
+                                return link.replace(hrefMatch[1], absoluteUrl);
+                            }
+                            return link;
+                        })
+                        .join('\n');
+                }
+
+                // Extract body content
+                const bodyMatch = reactHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+                if (bodyMatch) {
+                    const bodyContent = bodyMatch[1];
+                    
+                    // Extract scripts
+                    const scriptMatches = bodyContent.match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
+                    reactAppScripts = scriptMatches
+                        .filter(script => {
+                            const srcMatch = script.match(/src=["']([^"']+)["']/i);
+                            if (srcMatch) {
+                                const src = srcMatch[1];
+                                if (src.includes('cdn.ngrok.com') || src.includes('error.js')) {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        })
+                        .map(script => {
+                            const srcMatch = script.match(/src=["']([^"']+)["']/i);
+                            if (srcMatch && !srcMatch[1].startsWith('http')) {
+                                const absoluteUrl = srcMatch[1].startsWith('/') 
+                                    ? `${reactAppBaseUrl}${srcMatch[1]}`
+                                    : `${reactAppBaseUrl}/${srcMatch[1]}`;
+                                return script.replace(srcMatch[1], absoluteUrl);
+                            }
+                            return script;
+                        })
+                        .join('\n');
+
+                    // Extract body content (scripts ko remove karke)
+                    reactAppHtml = bodyContent
+                        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+                        .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '')
+                        .trim();
+
+                    // Root div content extract karo
+                    const rootDivMatch = reactAppHtml.match(/<div[^>]*id=["']root["'][^>]*>([\s\S]*?)<\/div>/i);
+                    if (rootDivMatch) {
+                        reactAppHtml = rootDivMatch[1];
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching React app:", error.message);
+            reactAppHtml = '<div style="padding:20px;text-align:center;"><p>Error loading React app</p></div>';
+        }
+
+        // Combine Shopify header/footer with React app content
+        const pageHtml = `
+          <!DOCTYPE html>
+          <html>
+            ${headHtml}
+            ${reactAppStyles}
+            <body style="margin:0;padding:0;">
+                <script>
+                    window.AGORA_CONFIG = {
+                        customerId: "${userId?.userId || ''}",
+                        shopId: "${shopDocId?._id || ''}",
+                        shop: "${shop || ''}",
+                        customerIdRaw: "${customerId || ''}"
+                    };
+                </script>
+              <main style="min-height:70vh;">
+                  ${headerHtml}
+                  
+                  <!-- React App Content -->
+                  <div id="root" style="width:100%;min-height:70vh;">
+                      ${reactAppHtml || '<div style="padding:20px;">Loading...</div>'}
+                  </div>
+                  
+                  ${footerHtml}
+              </main>
+              
+              <!-- React App Scripts -->
+              ${reactAppScripts}
+            </body>
+          </html>
+          `;
+        return res.status(200).send(pageHtml);
+    } catch (e) {
+        console.error("/apps/agora/consultant-cards error:", e);
+        return res.status(500).send("Failed to compose Shopify header/footer with React app");
+    }
+}
+
 module.exports = {
     installShopifyApp,
     authCallback,
@@ -1141,4 +1334,5 @@ module.exports = {
     proxyThemeAssetsController,
     proxyShopifyConsultantPage,
     proxyShopifyConsultantDashboard,
+    proxyShopifyConsultantCards,
 }
