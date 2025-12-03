@@ -1421,27 +1421,15 @@ const proxyShopifyConsultantCards = async (req, res) => {
 
         // Agar scripts nahi mile, to common React build paths try karo
         if (!reactAppScripts || reactAppScripts.length === 0) {
-            console.warn("⚠️ No scripts found in HTML, trying common React build paths...");
+            console.warn("⚠️ No scripts found after checking route + root HTML");
             
-            // Common React build paths (Vite, CRA, etc.)
-            const commonScriptPaths = [
-                '/static/js/main.js',
-                '/static/js/bundle.js',
-                '/assets/index.js',
-                '/index.js',
-                '/main.js',
-                '/bundle.js',
-                '/assets/main.js',
-                '/static/main.js'
-            ];
-            
-            // Try to find scripts by checking HTML for script references
+            // Duplicate fetch removed - already tried route + root HTML above
+            // No need to fetch again
             try {
-                const reactHtmlCheck = await fetch(reactAppFullUrl, {
-                    headers: { 'User-Agent': userAgent, 'Accept': 'text/html' }
-                }).then(r => r.ok ? r.text() : '');
+                // Skip duplicate fetch - already tried above
+                const reactHtmlCheck = null;
                 
-                if (reactHtmlCheck) {
+                if (false && reactHtmlCheck) { // Disabled duplicate fetch
                     // Extract all script src attributes from HTML
                     const allScriptSrcs = reactHtmlCheck.match(/<script[^>]*src=["']([^"']+)["'][^>]*>/gi) || [];
                     const foundScripts = [];
@@ -1470,20 +1458,6 @@ const proxyShopifyConsultantCards = async (req, res) => {
                     if (foundScripts.length > 0) {
                         reactAppScripts = foundScripts.join('\n');
                         console.log("✅ Scripts found in HTML, total:", foundScripts.length);
-                    } else {
-                        // Try common paths
-                        console.log("Trying common build paths...");
-                        const fallbackScripts = commonScriptPaths
-                            .map(path => {
-                                const fullPath = path.startsWith('/') 
-                                    ? `${reactAppBaseUrl}${path}`
-                                    : `${reactAppBaseUrl}/${path}`;
-                                return `<script src="${fullPath}"></script>`;
-                            })
-                            .join('\n');
-                        
-                        // Note: Fallback scripts ko directly use nahi karenge, sirf log karenge
-                        console.warn("Fallback scripts would be:", fallbackScripts.substring(0, 200));
                     }
                 }
             } catch (fallbackError) {
