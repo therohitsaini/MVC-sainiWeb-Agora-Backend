@@ -1203,6 +1203,9 @@ const proxyShopifyConsultantCards = async (req, res) => {
         const reactAppBaseUrl = process.env.REACT_APP_URL || "https://projectable-eely-minerva.ngrok-free.dev";
         const reactAppPath = "/consultant-cards";
         const reactAppFullUrl = `${reactAppBaseUrl}${reactAppPath}?customerId=${userId?.userId || ''}&shopid=${shopDocId?._id || ''}`;
+        
+        // React app ka root HTML bhi fetch karo (scripts usually root me hote hain)
+        const reactAppRootUrl = `${reactAppBaseUrl}/`;
 
         let reactAppHtml = '';
         let reactAppStyles = '';
@@ -1216,6 +1219,24 @@ const proxyShopifyConsultantCards = async (req, res) => {
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
                 }
             });
+            
+            // Root HTML bhi fetch karo scripts ke liye
+            let rootHtml = '';
+            try {
+                console.log("Fetching React app root HTML for scripts:", reactAppRootUrl);
+                const rootResponse = await fetch(reactAppRootUrl, {
+                    headers: {
+                        'User-Agent': userAgent,
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                    }
+                });
+                if (rootResponse.ok) {
+                    rootHtml = await rootResponse.text();
+                    console.log("Root HTML fetched, length:", rootHtml.length);
+                }
+            } catch (rootError) {
+                console.warn("Could not fetch root HTML:", rootError.message);
+            }
 
             if (reactResponse.ok) {
                 const reactHtml = await reactResponse.text();
@@ -1314,8 +1335,62 @@ const proxyShopifyConsultantCards = async (req, res) => {
                         });
                     
                     reactAppScripts = allScripts.join('\n');
-                    console.log("Total scripts extracted:", allScripts.length);
+                    console.log("Total scripts extracted from route HTML:", allScripts.length);
                     console.log("Scripts length:", reactAppScripts.length);
+                    
+                    // Agar scripts nahi mile route HTML se, to root HTML se try karo
+                    if ((!reactAppScripts || reactAppScripts.length === 0) && rootHtml) {
+                        console.log("No scripts in route HTML, trying root HTML...");
+                        
+                        // Root HTML se scripts extract karo
+                        const rootBodyMatch = rootHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+                        const rootHeadMatch = rootHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+                        
+                        const rootScripts = [];
+                        
+                        // Head scripts
+                        if (rootHeadMatch) {
+                            const rootHeadScripts = rootHeadMatch[1].match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
+                            rootHeadScripts.forEach(script => {
+                                const srcMatch = script.match(/src=["']([^"']+)["']/i);
+                                if (srcMatch) {
+                                    const src = srcMatch[1];
+                                    if (!src.includes('cdn.ngrok.com') && !src.includes('error.js')) {
+                                        const absoluteUrl = src.startsWith('http') ? src : 
+                                            (src.startsWith('/') ? `${reactAppBaseUrl}${src}` : `${reactAppBaseUrl}/${src}`);
+                                        rootScripts.push(`<script src="${absoluteUrl}"></script>`);
+                                        console.log("Found script in root head:", absoluteUrl);
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // Body scripts
+                        if (rootBodyMatch) {
+                            const rootBodyScripts = rootBodyMatch[1].match(/<script[^>]*>[\s\S]*?<\/script>/gi) || [];
+                            rootBodyScripts.forEach(script => {
+                                const srcMatch = script.match(/src=["']([^"']+)["']/i);
+                                if (srcMatch) {
+                                    const src = srcMatch[1];
+                                    if (!src.includes('cdn.ngrok.com') && !src.includes('error.js')) {
+                                        const absoluteUrl = src.startsWith('http') ? src : 
+                                            (src.startsWith('/') ? `${reactAppBaseUrl}${src}` : `${reactAppBaseUrl}/${src}`);
+                                        rootScripts.push(`<script src="${absoluteUrl}"></script>`);
+                                        console.log("Found script in root body:", absoluteUrl);
+                                    }
+                                } else {
+                                    // Inline script
+                                    rootScripts.push(script);
+                                    console.log("Found inline script in root body");
+                                }
+                            });
+                        }
+                        
+                        if (rootScripts.length > 0) {
+                            reactAppScripts = rootScripts.join('\n');
+                            console.log("✅ Scripts extracted from root HTML, total:", rootScripts.length);
+                        }
+                    }
 
                     // Extract body content (scripts ko remove karke)
                     reactAppHtml = bodyContent
@@ -1344,13 +1419,85 @@ const proxyShopifyConsultantCards = async (req, res) => {
             reactAppHtml = '<div style="padding:20px;text-align:center;"><p>Error loading React app</p></div>';
         }
 
-        // Agar scripts nahi mile, to warning de do (no iframe fallback)
+        // Agar scripts nahi mile, to common React build paths try karo
         if (!reactAppScripts || reactAppScripts.length === 0) {
-            console.error("❌ ERROR: No React scripts found! React app mount nahi hogi.");
-            console.error("Please check:");
-            console.error("1. React app URL sahi hai: " + reactAppFullUrl);
-            console.error("2. React app properly build hui hai");
-            console.error("3. React app scripts accessible hain");
+            console.warn("⚠️ No scripts found in HTML, trying common React build paths...");
+            
+            // Common React build paths (Vite, CRA, etc.)
+            const commonScriptPaths = [
+                '/static/js/main.js',
+                '/static/js/bundle.js',
+                '/assets/index.js',
+                '/index.js',
+                '/main.js',
+                '/bundle.js',
+                '/assets/main.js',
+                '/static/main.js'
+            ];
+            
+            // Try to find scripts by checking HTML for script references
+            try {
+                const reactHtmlCheck = await fetch(reactAppFullUrl, {
+                    headers: { 'User-Agent': userAgent, 'Accept': 'text/html' }
+                }).then(r => r.ok ? r.text() : '');
+                
+                if (reactHtmlCheck) {
+                    // Extract all script src attributes from HTML
+                    const allScriptSrcs = reactHtmlCheck.match(/<script[^>]*src=["']([^"']+)["'][^>]*>/gi) || [];
+                    const foundScripts = [];
+                    
+                    allScriptSrcs.forEach(scriptTag => {
+                        const srcMatch = scriptTag.match(/src=["']([^"']+)["']/i);
+                        if (srcMatch) {
+                            let scriptPath = srcMatch[1];
+                            // Skip ngrok error scripts
+                            if (scriptPath.includes('cdn.ngrok.com') || scriptPath.includes('error.js')) {
+                                return;
+                            }
+                            
+                            // Convert relative to absolute
+                            if (!scriptPath.startsWith('http')) {
+                                scriptPath = scriptPath.startsWith('/') 
+                                    ? `${reactAppBaseUrl}${scriptPath}`
+                                    : `${reactAppBaseUrl}/${scriptPath}`;
+                            }
+                            
+                            foundScripts.push(`<script src="${scriptPath}"></script>`);
+                            console.log("Found script in HTML:", scriptPath);
+                        }
+                    });
+                    
+                    if (foundScripts.length > 0) {
+                        reactAppScripts = foundScripts.join('\n');
+                        console.log("✅ Scripts found in HTML, total:", foundScripts.length);
+                    } else {
+                        // Try common paths
+                        console.log("Trying common build paths...");
+                        const fallbackScripts = commonScriptPaths
+                            .map(path => {
+                                const fullPath = path.startsWith('/') 
+                                    ? `${reactAppBaseUrl}${path}`
+                                    : `${reactAppBaseUrl}/${path}`;
+                                return `<script src="${fullPath}"></script>`;
+                            })
+                            .join('\n');
+                        
+                        // Note: Fallback scripts ko directly use nahi karenge, sirf log karenge
+                        console.warn("Fallback scripts would be:", fallbackScripts.substring(0, 200));
+                    }
+                }
+            } catch (fallbackError) {
+                console.error("Error in fallback script detection:", fallbackError.message);
+            }
+            
+            if (!reactAppScripts || reactAppScripts.length === 0) {
+                console.error("❌ ERROR: No React scripts found! React app mount nahi hogi.");
+                console.error("Please check:");
+                console.error("1. React app URL sahi hai: " + reactAppFullUrl);
+                console.error("2. React app properly build hui hai");
+                console.error("3. React app scripts accessible hain");
+                console.error("4. Browser me directly open karke check karo ki scripts load ho rahe hain");
+            }
         }
 
         // Combine Shopify header/footer with React app content (always use direct HTML injection, no iframe)
