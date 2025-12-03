@@ -21,6 +21,15 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Serve React frontend build (consultant-app) statically
+// Assuming sibling folder structure:
+// - MVC-sainiWeb-Agora-Backend (this project)
+// - consultant-app (React project with build/)
+const reactBuildPath = path.join(__dirname, "..", "consultant-app", "build");
+app.use("/static", express.static(path.join(reactBuildPath, "static")));
+app.use("/consultant-app", express.static(reactBuildPath));
+
 app.use((req, res, next) => {
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
   res.setHeader("Pragma", "no-cache");
