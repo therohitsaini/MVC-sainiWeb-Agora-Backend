@@ -528,14 +528,14 @@ const proxyShopifyConsultantPage = async (req, res) => {
         <!DOCTYPE html>
         <html>
           ${headHtml}
-          <body style="margin:0;padding:0;display:flex;flex-direction:column;min-height:100vh;">
+          <body style="margin:0;padding:0;display:flex;flex-direction:column;;">
             <header>${headerHtml}</header>
             
             <main style="flex:1;overflow:hidden;">
               <iframe 
                 id="agora-iframe"
                 src="https://projectable-eely-minerva.ngrok-free.dev/login"
-                style="border:none;width:100%;height:100vh;display:block;"
+                style="border:none;width:100%;height:80vh;display:block;"
               ></iframe>
             </main>
   
