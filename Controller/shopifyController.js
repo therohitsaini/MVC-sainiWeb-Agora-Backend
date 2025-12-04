@@ -324,15 +324,16 @@ const proxyThemeAssetsController = async (req, res) => {
                 <script>
                     const customerId = "${customerId}";
                 </script>
-              <main style="min-height:70vh;">
+              <main style="min-height:100vh;">
                   ${headerHtml}
                   <!-- Iframe without its own scrollbar: height is controlled from inside via postMessage -->
                   <iframe 
                     id="agora-frame"
                     src="https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || ''}" 
                     style="border:none;width:100%;display:block;overflow:hidden;"
+                    ${footerHtml}
                   ></iframe>
-                  ${footerHtml}
+              
               </main>
 
               <!-- Listen for height messages from React app and resize iframe -->
