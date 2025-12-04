@@ -555,6 +555,7 @@ const proxyShopifyConsultantPage = async (req, res) => {
                   minHeight: 400,
                   autoResize: true,
                   scrolling: 'auto'
+                  border:2px solid red;
                 }, '#agora-iframe');
               }
             </script>

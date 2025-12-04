@@ -105,7 +105,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
       <!DOCTYPE html>
       <html>
         ${headHtml}
-        <body style="margin:0;padding:0;display:flex;flex-direction:column;min-height:100vh;">
+        <body style="margin:0;padding:0;display:flex;flex-direction:column;min-height:1   00vh;">
           <header style="flex-shrink:0;">
             ${headerHtml}
           </header>
