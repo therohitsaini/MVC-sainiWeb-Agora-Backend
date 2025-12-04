@@ -330,9 +330,10 @@ const proxyThemeAssetsController = async (req, res) => {
                   <iframe 
                     id="agora-frame"
                     src="https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || ''}" 
-                    style="border:none;width:100%;display:block;overflow:hidden;"
-                    ${footerHtml}
+                    style="border:none;width:100%;display:block;overflow:hidden;height:100%;"
+            
                   ></iframe>
+                  ${footerHtml}
               
               </main>
 
