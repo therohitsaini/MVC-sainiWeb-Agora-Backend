@@ -324,7 +324,7 @@ const proxyThemeAssetsController = async (req, res) => {
                 <script>
                     const customerId = "${customerId}";
                 </script>
-              <main style="max-height:80vh;">
+              <main style="min-height:70vh;">
                   ${headerHtml}
                   <!-- Iframe without its own scrollbar: height is controlled from inside via postMessage -->
                   <iframe 
