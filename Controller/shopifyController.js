@@ -415,14 +415,35 @@ const proxyShopifyConsultantPage = async (req, res) => {
           <!DOCTYPE html>
           <html>
             ${headHtml}
-            <body style="margin:0;padding:0;">
-              ${headerHtml}
-              <main style="min-height:70vh;">
+            <body style="margin:0;padding:0;display:flex;flex-direction:column;min-height:100vh;">
+              <header style="flex-shrink:0;">
+                ${headerHtml}
+              </header>
+              <main style="flex:1;overflow:hidden;position:relative;">
                 <iframe 
+                  id="agora-iframe"
                   src="https://projectable-eely-minerva.ngrok-free.dev/login" 
-                  style="border:none;width:100%;height:100vh;display:block;"
+                  style="border:none;width:100%;height:100%;display:block;position:absolute;top:0;left:0;"
                 ></iframe>
               </main>
+              <footer style="flex-shrink:0;">
+                ${footerHtml}
+              </footer>
+              <script>
+                // Iframe height adjustment via postMessage (optional - if React app sends height)
+                window.addEventListener("message", function (event) {
+                  try {
+                    if (!event || !event.data || event.data.type !== "AGORA_IFRAME_HEIGHT") return;
+                    var iframe = document.getElementById("agora-iframe");
+                    if (iframe && event.data.height && Number(event.data.height) > 0) {
+                      iframe.style.height = Number(event.data.height) + "px";
+                      iframe.style.position = "relative";
+                    }
+                  } catch (e) {
+                    console.error("Error handling AGORA_IFRAME_HEIGHT message", e);
+                  }
+                });
+              </script>
             </body>
           </html>`;
         return res.status(200).send(pageHtml);
@@ -445,9 +466,6 @@ const proxyShopifyConsultantLoginPage = (req, res) => {
         }
     );
 };
-
-
-
 
 
 module.exports = {
