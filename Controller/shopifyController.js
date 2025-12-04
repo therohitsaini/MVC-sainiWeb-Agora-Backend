@@ -528,19 +528,34 @@ const proxyShopifyConsultantPage = async (req, res) => {
         <!DOCTYPE html>
         <html>
           ${headHtml}
-          <body style="margin:0;padding:0;display:flex;flex-direction:column;;">
-            <header>${headerHtml}</header>
+          <body style="margin:0;padding:0;display:flex;flex-direction:column;min-height:100vh;">
+            <header style="flex-shrink:0;">${headerHtml}</header>
             
-            <main style="flex:1;overflow:hidden;">
+            <main style="flex:1;overflow:hidden;position:relative;">
               <iframe 
                 id="agora-iframe"
                 src="https://projectable-eely-minerva.ngrok-free.dev/login"
-                style="border:none;width:100%;height:80vh;display:block;"
+                style="border:none;width:100%;display:block;"
               ></iframe>
             </main>
   
-            <footer>${footerHtml}</footer>
+            <footer style="flex-shrink:0;">${footerHtml}</footer>
   
+            <!-- iframe-resizer library -->
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.6/iframeResizer.min.js"></script>
+            <script>
+              // Initialize iframe-resizer
+              if (typeof iFrameResize !== 'undefined') {
+                iFrameResize({
+                  log: false,
+                  checkOrigin: false,
+                  heightCalculationMethod: 'bodyScroll',
+                  minHeight: 400,
+                  autoResize: true,
+                  scrolling: 'auto'
+                }, '#agora-iframe');
+              }
+            </script>
           </body>
         </html>
       `;
