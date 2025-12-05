@@ -585,7 +585,7 @@ const proxyShopifyUserChat = (req, res) => {
     return renderShopifyPage(
         req,
         res,
-        "https://projectable-eely-minerva.ngrok-free.dev/user-chats/:consultantId/:shopId",
+        "https://projectable-eely-minerva.ngrok-free.dev/user-chats",
         {
             title: "Consultant Chat"
         }
