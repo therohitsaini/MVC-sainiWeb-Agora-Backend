@@ -47,7 +47,7 @@ const manageShopifyUser = async (shop, customerId) => {
             console.log("id", id);
             const user = await User.findOne({ shopifyCustomerId: id });
             const getShop = await shopModel.findOne({ shop: shop });
-         
+
             if (user) {
                 return { success: true, message: "Customer already exists", userId: user._id };
             } else {
@@ -64,9 +64,9 @@ const manageShopifyUser = async (shop, customerId) => {
                     createdAt: customer.createdAt,
                     numberOfOrders: customer.numberOfOrders
                 });
-
+                console.log("newUser", newUser);
                 await newUser.save();
-             
+
                 return { success: true, message: "Customer created successfully", shop_id: newUser.shop_id };
             }
         }

@@ -103,6 +103,8 @@ const registerUserSchema = new mongoose.Schema(
         },
         licenseNo: {
             type: String,
+            unique: true,
+            sparse: true, // null values ko ignore karega - duplicate error se bachayega
         },
         consultantStatus: {
             type: Boolean,
