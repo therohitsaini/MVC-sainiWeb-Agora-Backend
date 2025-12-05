@@ -67,7 +67,7 @@ const manageShopifyUser = async (shop, customerId) => {
                 console.log("newUser    ", newUser);
                 await newUser.save();
 
-                return { success: true, message: "Customer created successfully", shop_id: newUser.shop_id };
+                return { success: true, message: "Customer created successfully", shop_id: newUser.shop_id, userId: newUser._id };
             }
         }
         return { success: false, message: "Customer not found in Shopify" };
