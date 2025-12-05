@@ -548,15 +548,14 @@ const proxyShopifyConsultantPage = async (req, res) => {
             <script>
               // Initialize iframe-resizer
               if (typeof iFrameResize !== 'undefined') {
-                iFrameResize({
-                  log: false,
-                  checkOrigin: false,
-                  heightCalculationMethod: 'bodyScroll',
-                  minHeight: 400,
-                  autoResize: true,
-                  scrolling: 'auto'
-                  border:2px solid red;
-                }, '#agora-iframe');
+              iFrameResize({
+  log: false,
+  checkOrigin: false,
+  heightCalculationMethod: 'bodyScroll',
+  minHeight: 400,
+  autoResize: true,
+  scrolling: 'auto'
+}, '#agora-iframe');
               }
             </script>
           </body>
