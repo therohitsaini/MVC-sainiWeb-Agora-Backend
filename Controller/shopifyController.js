@@ -588,7 +588,7 @@ const proxyShopifyUserChat = (req, res) => {
     console.log("shopId", shopId);
 
     // Build NEW iframe URL with params
-    const iframeUrl = `https://projectable-eely-minerva.ngrok-free.dev/user-chats?consultantId=${consultantId}&shopId=${shopId}`;
+    const iframeUrl = `https://projectable-eely-minerva.ngrok-free.dev/view-profile?consultantId=${consultantId}&shopId=${shopId}`;
 
     return renderShopifyPage(
         req,
