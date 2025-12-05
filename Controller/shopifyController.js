@@ -586,8 +586,6 @@ const proxyShopifyUserChat = (req, res) => {
     const shopId = req.query.shopId || "";
     console.log("consultantId", consultantId);
     console.log("shopId", shopId);
-
-    // Build NEW iframe URL with params
     const iframeUrl = `https://projectable-eely-minerva.ngrok-free.dev/view-profile?consultantId=${consultantId}&shopId=${shopId}`;
 
     return renderShopifyPage(
@@ -596,6 +594,17 @@ const proxyShopifyUserChat = (req, res) => {
         iframeUrl,
         {
             title: "Consultant Chat"
+        }
+    );
+};
+
+const proxyShopifyChatSection = (req, res) => {
+    return renderShopifyPage(
+        req,
+        res,
+        "https://projectable-eely-minerva.ngrok-free.dev/chats",
+        {
+            title: "Chat Section"
         }
     );
 };
