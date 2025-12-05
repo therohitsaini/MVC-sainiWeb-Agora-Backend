@@ -12,5 +12,4 @@ shopifyRoute.get('/consultant-theme/consultant-dashboard', proxyShopifyConsultan
 shopifyRoute.get('/consultant-theme/chats', proxySHopifyConsultantChat);
 
 
-
 module.exports = shopifyRoute;
