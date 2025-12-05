@@ -582,15 +582,24 @@ const proxySHopifyConsultantChat = (req, res) => {
 };
 
 const proxyShopifyUserChat = (req, res) => {
+    const consultantId = req.query.consultantId || "";
+    const shopId = req.query.shopId || "";
+    console.log("consultantId", consultantId);
+    console.log("shopId", shopId);
+
+    // Build NEW iframe URL with params
+    const iframeUrl = `https://projectable-eely-minerva.ngrok-free.dev/user-chats?consultantId=${consultantId}&shopId=${shopId}`;
+
     return renderShopifyPage(
         req,
         res,
-        "https://projectable-eely-minerva.ngrok-free.dev/user-chats",
+        iframeUrl,
         {
             title: "Consultant Chat"
         }
     );
 };
+
 
 module.exports = {
     installShopifyApp,
