@@ -105,7 +105,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
       <!DOCTYPE html>
       <html>
         ${headHtml}
-        <body style="margin:0;padding:0;display:flex;flex-direction:column;min-height:1   00vh;">
+        <body style="margin:0;padding:0;display:flex;flex-direction:column;min-height:700px;">
           <header style="flex-shrink:0;">
             ${headerHtml}
           </header>
@@ -113,26 +113,21 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
             <iframe 
               id="agora-iframe"
               src="${iframeUrl}" 
-              style="border:none;width:100%;display:block;"
+              style="border:none;width:100%;min-height:700px;display:block;"
             ></iframe>
           </main>
           <footer style="flex-shrink:0;">
             ${footerHtml}
           </footer>
-          <!-- iframe-resizer library -->
+          <!-- Parent script (MUST HAVE) -->
           <script src="https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.6/iframeResizer.min.js"></script>
           <script>
-            // Initialize iframe-resizer
-            if (typeof iFrameResize !== 'undefined') {
-              iFrameResize({
-                log: false,
-                checkOrigin: false,
-                heightCalculationMethod: 'bodyScroll',
-                minHeight: 400,
-                autoResize: true,
-                scrolling: 'auto'
-              }, '#agora-iframe');
-            }
+            iFrameResize({
+              checkOrigin: false,
+              autoResize: true,
+              heightCalculationMethod: "bodyScroll",
+              minHeight: 700,
+            }, "#agora-iframe");
           </script>
         </body>
       </html>`;

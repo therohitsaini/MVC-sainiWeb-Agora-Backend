@@ -326,30 +326,23 @@ const proxyThemeAssetsController = async (req, res) => {
                 </script>
               <main style="min-height:100vh;">
                   ${headerHtml}
-                  <!-- Iframe without its own scrollbar: height is controlled from inside via postMessage -->
                   <iframe 
                     id="agora-frame"
                     src="https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || ''}" 
-                    style="border:none;width:100%;display:block;overflow:hidden;height:100%;"
-            
+                    style="border:none;width:100%;min-height:700px;display:block;"
                   ></iframe>
                   ${footerHtml}
-              
               </main>
 
-              <!-- Listen for height messages from React app and resize iframe -->
+              <!-- Parent script (MUST HAVE) -->
+              <script src="https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.6/iframeResizer.min.js"></script>
               <script>
-                window.addEventListener("message", function (event) {
-                  try {
-                    if (!event || !event.data || event.data.type !== "AGORA_IFRAME_HEIGHT") return;
-                    var iframe = document.getElementById("agora-frame");
-                    if (iframe && event.data.height && Number(event.data.height) > 0) {
-                      iframe.style.height = Number(event.data.height) + "px";
-                    }
-                  } catch (e) {
-                    console.error("Error handling AGORA_IFRAME_HEIGHT message", e);
-                  }
-                });
+                iFrameResize({
+                  checkOrigin: false,
+                  autoResize: true,
+                  heightCalculationMethod: "bodyScroll",
+                  minHeight: 700,
+                }, "#agora-frame");
               </script>
             </body>
           </html>
@@ -537,26 +530,21 @@ const proxyShopifyConsultantPage = async (req, res) => {
               <iframe 
                 id="agora-iframe"
                 src="https://projectable-eely-minerva.ngrok-free.dev/login"
-                style="border:none;width:100%;display:block;"
+                style="border:none;width:100%;min-height:700px;display:block;"
               ></iframe>
             </main>
   
             <footer style="flex-shrink:0;">${footerHtml}</footer>
   
-            <!-- iframe-resizer library -->
+            <!-- Parent script (MUST HAVE) -->
             <script src="https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.6/iframeResizer.min.js"></script>
             <script>
-              // Initialize iframe-resizer
-              if (typeof iFrameResize !== 'undefined') {
               iFrameResize({
-  log: false,
-  checkOrigin: false,
-  heightCalculationMethod: 'bodyScroll',
-  minHeight: 400,
-  autoResize: true,
-  scrolling: 'auto'
-}, '#agora-iframe');
-              }
+                checkOrigin: false,
+                autoResize: true,
+                heightCalculationMethod: "bodyScroll",
+                minHeight: 700,
+              }, "#agora-iframe");
             </script>
           </body>
         </html>
