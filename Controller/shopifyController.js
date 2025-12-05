@@ -581,6 +581,17 @@ const proxySHopifyConsultantChat = (req, res) => {
     );
 };
 
+const proxyShopifyUserChat = (req, res) => {
+    return renderShopifyPage(
+        req,
+        res,
+        "https://projectable-eely-minerva.ngrok-free.dev/user-chats",
+        {
+            title: "Consultant Chat"
+        }
+    );
+};
+
 module.exports = {
     installShopifyApp,
     authCallback,
@@ -588,5 +599,6 @@ module.exports = {
     proxyThemeAssetsController,
     proxyShopifyConsultantPage,
     proxyShopifyConsultantLoginPage,
-    proxySHopifyConsultantChat
+    proxySHopifyConsultantChat,
+    proxyShopifyUserChat
 }
