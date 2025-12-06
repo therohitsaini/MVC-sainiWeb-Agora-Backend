@@ -128,7 +128,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
                         }
                       });
 
-                      function showToast(message, senderName = "Consultant", avatarUrl) {
+                      function showToast(message, senderName = "Consultant", avatar = 'https://cdn-icons-png.flaticon.com/512/1077/1077063.png') {
                         const toast = document.createElement("div");
 
                         toast.innerHTML = 
@@ -143,7 +143,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
                               border:2px solid #e5e5e5;
                             ">
                               <img 
-                                src="${avatarUrl || 'https://cdn-icons-png.flaticon.com/512/1077/1077063.png'}"
+                                src="${avatar}"
                                 style="width:100%; height:100%; object-fit:cover;"
                               />
                             </div>
