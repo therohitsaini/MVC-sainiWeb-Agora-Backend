@@ -105,7 +105,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
       <!DOCTYPE html>
       <html>
         ${headHtml}
-        <body style="margin:0;padding:0;display:flex;flex-direction:column;min-height:800px;">
+        <body style="margin:0;padding:0;display:flex;flex-direction:column;max-height:800px;min-height:800px;">
           <header style="flex-shrink:0;">
             ${headerHtml}
           </header>
@@ -113,7 +113,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
             <iframe 
               id="agora-iframe"
               src="${iframeUrl}" 
-              style="border:none;width:100%;max-height:800px;display:block;"
+              style="border:none;width:100%;max-height:800px;min-height:800px;display:block;"
             ></iframe>
           </main>
           <footer style="flex-shrink:0;">
@@ -127,6 +127,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
               autoResize: true,
               heightCalculationMethod: "bodyScroll",
               maxHeight: 800,
+              minHeight: 800,
             }, "#agora-iframe");
 
             window.addEventListener("message", (event) => {
