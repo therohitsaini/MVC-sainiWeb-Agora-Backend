@@ -599,10 +599,11 @@ const proxyShopifyViewProfile = (req, res) => {
 };
 
 const proxyShopifyChatSection = (req, res) => {
+    console.log("req.query", req.query);
     const consultantId = req.query.consultantId || "";
     console.log("consultantId", consultantId);
-  
-    const iframeUrl = `https://projectable-eely-minerva.ngrok-free.dev/chats?consultantId=${consultantId}`;    
+
+    const iframeUrl = `https://projectable-eely-minerva.ngrok-free.dev/chats?consultantId=${consultantId}`;
     return renderShopifyPage(
         req,
         res,
