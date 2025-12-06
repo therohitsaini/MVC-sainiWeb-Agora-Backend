@@ -164,7 +164,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
                               margin-bottom:2px;
                               color:#202223;
                             ">
-                                ${senderName}
+                                ${"cosnultant"}
                             </div>
 
                             <div style="
