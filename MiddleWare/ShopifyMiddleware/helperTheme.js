@@ -122,6 +122,32 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
           <!-- Parent script (MUST HAVE) -->
           <script src="https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.6/iframeResizer.min.js"></script>
           <script>
+          window.addEventListener("message", (event) => {
+  if (event.data.type === "SHOW_TOAST") {
+    showToast(event.data.message);
+  }
+});
+
+            function showToast(message) {
+              const toast = document.createElement("div");
+              toast.innerText = message;
+              toast.style.position = "fixed";
+              toast.style.bottom = "20px";
+              toast.style.right = "20px";
+              toast.style.background = "#333";
+              toast.style.color = "#fff";
+              toast.style.padding = "10px 20px";
+              toast.style.borderRadius = "8px";
+              toast.style.zIndex = "999999";
+              toast.style.opacity = "1";
+              toast.style.transition = "opacity 1s ease";
+              
+              document.body.appendChild(toast);
+
+              setTimeout(() => (toast.style.opacity = "0"), 3000);
+              setTimeout(() => toast.remove(), 4000);
+            }
+                                                
             iFrameResize({
               checkOrigin: false,
               autoResize: true,
