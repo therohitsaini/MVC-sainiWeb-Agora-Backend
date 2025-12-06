@@ -143,7 +143,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
                               border:2px solid #e5e5e5;
                             ">
                               <img 
-                                src="${avatar}"
+                                src="${'https://cdn-icons-png.flaticon.com/512/1077/1077063.png'}"
                                 style="width:100%; height:100%; object-fit:cover;"
                               />
                             </div>
