@@ -122,31 +122,96 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
           <!-- Parent script (MUST HAVE) -->
           <script src="https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.6/iframeResizer.min.js"></script>
           <script>
-          window.addEventListener("message", (event) => {
-  if (event.data.type === "SHOW_TOAST") {
-    showToast(event.data.message);
-  }
-});
+                            window.addEventListener("message", (event) => {
+                        if (event.data.type === "SHOW_TOAST") {
+                          showToast(event.data.message, event.data.senderName, event.data.avatar);
+                        }
+                      });
 
-            function showToast(message) {
-              const toast = document.createElement("div");
-              toast.innerText = message;
-              toast.style.position = "fixed";
-              toast.style.bottom = "20px";
-              toast.style.right = "20px";
-              toast.style.background = "#333";
-              toast.style.color = "#fff";
-              toast.style.padding = "10px 20px";
-              toast.style.borderRadius = "8px";
-              toast.style.zIndex = "999999";
-              toast.style.opacity = "1";
-              toast.style.transition = "opacity 1s ease";
-              
-              document.body.appendChild(toast);
+                      function showToast(message, senderName = "Consultant", avatarUrl) {
+                        const toast = document.createElement("div");
 
-              setTimeout(() => (toast.style.opacity = "0"), 3000);
-              setTimeout(() => toast.remove(), 4000);
-            }
+                        toast.innerHTML = 
+                          <div style="display:flex; align-items:center; gap:12px;">
+                            
+                            <div style="
+                              width:40px; 
+                              height:40px; 
+                              border-radius:50%; 
+                              overflow:hidden;
+                              flex-shrink:0;
+                              border:2px solid #e5e5e5;
+                            ">
+                              <img 
+                                src="${avatarUrl || 'https://cdn-icons-png.flaticon.com/512/1077/1077063.png'}"
+                                style="width:100%; height:100%; object-fit:cover;"
+                              />
+                            </div>
+
+                            <div style="flex:1;">
+                              <div style="
+                                font-weight:600; 
+                                font-size:15px;
+                                margin-bottom:2px;
+                                color:#202223;
+                              ">
+                                ${senderName}
+                              </div>
+
+                              <div style="
+                                font-size:14px;
+                                color:#3c3c3c;
+                              ">
+                                ${message}
+                              </div>
+                            </div>
+
+                            <div 
+                              style="
+                                font-size:20px; 
+                                cursor:pointer; 
+                                color:#777;
+                                padding:4px;
+                              " 
+                              onclick="this.parentNode.parentNode.remove()"
+                            >
+                              ×
+                            </div>
+                          </div>
+                        
+
+                        // MAIN CARD STYLING
+                        toast.style.position = "fixed";
+                        toast.style.top = "20px";
+                        toast.style.right = "20px";
+                        toast.style.background = "#fff";
+                        toast.style.borderRadius = "12px";
+                        toast.style.boxShadow = "0 4px 18px rgba(0,0,0,0.18)";
+                        toast.style.padding = "14px 16px";
+                        toast.style.minWidth = "280px";
+                        toast.style.maxWidth = "340px";
+                        toast.style.zIndex = "999999";
+                        toast.style.opacity = "0";
+                        toast.style.transform = "translateY(-10px)";
+                        toast.style.transition = "all .30s ease";
+
+                        document.body.appendChild(toast);
+
+                        // Fade-in animation
+                        setTimeout(() => {
+                          toast.style.opacity = "1";
+                          toast.style.transform = "translateY(0px)";
+                        }, 10);
+
+                        // Auto hide
+                        setTimeout(() => {
+                          toast.style.opacity = "0";
+                          toast.style.transform = "translateY(-10px)";
+                        }, 3500);
+
+                        setTimeout(() => toast.remove(), 4000);
+                      }
+
                                                 
             iFrameResize({
               checkOrigin: false,
