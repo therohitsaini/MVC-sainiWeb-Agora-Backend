@@ -123,7 +123,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
           <script src="https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.6/iframeResizer.min.js"></script>
           <script>
                    window.addEventListener("message", (event) => {
-                    ${console.log("event", event.data)}
+                   
                       if (event.data.type === "SHOW_TOAST") {
                         showToast(
                           event.data.message,
