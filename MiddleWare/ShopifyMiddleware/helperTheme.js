@@ -105,7 +105,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
       <!DOCTYPE html>
       <html>
         ${headHtml}
-        <body style="margin:0;padding:0;display:flex;flex-direction:column;max-height:800px;min-height:800px;">
+        <body style="margin:0;padding:0;display:flex;flex-direction:column;min-height:700px;">
           <header style="flex-shrink:0;">
             ${headerHtml}
           </header>
@@ -113,7 +113,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
             <iframe 
               id="agora-iframe"
               src="${iframeUrl}" 
-              style="border:none;width:100%;max-height:800px;min-height:800px;display:block;"
+              style="border:none;width:100%;min-height:700px;display:block;"
             ></iframe>
           </main>
           <footer style="flex-shrink:0;">
@@ -126,36 +126,8 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
               checkOrigin: false,
               autoResize: true,
               heightCalculationMethod: "bodyScroll",
-              maxHeight: 800,
-              minHeight: 800,
+              minHeight: 700,
             }, "#agora-iframe");
-
-            window.addEventListener("message", (event) => {
-              if (event.data.type === "SHOW_TOAST") {
-                showToast(event.data.message);
-              }
-            });
-
-            function showToast(message) {
-              const toast = document.createElement("div");
-              toast.innerText = message;
-              toast.style.position = "fixed";
-              toast.style.bottom = "20px";
-              toast.style.right = "20px";
-              toast.style.background = "#333";
-              toast.style.color = "#fff";
-              toast.style.padding = "10px 20px";
-              toast.style.borderRadius = "8px";
-              toast.style.zIndex = "999999";
-              toast.style.opacity = "1";
-              toast.style.transition = "opacity 1s ease";
-              
-              document.body.appendChild(toast);
-
-              setTimeout(() => (toast.style.opacity = "0"), 3000);
-              setTimeout(() => toast.remove(), 4000);
-            }
-
           </script>
         </body>
       </html>`;
