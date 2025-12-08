@@ -125,65 +125,65 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
                 window.addEventListener("message", (event) => {
                 console.log("🔥 TOAST RECEIVED IN PARENT:", event.data);
 
-                if (event.data.type === "SHOW_TOAST") {
-                  showToast(event.data.message);
-                }
-              });
+                    if (event.data.type === "SHOW_TOAST") {
+                      showToast(event.data.message);
+                    }
+                  });
 
-              function showToast(message) {
-                const toast = document.createElement("div");
+                    function showToast(message) {
+                      const toast = document.createElement("div");
 
-                toast.innerHTML = \`
-                  <div style="
-                    display:flex;
-                    gap:12px;
-                    align-items:center;
-                  ">
+                      toast.innerHTML = \`
+                        <div style="
+                          display:flex;
+                          gap:12px;
+                          align-items:center;
+                        ">
 
-                    <div style="
-                      width:40px;
-                      height:40px;
-                      border-radius:50%;
-                      overflow:hidden;
-                      background:#eee;
-                      flex-shrink:0;
-                    ">
-                      <img 
-                        src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png"
-                        style="width:100%;height:100%;object-fit:cover;"
-                      />
-                    </div>
+                          <div style="
+                            width:40px;
+                            height:40px;
+                            border-radius:50%;
+                            overflow:hidden;
+                            background:#eee;
+                            flex-shrink:0;
+                          ">
+                            <img 
+                              src="\${avatar || 'https://cdn-icons-png.flaticon.com/512/1077/1077063.png'}"
+                              style="width:100%;height:100%;object-fit:cover;"
+                            />
+                          </div>
 
-                    <div style="flex:1;">
-                      <div style="
-                        font-weight:600;
-                        font-size:15px;
-                        color:#202223;
-                      ">
-                        New Message
-                      </div>
-                      <div style="
-                        font-size:14px;
-                        color:#4a4a4a;
-                      ">
-                        \${message}
-                      </div>
-                    </div>
+                          <div style="flex:1;">
+                            <div style="
+                              font-weight:600;
+                              font-size:15px;
+                              color:#202223;
+                            ">
+                              \${senderName || 'New Message'}
+                            </div>
+                            <div style="
+                              font-size:14px;
+                              color:#4a4a4a;
+                            ">
+                              \${message}
+                            </div>
+                          </div>
 
-                    <div 
-                      style="
-                        font-size:22px;
-                        cursor:pointer;
-                        color:#666;
-                        padding:4px;
-                      "
-                      onclick="this.parentNode.parentNode.remove()"
-                    >
-                      ×
-                    </div>
-                  </div>
-                \`;
-                
+                          <div 
+                            style="
+                              font-size:22px;
+                              cursor:pointer;
+                              color:#666;
+                              padding:4px;
+                            "
+                            onclick="this.parentNode.parentNode.remove()"
+                          >
+                            ×
+                          </div>
+                        </div>
+                      \`;
+                      
 
                 // MAIN CARD STYLE
                 toast.style.position = "fixed";
