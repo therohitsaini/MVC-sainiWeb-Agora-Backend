@@ -133,7 +133,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
               function showToast(message) {
                 const toast = document.createElement("div");
 
-                toast.innerHTML = 
+                toast.innerHTML = \`
                   <div style="
                     display:flex;
                     gap:12px;
@@ -166,7 +166,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
                         font-size:14px;
                         color:#4a4a4a;
                       ">
-                        ${message}
+                        \${message}
                       </div>
                     </div>
 
@@ -182,6 +182,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
                       ×
                     </div>
                   </div>
+                \`;
                 
 
                 // MAIN CARD STYLE
