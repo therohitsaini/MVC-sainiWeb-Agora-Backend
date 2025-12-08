@@ -149,7 +149,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
                             flex-shrink:0;
                           ">
                             <img 
-                              src="\${avatar || 'https://cdn-icons-png.flaticon.com/512/1077/1077063.png'}"
+                              src="https://i.pinimg.com/736x/95/2a/ae/952aaea466ae9fb09f02889d33967cf6.jpg"
                               style="width:100%;height:100%;object-fit:cover;"
                             />
                           </div>
@@ -160,7 +160,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
                               font-size:15px;
                               color:#202223;
                             ">
-                              \${senderName || 'New Message'}
+                              New Message
                             </div>
                             <div style="
                               font-size:14px;
