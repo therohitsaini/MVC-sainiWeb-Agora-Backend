@@ -12,4 +12,9 @@ Thumbs.db
 calculateHMAC.js
 .env
 
+# Firebase Service Account Key (Security - Never commit this!)
+serviceAccountKey.json
+*firebase-adminsdk*.json
+*service-account*.json
+
     

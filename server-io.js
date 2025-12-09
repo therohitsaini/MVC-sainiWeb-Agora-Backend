@@ -7,6 +7,7 @@ const { HistroyMW } = require("./Socket-Io-MiddleWare/HistroyMW");
 const { Message } = require("./Modal/messageSchema");
 const { ChatList } = require("./Modal/chatListSchema");
 const { MessageModal } = require("./Modal/messageSchema");
+const { sendDisconnectNotification } = require("./Utils/firebaseNotification");
 
 
 const ioServer = (server) => {
@@ -271,11 +272,48 @@ const ioServer = (server) => {
                     delete onlineUsers[uid];
                     console.log(" User disconnected:", uid);
                     console.log(" Remaining online users:", Object.keys(onlineUsers));
+                    
                     try {
+                        // Update user status to inactive
                         await User.findByIdAndUpdate(uid, { isActive: false });
-                        await User.findByIdAndUpdate(uid, { isActive: false });
+                        
+                        // Get user with firebaseToken to send push notification
+                        const user = await User.findById(uid).select("firebaseToken fullname email");
+                        
+                        if (user) {
+                            // Check for pending unread messages
+                            const pendingMessages = await MessageModal.countDocuments({
+                                receiverId: uid,
+                                isRead: false
+                            });
+                            
+                            console.log(`📬 Pending messages for user ${uid}: ${pendingMessages}`);
+                            
+                            // Send push notification if user has FCM token
+                            if (user.firebaseToken && user.firebaseToken.token) {
+                                const notificationResult = await sendDisconnectNotification(
+                                    uid,
+                                    user,
+                                    pendingMessages
+                                );
+                                
+                                if (notificationResult.success) {
+                                    console.log("✅ Push notification sent to disconnected user:", uid);
+                                } else if (notificationResult.shouldRemoveToken) {
+                                    // Remove invalid token from database
+                                    await User.findByIdAndUpdate(uid, {
+                                        $unset: { firebaseToken: "" }
+                                    });
+                                    console.log("🗑️ Removed invalid FCM token for user:", uid);
+                                } else {
+                                    console.log("⚠️ Failed to send push notification:", notificationResult.error);
+                                }
+                            } else {
+                                console.log("ℹ️ No FCM token found for user:", uid);
+                            }
+                        }
                     } catch (err) {
-                        console.error("Error updating user inactive status:", err);
+                        console.error("❌ Error handling disconnect:", err);
                     }
                 }
             }
