@@ -1,4 +1,5 @@
 const { User } = require("../Modal/userSchema");
+const { sendPushNotification } = require("./sendNotification");
 
 async function handleUserDisconnect(userId) {
     const user = await User.findById(userId);
@@ -9,12 +10,12 @@ async function handleUserDisconnect(userId) {
     }
 
     const token = user.firebaseToken.token;
-    console.log("Token found for user:", token);
+    
 
-    // await sendPushNotification(token, {
-    //     title: "User Offline",
-    //     body: "A user has gone offline!",
-    // });
+    await sendPushNotification(token, {
+        title: "User Offline",
+        body: "A user has gone offline!",
+    });
 }
 
 module.exports = { handleUserDisconnect };
