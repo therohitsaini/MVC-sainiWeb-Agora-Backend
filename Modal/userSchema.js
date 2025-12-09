@@ -91,12 +91,12 @@ const registerUserSchema = new mongoose.Schema(
         },
         walletBalance: {
             type: Number,
-           
+
         },
 
         profession: {
             type: String,
-                
+
         },
         specialization: {
             type: String,
@@ -121,8 +121,16 @@ const registerUserSchema = new mongoose.Schema(
             type: String,
             sparse: true,
             trim: true,
+        },
+        firebaseToken: {
+            token: { type: String, default: null },
+            updatedAt: { type: Date, default: null },
+            userAgent: { type: String, default: "" },
+            browser: { type: String, default: "" },
+            os: { type: String, default: "" }
         }
     },
+
     { timestamps: true }
 );
 
