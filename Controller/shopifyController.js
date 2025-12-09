@@ -531,7 +531,7 @@ const proxyShopifyConsultantPage = async (req, res) => {
             <main style="flex:1;overflow:hidden;position:relative;">
               <iframe 
                 id="agora-iframe"
-                src="${frontendUrl}/login"
+                src="${frontendUrl}/login?shop=${shop}"
                 style="border:none;width:100%;min-height:700px;display:block;"
               ></iframe>
             </main>
@@ -562,10 +562,11 @@ const proxyShopifyConsultantPage = async (req, res) => {
 
 
 const proxyShopifyConsultantLoginPage = (req, res) => {
+    const shop = req.query.shop;
     return renderShopifyPage(
         req,
         res,
-        `${frontendUrl}/consultant-dashboard`,
+        `${frontendUrl}/consultant-dashboard?shop=${shop}`,
         {
             title: "Consultant App"
         }
@@ -573,10 +574,11 @@ const proxyShopifyConsultantLoginPage = (req, res) => {
 };
 
 const proxySHopifyConsultantChat = (req, res) => {
+    const shop = req.query.shop;
     return renderShopifyPage(
         req,
         res,
-        `${frontendUrl}/consulant-chats`,
+        `${frontendUrl}/consulant-chats?shop=${shop}`,
         {
             title: "Consultant Chat"
         }
@@ -584,11 +586,12 @@ const proxySHopifyConsultantChat = (req, res) => {
 };
 
 const proxyShopifyViewProfile = (req, res) => {
+    const shop = req.query.shop;
     const consultantId = req.query.consultantId || "";
     const shopId = req.query.shopId || "";
     // console.log("consultantId", consultantId);
     // console.log("shopId", shopId);
-    const iframeUrl = `${frontendUrl}/view-profile?consultantId=${consultantId}&shopId=${shopId}`;
+    const iframeUrl = `${frontendUrl}/view-profile?consultantId=${consultantId}&shopId=${shopId}&shop=${shop}`;
 
     return renderShopifyPage(
         req,
@@ -602,10 +605,11 @@ const proxyShopifyViewProfile = (req, res) => {
 
 const proxyShopifyChatSection = (req, res) => {
     console.log("req.query", req.query);
+    const shop = req.query.shop;
     const consultantId = req.query.consultantId || "";
     console.log("consultantId", consultantId);
 
-    const iframeUrl = `${frontendUrl}/chats?consultantId=${consultantId}`;
+    const iframeUrl = `${frontendUrl}/chats?consultantId=${consultantId}&shop=${shop}`;
     return renderShopifyPage(
         req,
         res,
