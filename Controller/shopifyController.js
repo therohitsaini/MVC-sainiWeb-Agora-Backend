@@ -19,6 +19,8 @@ try {
 }
 
 
+const frontendUrl = process.env.FRONTEND_URL || "https://formed-bears-lamp-claire.trycloudflare.com";
+
 const client_id = process.env.SHOPIFY_CLIENT_ID
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET
 const SCOPES = process.env.SHOPIFY_SCOPES || "read_customers,read_products";
@@ -201,7 +203,7 @@ const authCallback = async (req, res) => {
         const AdminiId = AdminUser._id;
         console.log("AdminiId", AdminiId);
         // https://projectable-eely-minerva.ngrok-free.dev/
-        const redirectUrl = `https://projectable-eely-minerva.ngrok-free.dev/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&adminId=${encodeURIComponent(AdminiId)}`;
+        const redirectUrl = `${frontendUrl}/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&adminId=${encodeURIComponent(AdminiId)}`;
         console.log("➡️ Redirecting to:", redirectUrl);
         return res.redirect(redirectUrl);
     } catch (error) {
@@ -232,7 +234,7 @@ const shopifyLogin = async (req, res) => {
 
         // Issue JWT for your frontend to consume
         const token = JWT.sign({ shop }, JWT_SRCURITE_KEY, { expiresIn: '2h' });
-        const frontend = 'https://shopifyconsultant-app.vercel.app/home';
+        const frontend = `${frontendUrl}/home`;
 
         const redirectUrl = `${frontend}?shop=${encodeURIComponent(shop)}&token=${encodeURIComponent(token)}`;
         console.log("➡️ Redirecting to:", redirectUrl);
@@ -328,7 +330,7 @@ const proxyThemeAssetsController = async (req, res) => {
                   ${headerHtml}
                   <iframe 
                     id="agora-frame"
-                    src="https://projectable-eely-minerva.ngrok-free.dev/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || ''}" 
+                    src="${frontendUrl}/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || ''}" 
                     style="border:none;width:100%;min-height:700px;display:block;"
                   ></iframe>
                   ${footerHtml}
@@ -529,7 +531,7 @@ const proxyShopifyConsultantPage = async (req, res) => {
             <main style="flex:1;overflow:hidden;position:relative;">
               <iframe 
                 id="agora-iframe"
-                src="https://entirely-afternoon-toolkit-clouds.trycloudflare.com/login"
+                src="${frontendUrl}/login"
                 style="border:none;width:100%;min-height:700px;display:block;"
               ></iframe>
             </main>
@@ -563,7 +565,7 @@ const proxyShopifyConsultantLoginPage = (req, res) => {
     return renderShopifyPage(
         req,
         res,
-        "https://projectable-eely-minerva.ngrok-free.dev/consultant-dashboard",
+        `${frontendUrl}/consultant-dashboard`,
         {
             title: "Consultant App"
         }
@@ -574,7 +576,7 @@ const proxySHopifyConsultantChat = (req, res) => {
     return renderShopifyPage(
         req,
         res,
-        "https://projectable-eely-minerva.ngrok-free.dev/consulant-chats",
+        `${frontendUrl}/consulant-chats`,
         {
             title: "Consultant Chat"
         }
@@ -586,7 +588,7 @@ const proxyShopifyViewProfile = (req, res) => {
     const shopId = req.query.shopId || "";
     // console.log("consultantId", consultantId);
     // console.log("shopId", shopId);
-    const iframeUrl = `https://projectable-eely-minerva.ngrok-free.dev/view-profile?consultantId=${consultantId}&shopId=${shopId}`;
+    const iframeUrl = `${frontendUrl}/view-profile?consultantId=${consultantId}&shopId=${shopId}`;
 
     return renderShopifyPage(
         req,
@@ -603,7 +605,7 @@ const proxyShopifyChatSection = (req, res) => {
     const consultantId = req.query.consultantId || "";
     console.log("consultantId", consultantId);
 
-    const iframeUrl = `https://projectable-eely-minerva.ngrok-free.dev/chats?consultantId=${consultantId}`;
+    const iframeUrl = `${frontendUrl}/chats?consultantId=${consultantId}`;
     return renderShopifyPage(
         req,
         res,
