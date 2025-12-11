@@ -62,6 +62,7 @@ if (!admin.apps.length) {
 
         // Initialize Firebase if we have valid credentials
         if (serviceAccount && serviceAccount.private_key && serviceAccount.client_email) {
+            console.log("serviceAccount", serviceAccount);
             try {
                 admin.initializeApp({
                     credential: admin.credential.cert(serviceAccount)
