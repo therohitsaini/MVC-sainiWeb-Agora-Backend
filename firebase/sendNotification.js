@@ -1,5 +1,4 @@
-const admin = require("./firebase/firebase");
-
+const admin = require("../firebase/firebase");
 async function sendFCM(token, title, body) {
     const message = {
         notification: { title, body },
