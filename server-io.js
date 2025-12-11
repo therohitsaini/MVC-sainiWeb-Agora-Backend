@@ -27,11 +27,9 @@ const ioServer = (server) => {
                 return;
             }
             onlineUsers[user_Id] = socket.id;
-            console.log("🔥 Online users:", onlineUsers);
-            console.log("🔥 User registered:", user_Id);
             if (user_Id) {
                 await User.findByIdAndUpdate(user_Id, { isActive: true });
-                console.log("🔥 User activated:", user_Id);
+               
             } else {
                 console.log("🔥 User not found:", user_Id);
             }
@@ -40,7 +38,6 @@ const ioServer = (server) => {
             console.log("MESSAGE RECEIVED:", data);
 
             const { senderId, receiverId, shop_id, text, timestamp } = data;
-            console.log("get sender Ids", senderId, receiverId, shop_id, text)
 
             if (!senderId || !receiverId || !shop_id) {
                 console.log(" Missing required IDs");
@@ -53,7 +50,6 @@ const ioServer = (server) => {
             });
 
             if (!existingChat) {
-                console.log("🟢 Chat does NOT exist → creating new ChatList");
 
                 await ChatList.create({
                     senderId,
@@ -63,7 +59,6 @@ const ioServer = (server) => {
                     lastMessageTime: timestamp
                 });
             } else {
-                console.log("🟡 Chat already exists → SKIPPING create");
 
                 // Optional: Only update last message time
                 await ChatList.updateOne(
@@ -83,7 +78,6 @@ const ioServer = (server) => {
                 });
 
                 await savedChat.save();
-                console.log("✅ Message saved to DB:", savedChat);
             
                     io.emit("receiveMessage", savedChat);
                     // .to(receiverSocketId)

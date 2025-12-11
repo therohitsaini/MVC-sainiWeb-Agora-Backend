@@ -21,6 +21,10 @@ const firebaseGetToken = async (req, res) => {
             });
         }
 
+        // Check if token already exists
+        const existingToken = user.firebaseToken?.token;
+        
+        // Update or Create token
         await User.updateOne(
             { _id: userId, shop_id: shopId },
             {
@@ -36,10 +40,17 @@ const firebaseGetToken = async (req, res) => {
             }
         );
 
+        const message = existingToken 
+            ? "Token updated successfully" 
+            : "Token created successfully";
+
+        console.log(`✅ FCM Token ${existingToken ? 'updated' : 'created'} for user: ${userId}`);
+
         return res.status(200).json({
             success: true,
-            message: "Token stored successfully",
-            token
+            message: message,
+            token,
+            action: existingToken ? "updated" : "created"
         });
 
     } catch (error) {
