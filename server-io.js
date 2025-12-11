@@ -43,6 +43,20 @@ const ioServer = (server) => {
                 console.log(" Missing required IDs");
                 return;
             }
+            const sender = await User.findById(senderId);
+            const user = sender 
+            if (user?.userType === "customer") {
+                const receiver = await User.findById(receiverId);
+                const consultantWalletBalance = receiver?.chatCost;
+                if(sender?.walletBalance < consultantWalletBalance) {
+                    console.log("Insufficient balance");
+                    return;
+                }else{
+                    await User.findByIdAndUpdate(senderId, { $inc: { walletBalance: -consultantWalletBalance } });
+                }
+
+            }
+
             const existingChat = await ChatList.findOne({
                 senderId,
                 receiverId,
@@ -81,39 +95,16 @@ const ioServer = (server) => {
 
                 io.emit("receiveMessage", savedChat);
                 // .to(receiverSocketId)
-
                 const receiver = await User.findById(receiverId);
                 const isActive = receiver?.isActive;
                 const token = receiver?.firebaseToken?.token;
-
                 if (token && !isActive) {
                     await sendFCM(token, "New Message", text, senderProfileImageURL = "https://i.pinimg.com/736x/95/2a/ae/952aaea466ae9fb09f02889d33967cf6.jpg");
                     console.log("FCM sent:", token);
                 }
-
-
             } catch (error) {
                 console.error("❌ Error saving message:", error);
             }
-
-
-            // After validation + ChatList create/update → send msg to receiver
-            // const receiverSocketId = users[receiverId];
-
-            // if (receiverSocketId) {
-            //     io.to(receiverSocketId).emit("receiveMessage", {
-            //         senderId,
-            //         text,
-            //         timestamp
-            //     });
-            // }
-
-            // // Also send back to sender UI
-            // io.to(users[senderId]).emit("receiveMessage", {
-            //     senderId,
-            //     text,
-            //     timestamp
-            // });
 
         });
 
