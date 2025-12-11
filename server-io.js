@@ -86,7 +86,7 @@ const ioServer = (server) => {
                 const token = receiver?.firebaseToken?.token;
 
                 if (token) {
-                    await sendFCM(token, "New Message", "You have a new message");
+                    await sendFCM(token, "New Message", text);
                     console.log("FCM sent:", token);
                 }
 
