@@ -29,16 +29,38 @@ if (!admin.apps.length) {
         if (!serviceAccount && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
             try {
                 // Fix private key format - handle multiple escape scenarios
-                let privateKey = process.env.FIREBASE_PRIVATE_KEY;
-                // Replace escaped newlines
+                let privateKey = String(process.env.FIREBASE_PRIVATE_KEY);
+                
+                // Handle different newline formats
+                // First, replace double backslashes with single (\\n -> \n)
+                privateKey = privateKey.replace(/\\\\n/g, '\\n');
+                // Then replace escaped newlines (\n -> actual newline)
                 privateKey = privateKey.replace(/\\n/g, '\n');
-                // If still has literal \n, replace those too
-                privateKey = privateKey.replace(/\\\\n/g, '\n');
+                
+                // Clean up: remove any extra whitespace but keep newlines
+                privateKey = privateKey.trim();
                 
                 // Validate private key format
                 if (!privateKey.includes('BEGIN PRIVATE KEY') || !privateKey.includes('END PRIVATE KEY')) {
-                    throw new Error("Invalid private key format in environment variable");
+                    throw new Error("Invalid private key format: Missing BEGIN/END markers");
                 }
+                
+                // Ensure proper PEM structure with newlines
+                if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+                    throw new Error("Invalid private key format: Must start with -----BEGIN PRIVATE KEY-----");
+                }
+                
+                if (!privateKey.endsWith('-----END PRIVATE KEY-----')) {
+                    throw new Error("Invalid private key format: Must end with -----END PRIVATE KEY-----");
+                }
+                
+                // Verify PEM format - should have actual newlines, not just \n characters
+                const lines = privateKey.split('\n');
+                if (lines.length < 3) {
+                    throw new Error("Invalid PEM format: Private key must have multiple lines separated by newlines");
+                }
+                
+                console.log("✅ Private key parsed successfully, lines:", lines.length);
                 
                 serviceAccount = {
                     type: process.env.FIREBASE_TYPE || "service_account",
