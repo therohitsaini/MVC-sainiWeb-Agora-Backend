@@ -7,7 +7,7 @@ const { HistroyMW } = require("./Socket-Io-MiddleWare/HistroyMW");
 const { Message } = require("./Modal/messageSchema");
 const { ChatList } = require("./Modal/chatListSchema");
 const { MessageModal } = require("./Modal/messageSchema");
-const { handleUserDisconnect } = require("./Utils/firebaseHelper");
+const sendFCM = require("./firebase/sendNotification");
 
 
 const ioServer = (server) => {
@@ -29,7 +29,7 @@ const ioServer = (server) => {
             onlineUsers[user_Id] = socket.id;
             if (user_Id) {
                 await User.findByIdAndUpdate(user_Id, { isActive: true });
-               
+
             } else {
                 console.log("🔥 User not found:", user_Id);
             }
@@ -78,11 +78,20 @@ const ioServer = (server) => {
                 });
 
                 await savedChat.save();
-            
-                    io.emit("receiveMessage", savedChat);
-                    // .to(receiverSocketId)
-           
-            } catch (error) {   
+
+                io.emit("receiveMessage", savedChat);
+                // .to(receiverSocketId)
+
+                const receiver = await User.findById(receiverId);
+                const token = receiver?.firebaseToken?.token;
+
+                if (token) {
+                    await sendFCM(token, "New Message", "You have a new message");
+                    console.log("FCM sent:", token);
+                }
+
+
+            } catch (error) {
                 console.error("❌ Error saving message:", error);
             }
 
@@ -268,8 +277,6 @@ const ioServer = (server) => {
                     console.log(" Remaining online users:", Object.keys(onlineUsers));
                     try {
                         await User.findByIdAndUpdate(uid, { isActive: false });
-                        await User.findByIdAndUpdate(uid, { isActive: false });
-                        await handleUserDisconnect(uid);
                     } catch (err) {
                         console.error("Error updating user inactive status:", err);
                     }
