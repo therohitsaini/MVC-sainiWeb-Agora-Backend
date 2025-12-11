@@ -83,11 +83,10 @@ const ioServer = (server) => {
                 // .to(receiverSocketId)
 
                 const receiver = await User.findById(receiverId);
+                const isActive = receiver?.isActive;
                 const token = receiver?.firebaseToken?.token;
 
-                if (token) {
-                    // await sendFCM(token, "New Message", text);
-                    // console.log("FCM sent:", token);
+                if (token && !isActive) {
                     await sendFCM(token, "New Message", text, senderProfileImageURL = "https://i.pinimg.com/736x/95/2a/ae/952aaea466ae9fb09f02889d33967cf6.jpg");
                     console.log("FCM sent:", token);
                 }
