@@ -122,6 +122,10 @@ const registerUserSchema = new mongoose.Schema(
             sparse: true,
             trim: true,
         },
+        chatCost: {
+            type: Number,
+            // default: 0,
+        },
         firebaseToken: {
             token: { type: String, default: null },
             updatedAt: { type: Date, default: null },
