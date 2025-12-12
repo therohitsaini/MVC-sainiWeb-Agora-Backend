@@ -19,7 +19,7 @@ try {
 }
 
 
-const frontendUrl = process.env.FRONTEND_URL || "https://vernon-thin-mpeg-relay.trycloudflare.com";
+const frontendUrl = process.env.FRONTEND_URL || " https://volvo-build-configuring-enlarge.trycloudflare.com";
 
 const client_id = process.env.SHOPIFY_CLIENT_ID
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET
