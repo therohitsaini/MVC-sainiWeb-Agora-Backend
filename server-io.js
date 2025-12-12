@@ -54,7 +54,7 @@ const ioServer = (server) => {
                 if (Number(sender?.walletBalance) < Number(consultantWalletBalance)) {
                 
                     console.log("Insufficient balance_____________________>");
-                    socket.emit("balanceError", {
+                    io.to(senderId).emit("balanceError", {
                         message: "Insufficient wallet balance",
                         required: consultantWalletBalance,
                         available: sender?.walletBalance
