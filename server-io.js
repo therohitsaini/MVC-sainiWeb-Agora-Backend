@@ -44,18 +44,23 @@ const ioServer = (server) => {
                 return;
             }
             const sender = await User.findById(senderId);
-            const user = sender 
-            // if (user?.userType === "customer") {
-            //     const receiver = await User.findById(receiverId);
-            //     const consultantWalletBalance = receiver?.chatCost;
-            //     if(sender?.walletBalance < consultantWalletBalance) {
-            //         console.log("Insufficient balance");
-            //         return;
-            //     }else{
-            //         await User.findByIdAndUpdate(senderId, { $inc: { walletBalance: -consultantWalletBalance } });
-            //     }
-
-            // }
+            const user = sender
+            if (user?.userType === "customer") {
+                const receiver = await User.findById(receiverId);
+                const consultantWalletBalance = receiver?.chatCost;
+                if (sender?.walletBalance < consultantWalletBalance) {
+                    console.log("Insufficient balance");
+                    socket.emit("balanceError", {
+                        message: "Insufficient wallet balance",
+                        required: consultantWalletBalance,
+                        available: sender?.walletBalance
+                    });
+                    return;
+                } 
+                // else {
+                //     await User.findByIdAndUpdate(senderId, { $inc: { walletBalance: -consultantWalletBalance } });
+                // }
+            }
 
             const existingChat = await ChatList.findOne({
                 senderId,
