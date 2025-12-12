@@ -50,9 +50,9 @@ const ioServer = (server) => {
                 const receiver = await User.findById(receiverId);
                 console.log("receiver", receiver);
                 const consultantWalletBalance = receiver?.chatCost;
-                console.log("consultantWalletBalance", consultantWalletBalance);
-                if (sender?.walletBalance < consultantWalletBalance) {
-                    console.log("Insufficient balance");
+                console.log("consultantWalletBalance_____________________>", consultantWalletBalance);
+                if (Number(sender?.walletBalance) < Number(consultantWalletBalance)) {
+                    console.log("Insufficient balance_____________________>");
                     socket.emit("balanceError", {
                         message: "Insufficient wallet balance",
                         required: consultantWalletBalance,
