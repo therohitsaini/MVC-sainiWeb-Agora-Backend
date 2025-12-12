@@ -45,15 +45,13 @@ const ioServer = (server) => {
             const sender = await User.findById(senderId);
             console.log("sender", sender);
             const user = sender
-            const isBalanceEnough = true;
-
-
+            if(user?.userType === "customer") return;
+            
             if (user?.userType === "customer") {
-
+                
                 console.log("sender is customer");
                 const receiver = await User.findById(receiverId);
                 console.log("receiver", receiver);
-
                 const consultantWalletBalance = receiver?.chatCost;
                 console.log("consultantWalletBalance_____________________>", consultantWalletBalance);
                 console.log("Number(sender?.walletBalance) _____________________>", Number(sender?.walletBalance) < Number(consultantWalletBalance));
@@ -65,18 +63,12 @@ const ioServer = (server) => {
                         required: consultantWalletBalance,
                         available: sender?.walletBalance
                     });
-                    isBalanceEnough = false;
                     return;
                 } 
                 // else {
                 //     await User.findByIdAndUpdate(senderId, { $inc: { walletBalance: -consultantWalletBalance } });
                 // }
             }
-
-            if (!isBalanceEnough) {
-                return false;
-            }else{
-                
             
 
             const existingChat = await ChatList.findOne({
@@ -127,7 +119,6 @@ const ioServer = (server) => {
             } catch (error) {
                 console.error("❌ Error saving message:", error);
             }
-        }
 
         });
 
