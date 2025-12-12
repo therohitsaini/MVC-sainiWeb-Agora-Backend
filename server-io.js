@@ -51,7 +51,9 @@ const ioServer = (server) => {
                 console.log("receiver", receiver);
                 const consultantWalletBalance = receiver?.chatCost;
                 console.log("consultantWalletBalance_____________________>", consultantWalletBalance);
+                console.log("Number(sender?.walletBalance) _____________________>", Number(sender?.walletBalance) < Number(consultantWalletBalance));
                 if (Number(sender?.walletBalance) < Number(consultantWalletBalance)) {
+                
                     console.log("Insufficient balance_____________________>");
                     socket.emit("balanceError", {
                         message: "Insufficient wallet balance",
