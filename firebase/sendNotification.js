@@ -40,7 +40,7 @@ async function sendFCM(token, title, body, avatar) {
 
     try {
         const res = await admin.messaging().send(message);
-        console.log("FCM sent:", res);
+        // console.log("FCM sent:", res);
     } catch (err) {
         console.error("FCM Error:", err);
     }

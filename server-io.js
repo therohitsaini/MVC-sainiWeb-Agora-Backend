@@ -35,8 +35,7 @@ const ioServer = (server) => {
             }
         });
         socket.on("sendMessage", async (data) => {
-            console.log("MESSAGE RECEIVED:", data);
-
+            // console.log("MESSAGE RECEIVED:", data);
             const { senderId, receiverId, shop_id, text, timestamp } = data;
 
             if (!senderId || !receiverId || !shop_id) {
@@ -44,10 +43,14 @@ const ioServer = (server) => {
                 return;
             }
             const sender = await User.findById(senderId);
+            console.log("sender", sender);
             const user = sender
             if (user?.userType === "customer") {
+                console.log("sender is customer");
                 const receiver = await User.findById(receiverId);
+                console.log("receiver", receiver);
                 const consultantWalletBalance = receiver?.chatCost;
+                console.log("consultantWalletBalance", consultantWalletBalance);
                 if (sender?.walletBalance < consultantWalletBalance) {
                     console.log("Insufficient balance");
                     socket.emit("balanceError", {
