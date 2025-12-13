@@ -4,6 +4,7 @@ const shop = new mongoose.Schema({
     accessToken: String,
     shopId: String,
     email: String,
+    adminPersenTage: { type: Number, default: 0 },
     installedAt: { type: Date, default: Date.now }
 });
 

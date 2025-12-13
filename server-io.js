@@ -9,6 +9,7 @@ const { ChatList } = require("./Modal/chatListSchema");
 const { MessageModal } = require("./Modal/messageSchema");
 const sendFCM = require("./firebase/sendNotification");
 const { TransactionHistroy } = require("./Modal/transactionHistroy");
+const { shopModel } = require("./Modal/shopify");
 
 
 const ioServer = (server) => {
@@ -55,9 +56,14 @@ const ioServer = (server) => {
                 if (!sender) throw new Error("Sender not found");
 
                 if (sender.userType === "customer") {
+
                     const receiver = await User.findById(receiverId).session(session);
                     if (!receiver) throw new Error("Receiver not found");
 
+                    const shop = await shopModel.findById(shop_id).session(session);
+                    if (!shop) throw new Error("Shop not found");
+
+                    const adminPercentage = shop.adminPersenTage;
                     const chatCost = Number(receiver.chatCost);
 
                     if (Number(sender.walletBalance) < chatCost) {
@@ -71,23 +77,39 @@ const ioServer = (server) => {
                         return;
                     }
 
+                    const adminCommission = (chatCost * adminPercentage) / 100;
+                    const consultantAmount = chatCost - adminCommission;
+
+
                     await User.findByIdAndUpdate(
                         senderId,
                         { $inc: { walletBalance: -chatCost } },
                         { session }
                     );
 
+                    // 2️⃣ Add consultant amount (after admin cut)
                     await User.findByIdAndUpdate(
                         receiverId,
-                        { $inc: { walletBalance: chatCost } },
+                        { $inc: { walletBalance: consultantAmount } },
                         { session }
                     );
+                    // (Optional) 3️⃣ Add admin commission to admin wallet
+                    await shopModel.findByIdAndUpdate(
+                        shop.adminId, // ya Admin ID
+                        { $inc: { adminPersenTage: adminCommission } },
+                        { session }
+                    );
+
                     await TransactionHistroy.create({
                         senderId,
                         receiverId,
                         shop_id,
                         amount: chatCost,
-                        type: "chat"
+                        adminAmount: adminCommission,
+                        consultantAmount: consultantAmount,
+                        type: "chat",
+                        debitFrom: senderId,
+                        creditTo: receiverId
                     });
                 }
 
