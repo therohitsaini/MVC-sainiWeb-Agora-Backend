@@ -55,6 +55,13 @@ const ioServer = (server) => {
                 const sender = await User.findById(senderId).session(session);
                 if (!sender) throw new Error("Sender not found");
 
+
+                /**
+                 * if sender is customer then deduct the amount from sender's
+                 *  wallet and add the amount to receiver's wallet and add the admin commission to the shop's wallet
+                 *  and create a transaction record in the database
+                 */
+
                 if (sender.userType === "customer") {
 
                     const receiver = await User.findById(receiverId).session(session);
@@ -96,7 +103,7 @@ const ioServer = (server) => {
                     // (Optional) 3️⃣ Add admin commission to admin wallet
                     await shopModel.findByIdAndUpdate(
                         shop.adminId, // ya Admin ID
-                        { $inc: { adminPersenTage: adminCommission } },
+                        { $inc: { adminWalletBalance: adminCommission } },
                         { session }
                     );
 
@@ -112,6 +119,8 @@ const ioServer = (server) => {
                         creditTo: receiverId
                     });
                 }
+
+                // =============================================== MESSAGE TRANSACTION LOGIC ===============================================
 
                 const existingChat = await ChatList.findOne({
                     senderId,

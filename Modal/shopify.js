@@ -5,6 +5,7 @@ const shop = new mongoose.Schema({
     shopId: String,
     email: String,
     adminPersenTage: { type: Number, default: 0 },
+    adminWalletBalance: { type: Number, default: 0 },
     installedAt: { type: Date, default: Date.now }
 });
 
