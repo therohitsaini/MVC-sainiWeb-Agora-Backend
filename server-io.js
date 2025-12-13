@@ -23,17 +23,22 @@ const ioServer = (server) => {
         console.log("🔥 Socket connected:", socket.id);
         socket.on("register", async (user_Id) => {
             if (!mongoose.Types.ObjectId.isValid(user_Id)) {
-                console.log(" Invalid userId received:", user_Id);
+                console.log("❌ Invalid userId received:", user_Id);
                 return;
             }
-            onlineUsers[user_Id] = socket.id;
-            if (user_Id) {
-                await User.findByIdAndUpdate(user_Id, { isActive: true });
 
-            } else {
-                console.log("🔥 User not found:", user_Id);
+            const roomId = user_Id.toString();
+            socket.join(roomId);
+            onlineUsers[roomId] = socket.id;
+            console.log("User joined room:", roomId);
+
+            try {
+                await User.findByIdAndUpdate(roomId, { isActive: true });
+            } catch (err) {
+                console.error("❌ Error updating user active status:", err);
             }
         });
+
         socket.on("sendMessage", async (data) => {
             // console.log("MESSAGE RECEIVED:", data);
             const { senderId, receiverId, shop_id, text, timestamp } = data;
@@ -50,16 +55,16 @@ const ioServer = (server) => {
                 const receiver = await User.findById(receiverId);
                 console.log("receiver", receiver);
                 const consultantWalletBalance = receiver?.chatCost;
-     
+
                 if (Number(sender?.walletBalance) < Number(consultantWalletBalance)) {
                     console.log("Insufficient wallet balance line 55");
-                    io.to(senderId).emit("balanceError", {
+                    io.to(senderId.toString()).emit("balanceError", {
                         message: "Insufficient wallet balance",
                         required: consultantWalletBalance,
                         available: sender?.walletBalance
                     });
                     return;
-                } 
+                }
                 // else {
                 //     await User.findByIdAndUpdate(senderId, { $inc: { walletBalance: -consultantWalletBalance } });
                 // }
