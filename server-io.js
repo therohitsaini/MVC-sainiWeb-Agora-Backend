@@ -8,6 +8,7 @@ const { Message } = require("./Modal/messageSchema");
 const { ChatList } = require("./Modal/chatListSchema");
 const { MessageModal } = require("./Modal/messageSchema");
 const sendFCM = require("./firebase/sendNotification");
+const { TransactionHistroy } = require("./Modal/transactionHistroy");
 
 
 const ioServer = (server) => {
@@ -81,6 +82,13 @@ const ioServer = (server) => {
                         { $inc: { walletBalance: chatCost } },
                         { session }
                     );
+                    await TransactionHistroy.create({
+                        senderId,
+                        receiverId,
+                        shop_id,
+                        amount: chatCost,
+                        type: "chat"
+                    });
                 }
 
                 const existingChat = await ChatList.findOne({
