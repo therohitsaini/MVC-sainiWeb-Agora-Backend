@@ -19,7 +19,7 @@ try {
 }
 
 
-const frontendUrl = process.env.FRONTEND_URL || " https://army-kai-buffer-holder.trycloudflare.com";
+const frontendUrl = process.env.FRONTEND_URL || "https://army-kai-buffer-holder.trycloudflare.com";
 
 const client_id = process.env.SHOPIFY_CLIENT_ID
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET
