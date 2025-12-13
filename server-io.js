@@ -40,86 +40,106 @@ const ioServer = (server) => {
         });
 
         socket.on("sendMessage", async (data) => {
-            // console.log("MESSAGE RECEIVED:", data);
             const { senderId, receiverId, shop_id, text, timestamp } = data;
 
             if (!senderId || !receiverId || !shop_id) {
-                console.log(" Missing required IDs");
+                console.log("❌ Missing required IDs");
                 return;
             }
-            const sender = await User.findById(senderId);
-            console.log("sender", sender);
-            const user = sender
-            if (user?.userType === "customer") {
-                console.log("sender is customer");
-                const receiver = await User.findById(receiverId);
-                console.log("receiver", receiver);
-                const consultantWalletBalance = receiver?.chatCost;
+            const session = await mongoose.startSession();
+            try {
+                session.startTransaction();
 
-                if (Number(sender?.walletBalance) < Number(consultantWalletBalance)) {
-                    console.log("Insufficient wallet balance line 55");
-                    io.to(senderId.toString()).emit("balanceError", {
-                        message: "Insufficient wallet balance",
-                        required: consultantWalletBalance,
-                        available: sender?.walletBalance
-                    });
-                    return;
+                const sender = await User.findById(senderId).session(session);
+                if (!sender) throw new Error("Sender not found");
+
+                if (sender.userType === "customer") {
+                    const receiver = await User.findById(receiverId).session(session);
+                    if (!receiver) throw new Error("Receiver not found");
+
+                    const chatCost = Number(receiver.chatCost);
+
+                    if (Number(sender.walletBalance) < chatCost) {
+                        io.to(senderId.toString()).emit("balanceError", {
+                            message: "Insufficient wallet balance",
+                            required: chatCost,
+                            available: sender.walletBalance
+                        });
+
+                        await session.abortTransaction();
+                        return;
+                    }
+
+                    await User.findByIdAndUpdate(
+                        senderId,
+                        { $inc: { walletBalance: -chatCost } },
+                        { session }
+                    );
+
+                    await User.findByIdAndUpdate(
+                        receiverId,
+                        { $inc: { walletBalance: chatCost } },
+                        { session }
+                    );
                 }
-                // else {
-                //     await User.findByIdAndUpdate(senderId, { $inc: { walletBalance: -consultantWalletBalance } });
-                // }
-            }
 
-            const existingChat = await ChatList.findOne({
-                senderId,
-                receiverId,
-                shop_id
-            });
+                const existingChat = await ChatList.findOne({
+                    senderId,
+                    receiverId,
+                    shop_id
+                }).session(session);
 
-            if (!existingChat) {
+                if (!existingChat) {
+                    await ChatList.create([{
+                        senderId,
+                        receiverId,
+                        shop_id,
+                        lastMessage: text,
+                        lastMessageTime: timestamp
+                    }], { session });
+                } else {
+                    await ChatList.updateOne(
+                        { _id: existingChat._id },
+                        { lastMessage: text, lastMessageTime: timestamp },
+                        { session }
+                    );
+                }
 
-                await ChatList.create({
+                // 4️⃣ Save message
+                const savedChat = await MessageModal.create([{
                     senderId,
                     receiverId,
                     shop_id,
-                    lastMessage: text,
-                    lastMessageTime: timestamp
-                });
-            } else {
-
-                // Optional: Only update last message time
-                await ChatList.updateOne(
-                    { _id: existingChat._id },
-                    { lastMessage: text, lastMessageTime: timestamp }
-                );
-            }
-            try {
-                const receiverSocketId = onlineUsers[receiverId];
-                const savedChat = new MessageModal({
-                    senderId: senderId,
-                    receiverId: receiverId,
-                    shop_id: shop_id,
-                    text: text,
-                    timestamp: timestamp,
+                    text,
+                    timestamp,
                     isRead: false
-                });
+                }], { session });
 
-                await savedChat.save();
+                await session.commitTransaction();
+                console.log("✅ Transaction committed successfully");
 
-                io.emit("receiveMessage", savedChat);
-                // .to(receiverSocketId)
+                // 6️⃣ Emit after commit
+                io.emit("receiveMessage", savedChat[0]);
+
+                // 7️⃣ FCM notification
                 const receiver = await User.findById(receiverId);
-                const isActive = receiver?.isActive;
-                const token = receiver?.firebaseToken?.token;
-                if (token && !isActive) {
-                    await sendFCM(token, "New Message", text, senderProfileImageURL = "https://i.pinimg.com/736x/95/2a/ae/952aaea466ae9fb09f02889d33967cf6.jpg");
-                    console.log("FCM sent:", token);
+                if (receiver?.firebaseToken?.token && !receiver?.isActive) {
+                    await sendFCM(
+                        receiver.firebaseToken.token,
+                        "New Message",
+                        text,
+                        "https://i.pinimg.com/736x/95/2a/ae/952aaea466ae9fb09f02889d33967cf6.jpg"
+                    );
                 }
-            } catch (error) {
-                console.error("❌ Error saving message:", error);
-            }
 
+            } catch (error) {
+                console.error("❌ Transaction failed:", error);
+                await session.abortTransaction();
+            } finally {
+                session.endSession();
+            }
         });
+
 
 
 
