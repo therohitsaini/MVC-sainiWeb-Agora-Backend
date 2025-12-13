@@ -1,16 +1,11 @@
 const { Server } = require("socket.io");
 const { User } = require("./Modal/userSchema");
 const { default: mongoose } = require("mongoose");
-
-const { Conversation } = require("./Modal/Histroy");
-const { HistroyMW } = require("./Socket-Io-MiddleWare/HistroyMW");
-const { Message } = require("./Modal/messageSchema");
 const { ChatList } = require("./Modal/chatListSchema");
 const { MessageModal } = require("./Modal/messageSchema");
 const sendFCM = require("./firebase/sendNotification");
 const { TransactionHistroy } = require("./Modal/transactionHistroy");
 const { shopModel } = require("./Modal/shopify");
-
 
 const ioServer = (server) => {
     const io = new Server(server, {
@@ -94,15 +89,16 @@ const ioServer = (server) => {
                         { session }
                     );
 
-                    // 2️⃣ Add consultant amount (after admin cut)
+                    // 2 Add consultant amount (after admin cut)
                     await User.findByIdAndUpdate(
                         receiverId,
                         { $inc: { walletBalance: consultantAmount } },
                         { session }
                     );
-                    // (Optional) 3️⃣ Add admin commission to admin wallet
+                    // (Optional)  Add admin commission to admin wallet
+                    console.log("shop", adminCommission);
                     await shopModel.findByIdAndUpdate(
-                        shop.adminId, // ya Admin ID
+                        _id, 
                         { $inc: { adminWalletBalance: adminCommission } },
                         { session }
                     );
@@ -144,7 +140,6 @@ const ioServer = (server) => {
                     );
                 }
 
-                // 4️⃣ Save message
                 const savedChat = await MessageModal.create([{
                     senderId,
                     receiverId,
@@ -155,12 +150,9 @@ const ioServer = (server) => {
                 }], { session });
 
                 await session.commitTransaction();
-                console.log("✅ Transaction committed successfully");
 
-                // 6️⃣ Emit after commit
                 io.emit("receiveMessage", savedChat[0]);
 
-                // 7️⃣ FCM notification
                 const receiver = await User.findById(receiverId);
                 if (receiver?.firebaseToken?.token && !receiver?.isActive) {
                     await sendFCM(

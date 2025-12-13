@@ -43,30 +43,17 @@ const roundingNumber = process.env.PASSWORD_SECRECT_ROUNDING
  */
 const installShopifyApp = (req, res) => {
 
-    console.log("req.query", req.query);
-    console.log("installShopifyApp");
-    console.log("client_id", client_id);
-    console.log("SHOPIFY_API_SECRET", SHOPIFY_API_SECRET);
+   
 
-    // Validation: client_id aur secret check karo
     if (!client_id || !SHOPIFY_API_SECRET) {
         return res.status(400).send("client_id or SHOPIFY_API_SECRET is not set");
     }
 
-    // Shop name extract karo (e.g., "store-name.myshopify.com")
     const shop = req.query.shop;
-    console.log("shop", shop);
     if (!shop) return res.status(400).send("Missing shop param");
 
-    // Security ke liye random state generate karo (CSRF protection)
     const state = crypto.randomBytes(16).toString('hex');
-    console.log("state", state);
-
-    // Callback URL define karo - yaha Shopify redirect karega after approval
-    // Request se dynamically URL banaye (environment variable me ${HOST}/${PORT} resolve nahi ho rahe)
     let baseUrl = APP_URL;
-
-    // Agar APP_URL me ${HOST} ya ${PORT} hai, to request se extract karo
     if (!baseUrl || baseUrl.includes('${HOST}') || baseUrl.includes('${PORT}')) {
         const protocol = req.protocol || 'http';
         const host = req.get('host') || req.headers.host || 'localhost:5001';
@@ -190,9 +177,10 @@ const authCallback = async (req, res) => {
             await new shopModel({
                 shop,
                 accessToken,
-                shopId,
+                shopId, 
                 email: ownerEmail,
                 installedAt: new Date(),
+            
             }).save();
         }
 
