@@ -171,20 +171,33 @@ const ioServer = (server) => {
             }
         });
 
-        // socket.on("markSeen", async ({ senderId, receiverId }) => {
-        //     console.log("markSeen", senderId, receiverId);
-        //     // await MessageModal.updateMany(
-        //     //     { senderId, receiverId, seen: false },
-        //     //     { $set: { seen: true } }
-        //     // );
-        //     // io.to(senderId).emit("seenUpdate", { senderId: receiverId });
-        // });
-        socket.on("markSeen", (data) => {
-            console.log("✅ markSeen EVENT RECEIVED");
-            console.log("DATA:", data);
+
+        socket.on("markSeen", async ({ senderId, receiverId }) => {
+            console.log("markSeen", senderId, receiverId);
+            if (!senderId || !receiverId) {
+                console.log("❌ Missing required IDs");
+                return;
+            }
+            if (!mongoose.Types.ObjectId.isValid(senderId) || !mongoose.Types.ObjectId.isValid(receiverId)) {
+                console.log("❌ Invalid IDs");
+                return;
+            }
+            const result = await MessageModal.updateMany(
+                {
+                    senderId: senderId,      // jisne messages bheje
+                    receiverId: receiverId,  // jisne read kiya
+                    isRead: false            // unread only
+                },
+                {
+                    $set: { isRead: true }
+                }
+            );
+
+            console.log("✅ Messages marked as read:", result.modifiedCount);
+
+            // optional: sender ko notify karo (✔✔)
+            io.to(senderId).emit("seenUpdate", { receiverId });
         });
-
-
 
 
         // socket.on("call-user", async ({ toUid, fromUid, type, channelName }) => {
