@@ -6,12 +6,12 @@ const { deleteConsultant } = require('../Controller/consultantController');
 shopifyRoute.get('/install', installShopifyApp);
 shopifyRoute.get('/callback', authCallback);
 shopifyRoute.get('/login', shopifyLogin);
-shopifyRoute.get('/consultant-theme', proxyThemeAssetsController);
-shopifyRoute.get('/consultant-theme/login', proxyShopifyConsultantPage);
-shopifyRoute.get('/consultant-theme/consultant-dashboard', proxyShopifyConsultantLoginPage);
-shopifyRoute.get('/consultant-theme/consultant-chats-section', proxySHopifyConsultantChat);
-shopifyRoute.get('/consultant-theme/view-profile', proxyShopifyViewProfile);
-shopifyRoute.get('/consultant-theme/chats-c', proxyShopifyChatSection);
+shopifyRoute.get('/home', proxyThemeAssetsController);
+shopifyRoute.get('/home/login', proxyShopifyConsultantPage);
+shopifyRoute.get('/home/consultant-dashboard', proxyShopifyConsultantLoginPage);
+shopifyRoute.get('/home/consultant-chats-section', proxySHopifyConsultantChat);
+shopifyRoute.get('/home/view-profile', proxyShopifyViewProfile);
+shopifyRoute.get('/home/chats-c', proxyShopifyChatSection);
 
 
 module.exports = shopifyRoute;
