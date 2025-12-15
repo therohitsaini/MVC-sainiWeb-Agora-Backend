@@ -98,7 +98,7 @@ const ioServer = (server) => {
                     // (Optional)  Add admin commission to admin wallet
                     console.log("shop", adminCommission);
                     await shopModel.findByIdAndUpdate(
-                        _id, 
+                        _id,
                         { $inc: { adminWalletBalance: adminCommission } },
                         { session }
                     );
@@ -169,6 +169,19 @@ const ioServer = (server) => {
             } finally {
                 session.endSession();
             }
+        });
+
+        // socket.on("markSeen", async ({ senderId, receiverId }) => {
+        //     console.log("markSeen", senderId, receiverId);
+        //     // await MessageModal.updateMany(
+        //     //     { senderId, receiverId, seen: false },
+        //     //     { $set: { seen: true } }
+        //     // );
+        //     // io.to(senderId).emit("seenUpdate", { senderId: receiverId });
+        // });
+        socket.on("markSeen", (data) => {
+            console.log("✅ markSeen EVENT RECEIVED");
+            console.log("DATA:", data);
         });
 
 

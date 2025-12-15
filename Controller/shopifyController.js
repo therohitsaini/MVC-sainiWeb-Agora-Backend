@@ -19,7 +19,7 @@ try {
 }
 
 
-const frontendUrl = process.env.FRONTEND_URL || "https://basement-depend-lung-iii.trycloudflare.com";
+const frontendUrl = process.env.FRONTEND_URL || "https://pearl-frame-bass-vincent.trycloudflare.com";
 
 const client_id = process.env.SHOPIFY_CLIENT_ID
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET
@@ -96,7 +96,6 @@ const installShopifyApp = (req, res) => {
 const authCallback = async (req, res) => {
     try {
         console.log("🔁 Auth callback triggered");
-        console.log("req.query", req.query);
         // Shopify se aaye huye query parameters extract karo
         const { shop, hmac, code, host } = req.query;
         console.log("shop", shop);
@@ -252,7 +251,7 @@ const proxyThemeAssetsController = async (req, res) => {
             try {
                 const result = await manageShopifyUser(shop, customerId);
                 userId = result;
-                console.log("result", result);
+             
                 if (result.success) {
                     console.log("✅ Customer registration:", result.message, result.userId ? `userId: ${result.userId}` : '');
                 } else {
@@ -592,7 +591,6 @@ const proxyShopifyViewProfile = (req, res) => {
 };
 
 const proxyShopifyChatSection = (req, res) => {
-    console.log("req.query", req.query);
     const shop = req.query.shop;
     const consultantId = req.query.consultantId || "";
     console.log("consultantId", consultantId);
