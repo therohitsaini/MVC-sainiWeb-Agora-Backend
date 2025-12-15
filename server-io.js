@@ -184,9 +184,9 @@ const ioServer = (server) => {
             }
             const result = await MessageModal.updateMany(
                 {
-                    senderId: senderId,      // jisne messages bheje
-                    receiverId: receiverId,  // jisne read kiya
-                    isRead: false            // unread only
+                    senderId: senderId,
+                    receiverId: receiverId,
+                    isRead: false
                 },
                 {
                     $set: { isRead: true }
@@ -196,7 +196,10 @@ const ioServer = (server) => {
             console.log("✅ Messages marked as read:", result.modifiedCount);
 
             // optional: sender ko notify karo (✔✔)
-            io.to(senderId).emit("seenUpdate", { receiverId });
+            io.to(senderId).emit("seenUpdate", {
+                seenBy: receiverId
+            });
+
         });
 
 
