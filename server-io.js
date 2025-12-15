@@ -98,7 +98,7 @@ const ioServer = (server) => {
                     // (Optional)  Add admin commission to admin wallet
                     console.log("shop", adminCommission);
                     await shopModel.findByIdAndUpdate(
-                        _id,
+                        shop_id,
                         { $inc: { adminWalletBalance: adminCommission } },
                         { session }
                     );
