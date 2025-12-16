@@ -170,6 +170,9 @@ const ioServer = (server) => {
                 session.endSession();
             }
         });
+        socket.on("acceptUserChat", async (userId) => {
+            console.log("acceptUserChat", userId);
+        })
 
 
         socket.on("markSeen", async ({ senderId, receiverId }) => {
