@@ -6,7 +6,6 @@ const getChatHistory = async (request, response) => {
     try {
         const { shopId, consultantId, userId } = request.params;
 
-        console.log("GET CHAT HISTORY", request.params);
 
         if (!mongoose.Types.ObjectId.isValid(shopId) ||
             !mongoose.Types.ObjectId.isValid(consultantId) ||

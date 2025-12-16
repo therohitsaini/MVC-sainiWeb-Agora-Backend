@@ -179,6 +179,7 @@ const ioServer = (server) => {
                 return;
             }
             const user = await User.findById(id);
+            console.log("user", user.isChatAccepted);
             if (!user) {
                 console.log("❌ User not found:", id);
                 return;
@@ -186,6 +187,7 @@ const ioServer = (server) => {
             if (user.isChatAccepted === "request") {
                 user.isChatAccepted = "accepted";
                 await user.save();
+                console.log("user____________", user.isChatAccepted);
             } else {
                 console.log("❌ User chat already accepted:", id);
                 return;
