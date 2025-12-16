@@ -193,11 +193,11 @@ const ioServer = (server) => {
                 return;
             }
             io.to(id).emit("userChatAccepted", { message: user.isChatAccepted });
-            console.log("✅ User chat accepted:", );
+            console.log("✅ User chat accepted:", user.isChatAccepted);
         })
 
 
-    
+
 
         // socket.on("call-user", async ({ toUid, fromUid, type, channelName }) => {
         //     try {
