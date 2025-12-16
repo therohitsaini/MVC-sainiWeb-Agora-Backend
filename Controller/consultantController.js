@@ -408,7 +408,7 @@ const getChatListByShopIdAndConsultantId = async (request, response) => {
                 },
                 isRequest: item.isRequest,
                 lastMessage: item.lastMessage,
-                isChatAccepted: item.receiverId?.isChatAccepted,
+                isChatAccepted: item.senderId?.isChatAccepted,
                 updatedAt: item.updatedAt,
                 createdAt: item.createdAt
             };
