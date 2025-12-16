@@ -408,8 +408,7 @@ const getChatListByShopIdAndConsultantId = async (request, response) => {
                 },
                 isRequest: item.isRequest,
                 lastMessage: item.lastMessage,
-                isChatAccepted: item.receiverId?.isChatAccepted,
-
+                isChatAccepted:"pending",
                 updatedAt: item.updatedAt,
                 createdAt: item.createdAt
             };
