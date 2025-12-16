@@ -183,7 +183,7 @@ const ioServer = (server) => {
                 console.log("❌ User not found:", id);
                 return;
             }
-            if (user.isChatAccepted === "pending") {
+            if (user.isChatAccepted === "request") {
                 user.isChatAccepted = "accepted";
                 await user.save();
             } else {
