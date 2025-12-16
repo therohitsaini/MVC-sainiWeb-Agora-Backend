@@ -382,7 +382,7 @@ const getChatListByShopIdAndConsultantId = async (request, response) => {
         if (!chatList) {
             return response.status(400).json({ message: 'Chat list not found' });
         }
-
+        console.log("chatList", chatList);
 
         const payload = chatList.map(item => {
             return {
@@ -408,13 +408,13 @@ const getChatListByShopIdAndConsultantId = async (request, response) => {
                 },
                 isRequest: item.isRequest,
                 lastMessage: item.lastMessage,
-                isChatAccepted:"pending",
+                isChatAccepted: item.receiverId?.isChatAccepted,
                 updatedAt: item.updatedAt,
                 createdAt: item.createdAt
             };
         });
         console.log("payload", payload);
-   
+
         return response.status(200).send({ success: true, message: 'Chat list fetched successfully', payload });
     } catch (error) {
         console.error(error);
