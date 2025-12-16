@@ -192,6 +192,7 @@ const ioServer = (server) => {
                 console.log("❌ User chat already accepted:", id);
                 return;
             }
+            
             io.to(id).emit("userChatAccepted", { message: user.isChatAccepted });
             console.log("✅ User chat accepted:", user.isChatAccepted);
         })
