@@ -171,40 +171,31 @@ const ioServer = (server) => {
             }
         });
         socket.on("acceptUserChat", async (userId) => {
-            console.log("acceptUserChat", userId);
+
+            const id = userId.userId;
+            console.log("acceptUserChat____________", id);
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                console.log("❌ Invalid userId received:", id);
+                return;
+            }
+            const user = await User.findById(id);
+            if (!user) {
+                console.log("❌ User not found:", id);
+                return;
+            }
+            if (user.isChatAccepted === "pending") {
+                user.isChatAccepted = "accepted";
+                await user.save();
+            } else {
+                console.log("❌ User chat already accepted:", id);
+                return;
+            }
+            io.to(id).emit("userChatAccepted", { message: "User chat accepted" });
+            console.log("✅ User chat accepted:", id);
         })
 
 
-        socket.on("markSeen", async ({ senderId, receiverId }) => {
-            console.log("markSeen", senderId, receiverId);
-            if (!senderId || !receiverId) {
-                console.log("❌ Missing required IDs");
-                return;
-            }
-            if (!mongoose.Types.ObjectId.isValid(senderId) || !mongoose.Types.ObjectId.isValid(receiverId)) {
-                console.log("❌ Invalid IDs");
-                return;
-            }
-            const result = await MessageModal.updateMany(
-                {
-                    senderId: senderId,
-                    receiverId: receiverId,
-                    isRead: false
-                },
-                {
-                    $set: { isRead: true }
-                }
-            );
-
-            console.log("✅ Messages marked as read:", result.modifiedCount);
-
-            // optional: sender ko notify karo (✔✔)
-            io.to(senderId).emit("seenUpdate", {
-                seenBy: receiverId
-            });
-
-        });
-
+    
 
         // socket.on("call-user", async ({ toUid, fromUid, type, channelName }) => {
         //     try {
