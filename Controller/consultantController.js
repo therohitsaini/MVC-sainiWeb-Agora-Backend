@@ -414,6 +414,7 @@ const getChatListByShopIdAndConsultantId = async (request, response) => {
                 createdAt: item.createdAt
             };
         });
+        console.log("payload", payload);
    
         return response.status(200).send({ success: true, message: 'Chat list fetched successfully', payload });
     } catch (error) {
