@@ -84,7 +84,7 @@ const ioServer = (server) => {
                     await ChatList.updateOne(
                         { _id: existingChat._id },
                         { lastMessage: text, lastMessageTime: timestamp },
-                        { session }
+                   
                     );
                 }
 
@@ -95,9 +95,9 @@ const ioServer = (server) => {
                     text,
                     timestamp,
                     isRead: false
-                }], { session });
+                }],);
 
-                await session.commitTransaction();
+                
 
                 io.emit("receiveMessage", savedChat[0]);
 
