@@ -28,7 +28,7 @@ const transactionSchema = new mongoose.Schema({
     creditTo: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required: true
+        // required: true
     },
     adminAmount: {
         type: Number,
