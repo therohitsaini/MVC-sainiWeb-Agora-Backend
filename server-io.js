@@ -394,6 +394,10 @@ const ioServer = (server) => {
                 $inc: { adminAmount: adminCommission, consultantAmount: consultantShare, amount: totalAmount }
             });
 
+            await User.findByIdAndUpdate(userId, {
+                $set: { isChatAccepted: "request" }
+            });
+
 
             io.to(userId).emit("chatEnded", {
                 totalSeconds,
