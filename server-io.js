@@ -335,87 +335,146 @@ const ioServer = (server) => {
             console.log("✅ Chat accepted & timer started");
         });
 
+        // socket.on("endChat", async (data) => {
+        //     const { transactionId, userId, consultantId, shopId } = data;
+        //     console.log("transactionId", transactionId);
+        //     console.log("userId", userId);
+        //     console.log("consultantId", consultantId);
+        //     console.log("shopId", shopId);
+        //     const transaction = await TransactionHistroy.findById(transactionId);
+        //     if (!transaction) return;
+        //     const consultantCost = await User.findById(consultantId);
+        //     if (!consultantCost) return;
+        //     const consultantChatCost = consultantCost.chatCost;
+        //     if (!consultantChatCost) return;
+        //     const shop = await shopModel.findById(shopId);
+        //     if (!shop) return;
+        //     const shopPercentage = Number(shop.adminPersenTage);
+        //     if (!shopPercentage) return;
+
+        //     const endTime = new Date();
+        //     const totalSeconds = Math.floor(
+        //         (endTime - new Date(transaction.startTime)) / 1000
+        //     );
+        //     console.log("totalSeconds", totalSeconds);
+
+        //     // const totalMinutes = Math.ceil(totalSeconds / 60);
+        //     // const totalAmount = totalMinutes * consultantChatCost;
+        //     // ✅ PER-SECOND BILLING LOGIC
+        //     const perSecondCost = consultantChatCost / 60;
+        //     const totalAmount = Number((totalSeconds * perSecondCost).toFixed(2));
+
+
+        //     const adminCommission = totalAmount * shopPercentage / 100;
+        //     const consultantShare = totalAmount - adminCommission;
+        //     const shopShare = adminCommission;
+        //     console.log("adminCommission", adminCommission);
+        //     console.log("consultantShare", consultantShare);
+        //     console.log("shopShare", shopShare);
+        //     // 4️⃣ Update transaction
+        //     transaction.endTime = endTime;
+        //     transaction.totalSeconds = totalSeconds;
+        //     transaction.totalAmount = totalAmount;
+        //     transaction.status = "completed";
+        //     await transaction.save();
+
+        //     // 5️⃣ Wallet update (safe)
+        //     await User.findByIdAndUpdate(userId, {
+        //         $inc: { walletBalance: -totalAmount }
+        //     });
+
+        //     await User.findByIdAndUpdate(consultantId, {
+        //         $inc: { walletBalance: consultantShare }
+        //     });
+
+        //     await shopModel.findByIdAndUpdate(shopId, {
+        //         $inc: { adminWalletBalance: shopShare }
+        //     });
+        //     await TransactionHistroy.findByIdAndUpdate(transactionId, {
+        //         $inc: { adminAmount: adminCommission, consultantAmount: consultantShare, amount: totalAmount }
+        //     });
+
+        //     await User.findByIdAndUpdate(userId, {
+        //         $set: { isChatAccepted: "request" }
+        //     });
+
+
+        //     io.to(userId).emit("chatEnded", {
+        //         transactionId,
+        //         totalSeconds,
+        //         totalAmount,
+        //         reason: "ended"
+        //     });
+
+        //     io.to(consultantId).emit("chatEnded", {
+        //         transactionId,
+        //         totalSeconds,
+        //         totalAmount,
+        //         reason: "ended"
+        //     });
+
+        //     console.log("✅ Chat ended:", transactionId);
+        // });
+
         socket.on("endChat", async (data) => {
             const { transactionId, userId, consultantId, shopId } = data;
-            console.log("transactionId", transactionId);
-            console.log("userId", userId);
-            console.log("consultantId", consultantId);
-            console.log("shopId", shopId);
-            const transaction = await TransactionHistroy.findById(transactionId);
-            if (!transaction) return;
-            const consultantCost = await User.findById(consultantId);
-            if (!consultantCost) return;
-            const consultantChatCost = consultantCost.chatCost;
-            if (!consultantChatCost) return;
-            const shop = await shopModel.findById(shopId);
-            if (!shop) return;
-            const shopPercentage = Number(shop.adminPersenTage);
-            if (!shopPercentage) return;
 
-            const endTime = new Date();
-            const totalSeconds = Math.floor(
-                (endTime - new Date(transaction.startTime)) / 1000
-            );
-            console.log("totalSeconds", totalSeconds);
+            const session = await mongoose.startSession();
+            session.startTransaction();
 
-            // const totalMinutes = Math.ceil(totalSeconds / 60);
-            // const totalAmount = totalMinutes * consultantChatCost;
-            // ✅ PER-SECOND BILLING LOGIC
-            const perSecondCost = consultantChatCost / 60;
-            const totalAmount = Number((totalSeconds * perSecondCost).toFixed(2));
+            try {
+                const transaction = await TransactionHistroy.findById(transactionId).session(session);
+                if (!transaction) throw new Error("Transaction not found");
 
+                const consultantCost = await User.findById(consultantId).session(session);
+                if (!consultantCost) throw new Error("Consultant not found");
 
-            const adminCommission = totalAmount * shopPercentage / 100;
-            const consultantShare = totalAmount - adminCommission;
-            const shopShare = adminCommission;
-            console.log("adminCommission", adminCommission);
-            console.log("consultantShare", consultantShare);
-            console.log("shopShare", shopShare);
-            // 4️⃣ Update transaction
-            transaction.endTime = endTime;
-            transaction.totalSeconds = totalSeconds;
-            transaction.totalAmount = totalAmount;
-            transaction.status = "completed";
-            await transaction.save();
+                const shop = await shopModel.findById(shopId).session(session);
+                if (!shop) throw new Error("Shop not found");
 
-            // 5️⃣ Wallet update (safe)
-            await User.findByIdAndUpdate(userId, {
-                $inc: { walletBalance: -totalAmount }
-            });
+                // Calculate amounts
+                const endTime = new Date();
+                const totalSeconds = Math.floor((endTime - new Date(transaction.startTime)) / 1000);
+                const perSecondCost = consultantCost.chatCost / 60;
+                const totalAmount = Number((totalSeconds * perSecondCost).toFixed(2));
+                const adminCommission = totalAmount * Number(shop.adminPersenTage) / 100;
+                const consultantShare = totalAmount - adminCommission;
+                const shopShare = adminCommission;
 
-            await User.findByIdAndUpdate(consultantId, {
-                $inc: { walletBalance: consultantShare }
-            });
+                // 1️⃣ Update transaction
+                transaction.endTime = endTime;
+                transaction.totalSeconds = totalSeconds;
+                transaction.totalAmount = totalAmount;
+                transaction.status = "completed";
+                await transaction.save({ session });
 
-            await shopModel.findByIdAndUpdate(shopId, {
-                $inc: { adminWalletBalance: shopShare }
-            });
-            await TransactionHistroy.findByIdAndUpdate(transactionId, {
-                $inc: { adminAmount: adminCommission, consultantAmount: consultantShare, amount: totalAmount }
-            });
+                // 2️⃣ Update wallets
+                await User.findByIdAndUpdate(userId, { $inc: { walletBalance: -totalAmount } }, { session });
+                await User.findByIdAndUpdate(consultantId, { $inc: { walletBalance: consultantShare } }, { session });
+                await shopModel.findByIdAndUpdate(shopId, { $inc: { adminWalletBalance: shopShare } }, { session });
 
-            await User.findByIdAndUpdate(userId, {
-                $set: { isChatAccepted: "request" }
-            });
+                await TransactionHistroy.findByIdAndUpdate(transactionId, {
+                    $inc: { adminAmount: adminCommission, consultantAmount: consultantShare, amount: totalAmount }
+                }, { session });
 
+                await User.findByIdAndUpdate(userId, { $set: { isChatAccepted: "request" } }, { session });
 
-            io.to(userId).emit("chatEnded", {
-                transactionId,
-                totalSeconds,
-                totalAmount,
-                reason: "ended"
-            });
+                // 3️⃣ Commit
+                await session.commitTransaction();
 
-            io.to(consultantId).emit("chatEnded", {
-                transactionId,
-                totalSeconds,
-                totalAmount,
-                reason: "ended"
-            });
+                // 4️⃣ Emit events
+                io.to(userId).emit("chatEnded", { transactionId, totalSeconds, totalAmount, reason: "ended" });
+                io.to(consultantId).emit("chatEnded", { transactionId, totalSeconds, totalAmount, reason: "ended" });
 
-            console.log("✅ Chat ended:", transactionId);
+                console.log("✅ Chat ended:", transactionId);
+
+            } catch (error) {
+                console.log("Transaction error:", error);
+                await session.abortTransaction();
+            } finally {
+                session.endSession();
+            }
         });
-
 
 
         socket.on("disconnect", async () => {
