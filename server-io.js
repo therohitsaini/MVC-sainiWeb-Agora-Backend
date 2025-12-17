@@ -84,7 +84,7 @@ const ioServer = (server) => {
                     await ChatList.updateOne(
                         { _id: existingChat._id },
                         { lastMessage: text, lastMessageTime: timestamp },
-                   
+
                     );
                 }
 
@@ -97,7 +97,7 @@ const ioServer = (server) => {
                     isRead: false
                 }],);
 
-                
+
 
                 io.emit("receiveMessage", savedChat[0]);
 
@@ -331,6 +331,40 @@ const ioServer = (server) => {
                 userId,
                 shopId
             });
+            let userBalance = Number(user?.walletBalance);
+            const consultantCost = await User.findById(consultantId);
+            const consultantChatCost = Number(consultantCost?.chatCost);
+            const perSecondCost = consultantChatCost / 60;
+            if (userBalance < perSecondCost) {
+                console.log("Insufficient balance to start chat");
+                return; // Ya frontend ko notify karo
+            }
+            // Total seconds user afford kar sakta hai
+            const maxChatSeconds = Math.floor(userBalance / perSecondCost);
+
+            // Convert to minutes + seconds (optional)
+            const minutes = Math.floor(maxChatSeconds / 60);
+            const seconds = maxChatSeconds % 60;
+
+            console.log(`User can chat for ${minutes} minutes and ${seconds} seconds`);
+            let remainingBalance = userBalance;
+            let chatSeconds = 0;
+
+            const interval = setInterval(() => {
+                if (remainingBalance >= perSecondCost) {
+                    remainingBalance -= perSecondCost;
+                    chatSeconds++;
+                    // update frontend timer if needed
+                } else {
+                    clearInterval(interval);
+                    socket.emit("autoChatEnded", {
+                        transactionId: transaction._id,
+                        reason: "auto-ended"
+                    });
+                }
+            }, 1000);
+
+
 
             console.log("✅ Chat accepted & timer started");
         });
