@@ -400,13 +400,17 @@ const ioServer = (server) => {
 
 
             io.to(userId).emit("chatEnded", {
+                transactionId,
                 totalSeconds,
-                totalAmount
+                totalAmount,
+                reason: "ended"
             });
 
             io.to(consultantId).emit("chatEnded", {
+                transactionId,
                 totalSeconds,
-                totalAmount
+                totalAmount,
+                reason: "ended"
             });
 
             console.log("✅ Chat ended:", transactionId);
