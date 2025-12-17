@@ -358,8 +358,12 @@ const ioServer = (server) => {
             );
             console.log("totalSeconds", totalSeconds);
 
-            const totalMinutes = Math.ceil(totalSeconds / 60);
-            const totalAmount = totalMinutes * consultantChatCost;
+            // const totalMinutes = Math.ceil(totalSeconds / 60);
+            // const totalAmount = totalMinutes * consultantChatCost;
+            // ✅ PER-SECOND BILLING LOGIC
+            const perSecondCost = consultantChatCost / 60;
+            const totalAmount = Number((totalSeconds * perSecondCost).toFixed(2));
+
 
             const adminCommission = totalAmount * shopPercentage / 100;
             const consultantShare = totalAmount - adminCommission;

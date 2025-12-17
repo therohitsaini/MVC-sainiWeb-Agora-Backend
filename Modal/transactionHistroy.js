@@ -42,9 +42,13 @@ const transactionSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
+    endTime: {
+        type: Date,
+        default: null
+    },
     status: {
         type: String,
-        enum: ["active", "ended","completed"],
+        enum: ["active", "ended", "completed"],
         default: "active"
     },
     type: {
