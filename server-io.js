@@ -337,6 +337,10 @@ const ioServer = (server) => {
 
         socket.on("endChat", async (data) => {
             const { transactionId, userId, consultantId, shopId } = data;
+            console.log("transactionId", transactionId);
+            console.log("userId", userId);
+            console.log("consultantId", consultantId);
+            console.log("shopId", shopId);
             const transaction = await TransactionHistroy.findById(transactionId);
             if (!transaction) return;
             const consultantCost = await User.findById(consultantId);
@@ -386,7 +390,7 @@ const ioServer = (server) => {
                 $inc: { adminAmount: adminCommission, consultantAmount: consultantShare, amount: totalAmount }
             });
 
-          
+
             io.to(userId).emit("chatEnded", {
                 totalSeconds,
                 totalAmount
