@@ -170,31 +170,34 @@ const ioServer = (server) => {
                 session.endSession();
             }
         });
-        socket.on("acceptUserChat", async (userId) => {
+        
+        socket.on("acceptUserChat", async (acceptData) => {
+            const { userId, shopId, consultantId } = acceptData;
+            console.log("acceptUserChat____________", userId, shopId, consultantId);
+            // const id = userId.userId;
+            // console.log("acceptUserChat____________", id);
+            // if (!mongoose.Types.ObjectId.isValid(id)) {
+            //     console.log("❌ Invalid userId received:", id);
+            //     return;
+            // }
+            // const user = await User.findById(id);
+            // console.log("user", user.isChatAccepted);
+            // if (!user) {
+            //     console.log("❌ User not found:", id);
+            //     return;
+            // }
+            // if (user.isChatAccepted === "request") {
+            //     user.isChatAccepted = "accepted";
+            //     await user.save();
+            //     console.log("user____________", user.isChatAccepted);
+            // } else {
+            //     console.log("❌ User chat already accepted:", id);
+            //     return;
+            // }
 
-            const id = userId.userId;
-            console.log("acceptUserChat____________", id);
-            if (!mongoose.Types.ObjectId.isValid(id)) {
-                console.log("❌ Invalid userId received:", id);
-                return;
-            }
-            const user = await User.findById(id);
-            console.log("user", user.isChatAccepted);
-            if (!user) {
-                console.log("❌ User not found:", id);
-                return;
-            }
-            if (user.isChatAccepted === "request") {
-                user.isChatAccepted = "accepted";
-                await user.save();
-                console.log("user____________", user.isChatAccepted);
-            } else {
-                console.log("❌ User chat already accepted:", id);
-                return;
-            }
-            
-            io.to(id).emit("userChatAccepted", { message: user.isChatAccepted });
-            console.log("✅ User chat accepted:", user.isChatAccepted);
+
+            // io.to(id).emit("userChatAccepted", { message: user.isChatAccepted });
+            // console.log("✅ User chat accepted:", user.isChatAccepted);
         })
 
 
