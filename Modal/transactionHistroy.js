@@ -23,7 +23,7 @@ const transactionSchema = new mongoose.Schema({
     debitFrom: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required: true
+        // required: true
     },
     creditTo: {
         type: mongoose.Schema.Types.ObjectId,
