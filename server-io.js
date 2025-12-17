@@ -170,35 +170,41 @@ const ioServer = (server) => {
                 session.endSession();
             }
         });
-        
-        socket.on("acceptUserChat", async (acceptData) => {
-            const { userId, shopId, consultantId } = acceptData;
-            console.log("acceptUserChat____________", userId, shopId, consultantId);
-            // const id = userId.userId;
-            // console.log("acceptUserChat____________", id);
-            // if (!mongoose.Types.ObjectId.isValid(id)) {
-            //     console.log("❌ Invalid userId received:", id);
-            //     return;
-            // }
-            // const user = await User.findById(id);
-            // console.log("user", user.isChatAccepted);
-            // if (!user) {
-            //     console.log("❌ User not found:", id);
-            //     return;
-            // }
-            // if (user.isChatAccepted === "request") {
-            //     user.isChatAccepted = "accepted";
-            //     await user.save();
-            //     console.log("user____________", user.isChatAccepted);
-            // } else {
-            //     console.log("❌ User chat already accepted:", id);
-            //     return;
-            // }
+
+        // socket.on("acceptUserChat", async (acceptData) => {
+        //     const { userId, shopId, consultantId } = acceptData;
+        //     console.log("acceptUserChat____________", userId, shopId, consultantId);
+
+        //     console.log("acceptUserChat____________", userId);
+        //     if (!mongoose.Types.ObjectId.isValid(userId)) {
+        //         console.log("❌ Invalid userId received:", userId);
+        //         return;
+        //     }
+        //     const user = await User.findById(userId);
+        //     console.log("user", user.isChatAccepted);
+        //     if (!user) {
+        //         console.log("❌ User not found:", userId);
+        //         return;
+        //     }
+        //     if (user.isChatAccepted === "request") {
+        //         user.isChatAccepted = "accepted";
+        //         await user.save();
+        //         await TransactionHistroy.updateOne(
+        //             { senderId: userId, receiverId: consultantId, shop_id: shopId },
+        //             { $set: { acceptedAt: new Date() } }
+        //         );
+        //         console.log("user____________", user.isChatAccepted);
+        //     } else {
+        //         console.log("❌ User chat already accepted:", userId);
+        //         return;
+        //     }
 
 
-            // io.to(id).emit("userChatAccepted", { message: user.isChatAccepted });
-            // console.log("✅ User chat accepted:", user.isChatAccepted);
-        })
+
+
+        //     // io.to(id).emit("userChatAccepted", { message: user.isChatAccepted });
+        //     // console.log("✅ User chat accepted:", user.isChatAccepted);
+        // })
 
 
 
@@ -348,6 +354,42 @@ const ioServer = (server) => {
         //         io.to(receiverSocketId).emit("call-ended", { fromUid });
         //     }
         // });
+        socket.on("acceptUserChat", async (acceptData) => {
+            const { userId, shopId, consultantId } = acceptData;
+            if (!mongoose.Types.ObjectId.isValid(userId)) return;
+
+            const user = await User.findById(userId);
+            if (!user || user.isChatAccepted !== "request") return;
+
+            // 1️⃣ Accept chat
+            user.isChatAccepted = "accepted";
+            await user.save();
+
+            // 2️⃣ Create transaction history
+            const transaction = await TransactionHistroy.create({
+                senderId: userId,
+                receiverId: consultantId,
+                shop_id: shopId,
+                startTime: new Date(),
+                status: "active",
+                type: "chat"
+            });
+
+            // 3️⃣ Emit to BOTH user & consultant → start timer
+            io.to(userId).emit("chatTimerStarted", {
+                transactionId: transaction._id,
+                startTime: transaction.startTime,
+                consultantId
+            });
+
+            io.to(consultantId).emit("chatTimerStarted", {
+                transactionId: transaction._id,
+                startTime: transaction.startTime,
+                userId
+            });
+
+            console.log("✅ Chat accepted & timer started");
+        });
 
 
         socket.on("disconnect", async () => {
