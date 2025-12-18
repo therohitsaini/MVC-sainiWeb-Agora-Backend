@@ -14,8 +14,11 @@ const randomAgoraUid = Math.floor(Math.random() * 1000000000);
 const consultantController = async (req, res) => {
     try {
         const { shop_id } = req.params;
+        console.log("shop_id", shop_id);
         const body = req.body;
         const file = req.file;
+        console.log("body", body);
+        console.log("file", file);
         if (!mongoose.Types.ObjectId.isValid(shop_id)) {
             return res
                 .status(400)

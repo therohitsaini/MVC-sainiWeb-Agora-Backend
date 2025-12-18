@@ -62,15 +62,13 @@ const installShopifyApp = (req, res) => {
     const redirectUri = `${baseUrl}/app/callback`;
     console.log("redirectUri", redirectUri);
 
-    // Shopify OAuth authorize URL banayo
-    // Ye URL user ko Shopify permission page par le jayega
+
     const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${client_id
         }&scope=${SCOPES
         }&redirect_uri=${encodeURIComponent(redirectUri)
         }&state=${state}`;
     console.log("installUrl", installUrl);
 
-    // User ko Shopify OAuth page par redirect karo
     res.redirect(installUrl);
 };
 
@@ -95,13 +93,11 @@ const installShopifyApp = (req, res) => {
 const authCallback = async (req, res) => {
     try {
         console.log("🔁 Auth callback triggered");
-        // Shopify se aaye huye query parameters extract karo
         const { shop, hmac, code, host } = req.query;
         console.log("shop", shop);
         console.log("hmac", hmac);
         console.log("code", code);
         console.log("host___Update___", host);
-        // --- STEP 1: Required parameters check karo
         if (!shop || !hmac || !code) {
             console.log("❌ Missing required parameters");
             return res.status(400).send("Missing required parameters");
@@ -114,20 +110,16 @@ const authCallback = async (req, res) => {
         delete params.hmac;
         delete params.signature;
 
-        // Shopify requires: parameters alphabetically sorted hone chahiye
         const sortedKeys = Object.keys(params).sort();
         const message = sortedKeys
             .map((key) => `${key}=${params[key]}`)
             .join("&");
 
-        // --- STEP 3: Apne secret se HMAC generate karo
         const generatedHmac = crypto
             .createHmac("sha256", SHOPIFY_API_SECRET)
             .update(message)
             .digest("hex");
 
-        // --- STEP 4: HMAC compare karo (security verification)
-        // Agar match nahi kiya to request fake/unauthorized hai
         if (generatedHmac.toLowerCase() !== hmac.toLowerCase()) {
             console.log("❌ HMAC validation failed");
             return res.status(400).send("HMAC validation failed");
@@ -135,19 +127,16 @@ const authCallback = async (req, res) => {
 
         console.log("✅ HMAC validation successful");
 
-        // --- STEP 5: Authorization code ko access token me convert karo
-        // Ye access token se aap Shopify API calls kar sakte ho
         const tokenResponse = await axios.post(
             `https://${shop}/admin/oauth/access_token`,
             {
                 client_id: client_id,
                 client_secret: SHOPIFY_API_SECRET,
-                code, // Temporary code jo Shopify ne diya
+                code,
             }
         );
 
         const accessToken = tokenResponse.data.access_token;
-        console.log("accessToken_______________", accessToken);
         if (!accessToken) {
             return res.status(400).send("Failed to get access token");
         }
@@ -188,7 +177,6 @@ const authCallback = async (req, res) => {
         }
         const AdminiId = AdminUser._id;
         console.log("AdminiId", AdminiId);
-        // https://projectable-eely-minerva.ngrok-free.dev/
         const redirectUrl = `${frontendUrl}/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&adminId=${encodeURIComponent(AdminiId)}`;
         console.log("➡️ Redirecting to:", redirectUrl);
         return res.redirect(redirectUrl);
