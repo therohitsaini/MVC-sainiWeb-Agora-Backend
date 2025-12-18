@@ -32,6 +32,7 @@ const consultantController = async (req, res) => {
                 .json({ success: false, message: "Shop not found" });
         }
 
+        console.log("body test after shop_id");
         if (
             !body.fullName ||
             !body.email ||
@@ -53,12 +54,12 @@ const consultantController = async (req, res) => {
             !body.dateOfBirth ||
             !body.pancardNumber
         ) {
-            return res
-                .status(400)
-                .json({ success: false, message: "All fields are required" });
+            console.log("All fields are required");
+            return res.status(400)  .json({ success: false, message: "All fields are required" });
         }
 
         if (!file) {
+            console.log("Profile image is required");
             return res
                 .status(400)
                 .json({ success: false, message: "Profile image is required" });
@@ -79,18 +80,20 @@ const consultantController = async (req, res) => {
         const imageURL = savePath;
         const hashPassword = await bcrypt.hash(body.password, 10);
         console.log("hashPassword", hashPassword);
+        const randomAgoraUid = Math.floor(100000 + Math.random() * 900000);
+
         const consultantDetails = new User({
-            shop_id: shop_id,
-            fullname: body.fullName,
+            shop_id,
+            fullName: body.fullName,
             email: body.email,
             phone: body.phoneNumber,
             password: hashPassword,
             profession: body.profession,
             specialization: body.specialization,
             licenseNo: body.licenseIdNumber,
-            experience: body.yearOfExperience,
-            fees: body.chargingPerMinute,
-            language: body.languages,
+            experience: Number(body.yearOfExperience),
+            fees: Number(body.chargingPerMinute),
+            language: JSON.parse(body.languages),
             displayName: body.displayName,
             gender: body.gender,
             houseNumber: body.houseNumber,
@@ -106,6 +109,9 @@ const consultantController = async (req, res) => {
             userType: "consultant",
             consultantStatus: false,
         });
+
+        await consultantDetails.save();
+
         console.log("consultantDetails", consultantDetails);
         await consultantDetails.save();
 
