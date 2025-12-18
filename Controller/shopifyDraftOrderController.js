@@ -2,7 +2,7 @@ const { shopModel } = require("../Modal/shopify");
 const mongoose = require("mongoose");
 const axios = require("axios");
 
-export const createDraftOrder = async (req, res) => {
+ const createDraftOrder = async (req, res) => {
     try {
         const { shop, amount, title, userId } = req.body;
         if (!shop || !amount || !title || !userId) {
