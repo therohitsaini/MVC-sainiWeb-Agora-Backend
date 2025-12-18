@@ -23,7 +23,7 @@ const frontendUrl = process.env.FRONTEND_URL || "https://rosa-max-become-asset.t
 
 const client_id = process.env.SHOPIFY_CLIENT_ID
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET
-const SCOPES = process.env.SHOPIFY_SCOPES || "read_customers,read_products";
+const SCOPES = "read_customers,write_customers,write_draft_orders,read_draft_orders,read_orders,write_orders";
 const APP_URL = process.env.APP_URL || "http://localhost:5001";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
 const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff";
@@ -164,10 +164,10 @@ const authCallback = async (req, res) => {
             await new shopModel({
                 shop,
                 accessToken,
-                shopId, 
+                shopId,
                 email: ownerEmail,
                 installedAt: new Date(),
-            
+
             }).save();
         }
 
@@ -238,7 +238,7 @@ const proxyThemeAssetsController = async (req, res) => {
             try {
                 const result = await manageShopifyUser(shop, customerId);
                 userId = result;
-             
+
                 if (result.success) {
                     console.log("✅ Customer registration:", result.message, result.userId ? `userId: ${result.userId}` : '');
                 } else {
