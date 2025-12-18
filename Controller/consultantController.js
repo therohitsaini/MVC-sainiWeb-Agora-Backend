@@ -63,20 +63,22 @@ const consultantController = async (req, res) => {
                 .status(400)
                 .json({ success: false, message: "Profile image is required" });
         }
+        console.log("file", file);
 
         const uploadFolder = path.join("uploads", "consultants");
-
+        console.log("uploadFolder", uploadFolder);
         if (!fs.existsSync(uploadFolder)) {
             fs.mkdirSync(uploadFolder, { recursive: true });
         }
 
         const fileName = Date.now() + "-" + file.originalname;
         const savePath = path.join(uploadFolder, fileName);
-
+        console.log("savePath", savePath);
         fs.writeFileSync(savePath, file.buffer);
-
+        console.log("file.buffer", file.buffer);
         const imageURL = savePath;
         const hashPassword = await bcrypt.hash(body.password, 10);
+        console.log("hashPassword", hashPassword);
         const consultantDetails = new User({
             shop_id: shop_id,
             fullname: body.fullName,
