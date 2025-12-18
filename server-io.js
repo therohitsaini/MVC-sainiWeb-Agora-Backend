@@ -339,10 +339,8 @@ const ioServer = (server) => {
                 console.log("Insufficient balance to start chat");
                 return; // Ya frontend ko notify karo
             }
-            // Total seconds user afford kar sakta hai
             const maxChatSeconds = Math.floor(userBalance / perSecondCost);
 
-            // Convert to minutes + seconds (optional)
             const minutes = Math.floor(maxChatSeconds / 60);
             const seconds = maxChatSeconds % 60;
 

@@ -19,7 +19,7 @@ try {
 }
 
 
-const frontendUrl = process.env.FRONTEND_URL || "https://white-hoping-vehicle-considered.trycloudflare.com";
+const frontendUrl = process.env.FRONTEND_URL || "https://humanitarian-cleared-swap-penalty.trycloudflare.com";
 
 const client_id = process.env.SHOPIFY_CLIENT_ID
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET
@@ -43,7 +43,6 @@ const roundingNumber = process.env.PASSWORD_SECRECT_ROUNDING
  */
 const installShopifyApp = (req, res) => {
 
-   
 
     if (!client_id || !SHOPIFY_API_SECRET) {
         return res.status(400).send("client_id or SHOPIFY_API_SECRET is not set");
