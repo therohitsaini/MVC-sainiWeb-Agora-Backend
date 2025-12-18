@@ -46,7 +46,7 @@ const { consultantRoute } = require("./Routes/consultantRoute");
 const { employRoute } = require("./Routes/employRutes");
 const chatRoutes = require("./Routes/chatRoutes");
 const firebaseRouter = require("./Routes/firebaseRoutes");
-
+const { shopifyDraftOrderRoute } = require("./Routes/shopifyDraftOrderRoute");
 
 app.use("/api/video-call", videoCallRouter);
 app.use("/api/auth", signinSignupRouter);
@@ -64,6 +64,8 @@ app.use("/local-consultant/public/apps", shopifyRoute);
 app.use("/api/chat", chatRoutes);
 app.use("/api", firebaseRouter);
 
+/** Shopify Draft Order Routes */
+app.use("/api/draft-order", shopifyDraftOrderRoute);
 
 ioServer(server);
 
