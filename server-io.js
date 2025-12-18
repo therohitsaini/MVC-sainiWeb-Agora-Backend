@@ -355,16 +355,24 @@ const ioServer = (server) => {
                     // update frontend timer if needed
                 } else {
                     clearInterval(interval);
-                    socket.emit("autoChatEnded", {
+                    console.log("🔥 BACKEND: autoChatEnded EMIT", {
+                        transactionId: transaction._id,
+                        userId,
+                        consultantId
+                    });
+
+                    io.to(userId).emit("autoChatEnded", {
+                        transactionId: transaction._id,
+                        reason: "auto-ended"
+                    });
+
+                    io.to(consultantId).emit("autoChatEnded", {
                         transactionId: transaction._id,
                         reason: "auto-ended"
                     });
                 }
             }, 1000);
 
-
-
-            console.log("✅ Chat accepted & timer started");
         });
 
         // socket.on("endChat", async (data) => {
