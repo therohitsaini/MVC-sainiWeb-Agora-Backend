@@ -592,6 +592,20 @@ const proxyShopifyChatSection = (req, res) => {
         }
     );
 };
+const proxyProfileSection = (req, res) => {
+    const shop = req.query.shop;
+    const consultantId = req.query.consultantId || "";
+    const shopId = req.query.shopId || "";
+    const iframeUrl = `${frontendUrl}/profile?consultantId=${consultantId}&shop=${shop}&shopId=${shopId}`;
+    return renderShopifyPage(
+        req,
+        res,
+        iframeUrl,
+        {
+            title: "Profile Section"
+        }
+    );
+}
 
 
 module.exports = {
@@ -603,5 +617,6 @@ module.exports = {
     proxyShopifyConsultantLoginPage,
     proxySHopifyConsultantChat,
     proxyShopifyViewProfile,
-    proxyShopifyChatSection
+    proxyShopifyChatSection,
+    proxyProfileSection
 }

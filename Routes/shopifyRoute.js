@@ -1,6 +1,6 @@
 const express = require('express');
 const shopifyRoute = express.Router();
-const { installShopifyApp, authCallback, proxyThemeAssetsController, proxyShopifyConsultantPage, proxyShopifyConsultantLoginPage, proxySHopifyConsultantChat, proxyShopifyViewProfile, proxyShopifyChatSection        } = require('../Controller/shopifyController');
+const { installShopifyApp, authCallback, proxyThemeAssetsController, proxyShopifyConsultantPage, proxyShopifyConsultantLoginPage, proxySHopifyConsultantChat, proxyShopifyViewProfile, proxyShopifyChatSection, proxyProfileSection        } = require('../Controller/shopifyController');
 const { deleteConsultant } = require('../Controller/consultantController');
 // Original route (Shopify automatically hit karta hai - MUST KEEP THIS!)
 shopifyRoute.get('/install', installShopifyApp);
@@ -12,6 +12,6 @@ shopifyRoute.get('/consultant-theme/consultant-dashboard', proxyShopifyConsultan
 shopifyRoute.get('/consultant-theme/consultant-chats-section', proxySHopifyConsultantChat);
 shopifyRoute.get('/consultant-theme/view-profile', proxyShopifyViewProfile);
 shopifyRoute.get('/consultant-theme/chats-c', proxyShopifyChatSection);
-
+shopifyRoute.get('/consultant-theme/profile', proxyProfileSection);
 
 module.exports = shopifyRoute;
