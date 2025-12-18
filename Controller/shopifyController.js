@@ -198,38 +198,38 @@ const authCallback = async (req, res) => {
     }
 };
 
-const shopifyLogin = async (req, res) => {
-    console.log("shopifyLogin");
-    try {
-        const { hmac, shop, host, timestamp } = req.query;
-        if (!hmac || !shop || !timestamp) {
-            return res.status(400).send("Missing required query params");
-        }
-        const params = { ...req.query };
-        delete params['hmac'];
-        const message = Object.keys(params).sort().map(k => `${k}=${params[k]}`).join('&');
-        const generatedHash = crypto.createHmac('sha256', SHOPIFY_API_SECRET).update(message).digest('hex');
-        if (generatedHash !== hmac) {
-            return res.status(400).send("HMAC validation failed");
-        }
-        // Optionally verify shop exists in DB (installed app)
-        const shopData = await shopModel.findOne({ shop: shop });
-        if (!shopData) {
-            return res.status(403).send("Shop not installed");
-        }
+// const shopifyLogin = async (req, res) => {
+//     console.log("shopifyLogin");
+//     try {
+//         const { hmac, shop, host, timestamp } = req.query;
+//         if (!hmac || !shop || !timestamp) {
+//             return res.status(400).send("Missing required query params");
+//         }
+//         const params = { ...req.query };
+//         delete params['hmac'];
+//         const message = Object.keys(params).sort().map(k => `${k}=${params[k]}`).join('&');
+//         const generatedHash = crypto.createHmac('sha256', SHOPIFY_API_SECRET).update(message).digest('hex');
+//         if (generatedHash !== hmac) {
+//             return res.status(400).send("HMAC validation failed");
+//         }
+//         // Optionally verify shop exists in DB (installed app)
+//         const shopData = await shopModel.findOne({ shop: shop });
+//         if (!shopData) {
+//             return res.status(403).send("Shop not installed");
+//         }
 
-        // Issue JWT for your frontend to consume
-        const token = JWT.sign({ shop }, JWT_SRCURITE_KEY, { expiresIn: '2h' });
-        const frontend = `${frontendUrl}/home`;
+//         // Issue JWT for your frontend to consume
+//         const token = JWT.sign({ shop }, JWT_SRCURITE_KEY, { expiresIn: '2h' });
+//         const frontend = `${frontendUrl}/home`;
 
-        const redirectUrl = `${frontend}?shop=${encodeURIComponent(shop)}&token=${encodeURIComponent(token)}`;
-        console.log("➡️ Redirecting to:", redirectUrl);
-        return res.redirect(redirectUrl);
-    } catch (err) {
-        console.error(err || err);
-        return res.status(500).send("Failed to login via Shopify");
-    }
-}
+//         const redirectUrl = `${frontend}?shop=${encodeURIComponent(shop)}&token=${encodeURIComponent(token)}`;
+//         console.log("➡️ Redirecting to:", redirectUrl);
+//         return res.redirect(redirectUrl);
+//     } catch (err) {
+//         console.error(err || err);
+//         return res.status(500).send("Failed to login via Shopify");
+//     }
+// }
 
 
 
@@ -609,7 +609,7 @@ const proxyShopifyChatSection = (req, res) => {
 module.exports = {
     installShopifyApp,
     authCallback,
-    shopifyLogin,
+    // shopifyLogin,
     proxyThemeAssetsController,
     proxyShopifyConsultantPage,
     proxyShopifyConsultantLoginPage,

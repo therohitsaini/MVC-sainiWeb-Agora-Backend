@@ -16,7 +16,6 @@ const consultantController = async (req, res) => {
         const { shop_id } = req.params;
         const body = req.body;
         const file = req.file;
-        console.log("body", body);
         if (!mongoose.Types.ObjectId.isValid(shop_id)) {
             return res
                 .status(400)
