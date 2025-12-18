@@ -19,12 +19,13 @@ const consultantController = async (req, res) => {
         const file = req.file;
         console.log("body", body);
         console.log("file", file);
+
+        // Basic shop validation
         if (!mongoose.Types.ObjectId.isValid(shop_id)) {
             return res
                 .status(400)
                 .json({ success: false, message: "Invalid shop ID" });
         }
-
 
         if (!shop_id) {
             return res
@@ -33,6 +34,8 @@ const consultantController = async (req, res) => {
         }
 
         console.log("body test after shop_id");
+
+        // Required fields validation
         if (
             !body.fullName ||
             !body.email ||
@@ -43,7 +46,6 @@ const consultantController = async (req, res) => {
             !body.licenseIdNumber ||
             !body.yearOfExperience ||
             !body.chargingPerMinute ||
-            // !body.languages ||
             !body.displayName ||
             !body.gender ||
             !body.houseNumber ||
@@ -55,7 +57,9 @@ const consultantController = async (req, res) => {
             !body.pancardNumber
         ) {
             console.log("All fields are required");
-            return res.status(400).json({ success: false, message: "All fields are required" });
+            return res
+                .status(400)
+                .json({ success: false, message: "All fields are required" });
         }
 
         if (!file) {
@@ -64,8 +68,8 @@ const consultantController = async (req, res) => {
                 .status(400)
                 .json({ success: false, message: "Profile image is required" });
         }
-        console.log("file", file);
 
+        // Handle profile image upload
         const uploadFolder = path.join("uploads", "consultants");
         console.log("uploadFolder", uploadFolder);
         if (!fs.existsSync(uploadFolder)) {
@@ -76,26 +80,43 @@ const consultantController = async (req, res) => {
         const savePath = path.join(uploadFolder, fileName);
         console.log("savePath", savePath);
         await fs.promises.writeFile(savePath, file.buffer);
+
         const imageURL = savePath;
         console.log("imageURL", imageURL);
-        const hashPassword = await bcrypt.hash(body.password, 10);
-        console.log("body.password", body.password);
-        console.log("hashPassword", hashPassword);
 
-        const randomAgoraUid = Math.floor(100000 + Math.random() * 900000);
+        // Password hashing
+        const hashPassword = await bcrypt.hash(String(body.password), 10);
+        console.log("hashPassword created");
+
+        // Parse languages safely
+        let languages = [];
+        if (body.languages) {
+            try {
+                // body.languages may already be an array or a JSON string
+                languages = Array.isArray(body.languages)
+                    ? body.languages
+                    : JSON.parse(body.languages);
+            } catch (e) {
+                console.log("Invalid languages format, defaulting to []");
+                languages = [];
+            }
+        }
+
+        const randomAgoraUidLocal = Math.floor(100000 + Math.random() * 900000);
 
         const consultantDetails = new User({
             shop_id,
-            fullName: body.fullName,
+            // IMPORTANT: schema field is `fullname`, not `fullName`
+            fullname: body.fullName,
             email: body.email,
             phone: body.phoneNumber,
             password: hashPassword,
             profession: body.profession,
             specialization: body.specialization,
             licenseNo: body.licenseIdNumber,
-            experience: Number(body.yearOfExperience),
-            fees: Number(body.chargingPerMinute),
-            language: JSON.parse(body.languages),
+            experience: String(body.yearOfExperience),
+            fees: String(body.chargingPerMinute),
+            language: languages,
             displayName: body.displayName,
             gender: body.gender,
             houseNumber: body.houseNumber,
@@ -103,24 +124,27 @@ const consultantController = async (req, res) => {
             landmark: body.landmark,
             address: body.address,
             pincode: body.pincode,
-            dateOfBirth: body.dateOfBirth,
+            dateOfBirth: new Date(body.dateOfBirth),
             pan_cardNumber: body.pancardNumber,
             profileImage: imageURL,
             isActive: true,
-            agoraUid: randomAgoraUid,
+            agoraUid: randomAgoraUidLocal,
             userType: "consultant",
             consultantStatus: false,
         });
 
         await consultantDetails.save();
 
-        console.log("consultantDetails", consultantDetails);
-        await consultantDetails.save();
+        console.log("consultantDetails saved:", consultantDetails._id);
 
-        res.status(201).json({ success: true, message: "Consultant created successfully" });
+        res
+            .status(201)
+            .json({ success: true, message: "Consultant created successfully" });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ success: false, message: error.message });
+        console.log("consultantController error:", error);
+        res
+            .status(500)
+            .json({ success: false, message: error.message || "Server error" });
     }
 };
 
