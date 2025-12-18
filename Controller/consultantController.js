@@ -75,12 +75,11 @@ const consultantController = async (req, res) => {
         const fileName = Date.now() + "-" + file.originalname;
         const savePath = path.join(uploadFolder, fileName);
         console.log("savePath", savePath);
-        fs.writeFileSync(savePath, file.buffer);
-    
+        await fs.promises.writeFile(savePath, file.buffer);
         const imageURL = savePath;
         console.log("imageURL", imageURL);
         const hashPassword = await bcrypt.hash(body.password, 10);
-        console.log("body.password",body.password );
+        console.log("body.password", body.password);
         console.log("hashPassword", hashPassword);
 
         const randomAgoraUid = Math.floor(100000 + Math.random() * 900000);
