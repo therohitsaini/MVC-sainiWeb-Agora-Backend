@@ -58,16 +58,11 @@ const installShopifyApp = (req, res) => {
         const host = req.get('host') || req.headers.host || 'localhost:5001';
         baseUrl = `${protocol}://${host}`;
     }
-
     const redirectUri = `${baseUrl}/app/callback`;
-    console.log("redirectUri", redirectUri);
-
-
     const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${client_id
         }&scope=${SCOPES
         }&redirect_uri=${encodeURIComponent(redirectUri)
         }&state=${state}`;
-    console.log("installUrl", installUrl);
 
     res.redirect(installUrl);
 };
@@ -106,6 +101,7 @@ const authCallback = async (req, res) => {
         // --- STEP 2: HMAC validation ke liye message banayo
         // HMAC security ke liye hota hai - verify karta hai ki request Shopify se hi aayi hai
         // hmac aur signature ko exclude karo (ye validation ke liye use hoga)
+        
         const params = { ...req.query };
         delete params.hmac;
         delete params.signature;

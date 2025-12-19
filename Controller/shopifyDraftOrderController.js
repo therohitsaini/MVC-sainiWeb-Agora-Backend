@@ -106,6 +106,7 @@ const createDraftOrder = async (req, res) => {
         }
 
         const draftOrder = result.draftOrder;
+        console.log("draftOrder", draftOrder);
 
         return res.status(200).json({
             success: true,
