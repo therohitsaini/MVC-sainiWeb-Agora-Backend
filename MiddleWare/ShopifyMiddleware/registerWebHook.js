@@ -10,7 +10,7 @@ const registerOrderPaidWebhook = async (shop, accessToken,) => {
         webhookSubscriptionCreate(
           topic: ORDERS_CREATE,
           webhookSubscription: {
-            callbackUrl: "${process.env.APP_URL}/api/webhooks/webhooks/orders-paid",
+            callbackUrl: "${process.env.APP_URL}/api/webhooks/webhooks/orders-created",
             format: JSON
           }
         ) {
