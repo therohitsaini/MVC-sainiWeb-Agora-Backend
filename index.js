@@ -14,12 +14,26 @@ const server = http.createServer(app);
 const { ioServer } = require("./server-io");
 const { razerPayRoute } = require("./Routes/razerPayRoute");
 const shopifyRoute = require("./Routes/shopifyRoute");
+const { webHookRoute } = require("./Routes/webHookRoute");
+
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// Register webhook routes BEFORE JSON parsers to preserve raw body
+app.use("/api/webhooks", webHookRoute);
+
+// JSON parsers - skip webhook paths to preserve raw body for HMAC verification
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/webhooks')) {
+    return next(); // Skip JSON parsing for webhooks
+  }
+  express.json()(req, res, next);
+});
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/webhooks')) {
+    return next(); // Skip URL encoding for webhooks
+  }
+  express.urlencoded({ extended: true })(req, res, next);
+});
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Serve React frontend build (consultant-app) statically
@@ -47,7 +61,6 @@ const { employRoute } = require("./Routes/employRutes");
 const chatRoutes = require("./Routes/chatRoutes");
 const firebaseRouter = require("./Routes/firebaseRoutes");
 const { shopifyDraftOrderRoute } = require("./Routes/shopifyDraftOrderRoute");
-const { webHookRoute } = require("./Routes/webHookRoute");
 
 app.use("/api/video-call", videoCallRouter);
 app.use("/api/auth", signinSignupRouter);
@@ -67,9 +80,6 @@ app.use("/api", firebaseRouter);
 
 /** Shopify Draft Order Routes */
 app.use("/api/draft-order", shopifyDraftOrderRoute);
-
-/** Web Hook Routes */
-app.use("/api/webhooks", webHookRoute);
 
 ioServer(server);
 

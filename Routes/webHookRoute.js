@@ -2,9 +2,11 @@
 const express = require('express');
 const webHookRoute = express.Router();
 const { webhooksOrdersCreated, webhooksOrdersDeleted } = require('../Controller/webHookController');
+const { verifyWebhook } = require('../MiddleWare/ShopifyMiddleware/verifyWebHook');
 
 // Shopify webhooks must use raw body
-webHookRoute.post('/webhooks/orders-created', express.raw({ type: "application/json" }), webhooksOrdersCreated);
-webHookRoute.post('/webhooks/orders-deleted', express.raw({ type: "application/json" }), webhooksOrdersDeleted);
+// express.raw() must be first to preserve the raw body for HMAC verification
+webHookRoute.post('/webhooks/orders-created', express.raw({ type: "application/json" }), verifyWebhook, webhooksOrdersCreated);
+webHookRoute.post('/webhooks/orders-deleted', express.raw({ type: "application/json" }), verifyWebhook, webhooksOrdersDeleted);
 
 module.exports = { webHookRoute };
