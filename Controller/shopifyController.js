@@ -9,7 +9,7 @@ const { User } = require('../Modal/userSchema');
 const { manageShopifyUser } = require('../MiddleWare/ShopifyMiddleware/handleShopifyUser');
 const { createAppMenu } = require('../MiddleWare/shopifySubMenu');
 const { renderShopifyPage } = require('../MiddleWare/ShopifyMiddleware/helperTheme');
-const { registerOrderPaidWebhook,  } = require('../MiddleWare/ShopifyMiddleware/registerWebHook');
+const { registerOrderPaidWebhook, registerOrderDeletedWebhook,  } = require('../MiddleWare/ShopifyMiddleware/registerWebHook');
 let axios, wrapper, CookieJar;
 try {
     axios = require("axios");
@@ -178,7 +178,7 @@ const authCallback = async (req, res) => {
 
         /** Register Order Paid Webhook */
         await registerOrderPaidWebhook(shop, accessToken);
-        // await registerOrderDeletedWebhook(shop, accessToken);
+        await registerOrderDeletedWebhook(shop, accessToken);
 
         const AdminiId = AdminUser._id;
         console.log("AdminiId", AdminiId);
