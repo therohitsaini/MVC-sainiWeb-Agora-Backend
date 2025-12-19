@@ -9,7 +9,7 @@ const { User } = require('../Modal/userSchema');
 const { manageShopifyUser } = require('../MiddleWare/ShopifyMiddleware/handleShopifyUser');
 const { createAppMenu } = require('../MiddleWare/shopifySubMenu');
 const { renderShopifyPage } = require('../MiddleWare/ShopifyMiddleware/helperTheme');
-const { registerOrderPaidWebhook, registerOrderDeletedWebhook } = require('../MiddleWare/ShopifyMiddleware/registerWebHook');
+const { registerOrderPaidWebhook,  } = require('../MiddleWare/ShopifyMiddleware/registerWebHook');
 let axios, wrapper, CookieJar;
 try {
     axios = require("axios");
