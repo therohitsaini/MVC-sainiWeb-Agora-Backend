@@ -8,7 +8,7 @@ const registerOrderPaidWebhook = async (shop, accessToken) => {
         const query = `
       mutation {
         webhookSubscriptionCreate(
-          topic: ORDERS_UPDATED,
+          topic: ORDERS_PAID,
           webhookSubscription: {
             callbackUrl: "${process.env.APP_URL}/api/webhooks/webhooks/orders-paid",
             format: JSON
