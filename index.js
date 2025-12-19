@@ -47,6 +47,7 @@ const { employRoute } = require("./Routes/employRutes");
 const chatRoutes = require("./Routes/chatRoutes");
 const firebaseRouter = require("./Routes/firebaseRoutes");
 const { shopifyDraftOrderRoute } = require("./Routes/shopifyDraftOrderRoute");
+const { webHookRoute } = require("./Routes/webHookRoute");
 
 app.use("/api/video-call", videoCallRouter);
 app.use("/api/auth", signinSignupRouter);
@@ -66,6 +67,9 @@ app.use("/api", firebaseRouter);
 
 /** Shopify Draft Order Routes */
 app.use("/api/draft-order", shopifyDraftOrderRoute);
+
+/** Web Hook Routes */
+app.use("/api/webhooks", webHookRoute);
 
 ioServer(server);
 

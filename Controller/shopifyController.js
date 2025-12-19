@@ -9,6 +9,7 @@ const { User } = require('../Modal/userSchema');
 const { manageShopifyUser } = require('../MiddleWare/ShopifyMiddleware/handleShopifyUser');
 const { createAppMenu } = require('../MiddleWare/shopifySubMenu');
 const { renderShopifyPage } = require('../MiddleWare/ShopifyMiddleware/helperTheme');
+const { registerOrderPaidWebhook } = require('../MiddleWare/ShopifyMiddleware/registerWebHook');
 let axios, wrapper, CookieJar;
 try {
     axios = require("axios");
@@ -101,7 +102,7 @@ const authCallback = async (req, res) => {
         // --- STEP 2: HMAC validation ke liye message banayo
         // HMAC security ke liye hota hai - verify karta hai ki request Shopify se hi aayi hai
         // hmac aur signature ko exclude karo (ye validation ke liye use hoga)
-        
+
         const params = { ...req.query };
         delete params.hmac;
         delete params.signature;
@@ -171,6 +172,9 @@ const authCallback = async (req, res) => {
         if (!AdminUser) {
             return res.status(400).send("Admin user not found");
         }
+        
+        /** Register Order Paid Webhook */
+        await registerOrderPaidWebhook(shop, accessToken);
         const AdminiId = AdminUser._id;
         console.log("AdminiId", AdminiId);
         const redirectUrl = `${frontendUrl}/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&adminId=${encodeURIComponent(AdminiId)}`;

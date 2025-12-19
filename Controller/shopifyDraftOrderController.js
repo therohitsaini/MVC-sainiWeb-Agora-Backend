@@ -2,6 +2,7 @@ const { shopModel } = require("../Modal/shopify");
 const mongoose = require("mongoose");
 const axios = require("axios");
 const { ReachargeTransactionHistroy } = require("../Modal/reachargeTransactionHistroy");
+const { User } = require("../Modal/userSchema");
 
 /**
  * Create Shopify Draft Order (Latest GraphQL version)
@@ -25,6 +26,13 @@ const createDraftOrder = async (req, res) => {
             return res
                 .status(400)
                 .json({ success: false, message: "Invalid user ID" });
+        }
+        let customerId = null;
+        if (userId) {
+            const user = await User.findById(userId).select("shopifyCustomerId");
+            if (user) {
+                customerId = user.shopifyCustomerId;
+            }
         }
 
         const shopAccessToken = await shopModel.findOne({ shop });
@@ -74,7 +82,7 @@ const createDraftOrder = async (req, res) => {
                         // Optional: add custom attributes for tracking in Shopify
                         customAttributes: [
                             { key: "app_user_id", value: String(userId) },
-                            { key: "payment_type", value: "chat" }
+                            { key: "customer_id", value: String(customerId) }
                         ]
                     }
                 }
@@ -108,12 +116,13 @@ const createDraftOrder = async (req, res) => {
         }
 
         const draftOrder = result.draftOrder;
-        const draftOrderId =  draftOrder?.id.split("/").pop();
+        const draftOrderId = draftOrder?.id.split("/").pop();
 
         const transaction = await ReachargeTransactionHistroy.create({
             shop,
             userId,
             amount,
+            customerId: customerId,
             currency: "INR",
             draftOrderId: draftOrderId,
             invoiceUrl: draftOrder.invoiceUrl,
@@ -140,5 +149,6 @@ const createDraftOrder = async (req, res) => {
         });
     }
 };
+
 
 module.exports = { createDraftOrder };
