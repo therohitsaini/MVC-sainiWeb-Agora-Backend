@@ -11,8 +11,8 @@ const registerOrderPaidWebhook = async (shop, accessToken, topic, callbackUrl) =
         webhookSubscriptionCreate(
           topic: ${topic},
           webhookSubscription: {
-            callbackUrl: ${callbackUrl},
-            format: JSON
+            uri: ${callbackUrl},
+            format: JSON    
           }
         ) {
           webhookSubscription {
