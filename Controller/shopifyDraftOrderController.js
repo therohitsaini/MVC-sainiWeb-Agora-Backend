@@ -15,7 +15,6 @@ const createDraftOrder = async (req, res) => {
     try {
         const { shop, amount, title, userId } = req.body;
 
-        // Basic validation
         if (!shop || !amount || !title || !userId) {
             return res
                 .status(400)
@@ -44,7 +43,6 @@ const createDraftOrder = async (req, res) => {
 
         const accessToken = shopAccessToken.accessToken;
 
-        // Latest Shopify Admin GraphQL (2024-01) draftOrderCreate
         const response = await axios.post(
             `https://${shop}/admin/api/2024-01/graphql.json`,
             {
