@@ -1,18 +1,22 @@
-const crypto = require("crypto");
+const crypto = require('crypto');
+
 const dotenv = require("dotenv");
 dotenv.config();
+function verifyWebhook(req, res, next) {
+    const hmacHeader = req.get('X-Shopify-Hmac-Sha256'); // or lowercase
+    const secret = process.env.SHOPIFY_API_SECRET;
 
-const verifyWebhook = (req) => {
-    const hmac = req.headers["x-shopify-hmac-sha256"];
-    const body = req.body;
-    console.log("body", req.headers,);
+    // req.body here is still a Buffer, do NOT JSON.stringify
     const hash = crypto
-        .createHmac("sha256", process.env.SHOPIFY_API_SECRET)
-        .update(body)
-        .digest("base64");
-    console.log("hash", hash);
+        .createHmac('sha256', secret)
+        .update(req.body) // must be buffer or string
+        .digest('base64');
 
-    return hash === hmac;
-};
+    if (hash === hmacHeader) {
+        next();
+    } else {
+        res.status(401).send('Unauthorized');
+    }
+}
 
 module.exports = { verifyWebhook };

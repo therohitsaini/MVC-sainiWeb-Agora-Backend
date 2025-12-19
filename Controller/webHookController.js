@@ -8,7 +8,7 @@ const webhooksOrdersCreated = async (req, res) => {
             return res.status(401).send("Invalid webhook");
         }
 
-        const order = JSON.parse(req.body.toString());
+        const order =JSON.parse(req.body.toString('utf8'));
         console.log("✅ Order Created:", order.id);
 
         res.status(200).send("OK");
