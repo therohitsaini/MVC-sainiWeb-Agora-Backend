@@ -2,15 +2,16 @@ const axios = require("axios");
 const dotenv = require("dotenv");
 dotenv.config();
 
-const registerOrderPaidWebhook = async (shop, accessToken) => {
+const registerOrderPaidWebhook = async (shop, accessToken, topic, callbackUrl) => {
+    console.log("Registering webhook for topic:", topic, "and callback url:", callbackUrl);
     try {
 
         const query = `
       mutation {
         webhookSubscriptionCreate(
-          topic: ORDERS_CREATE,
+          topic: ${topic},
           webhookSubscription: {
-            callbackUrl: "${process.env.APP_URL}/api/webhooks/webhooks/orders-paid",
+            callbackUrl: ${callbackUrl},
             format: JSON
           }
         ) {

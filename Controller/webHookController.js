@@ -1,8 +1,8 @@
-const webhooksOrdersPaid = async (req, res) => {
+
+const webhooksOrdersCreated = async (req, res) => {
     try {
         const data = req.body;
-        console.log("Orders paid webhook received:", data);
-        // Yahan payment verify karke DB update karna
+        console.log("Orders created webhook received:", data);
         res.status(200).send("Webhook received");
     } catch (error) {
         console.log(error);
@@ -12,4 +12,20 @@ const webhooksOrdersPaid = async (req, res) => {
         });
     }
 }
-module.exports = { webhooksOrdersPaid };
+
+
+const webhooksOrdersDeleted = async (req, res) => {
+    try {
+        const data = req.body;
+        console.log("Orders deleted webhook received:", data);
+        res.status(200).send("Webhook received");
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: "Server error while processing webhook"
+        });
+    }
+}
+
+module.exports = {  webhooksOrdersCreated, webhooksOrdersDeleted };

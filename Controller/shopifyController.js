@@ -29,7 +29,10 @@ const APP_URL = process.env.APP_URL || "http://localhost:5001";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
 const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff";
 const roundingNumber = process.env.PASSWORD_SECRECT_ROUNDING
-
+const callbackUrlCreated = `${APP_URL}/api/webhooks/webhooks/orders-created`;
+const callbackUrlDeleted = `${APP_URL}/api/webhooks/webhooks/orders-deleted`;
+const topicCreated = "ORDERS_CREATED";
+const topicDeleted = "ORDERS_DELETED";
 /**
  * STEP 1: Shopify App Installation Function
  * 
@@ -174,8 +177,9 @@ const authCallback = async (req, res) => {
         }
 
         /** Register Order Paid Webhook */
-        await registerOrderPaidWebhook(shop, accessToken);
-        
+        await registerOrderPaidWebhook(shop, accessToken,topicCreated,callbackUrlCreated);
+        await registerOrderPaidWebhook(shop, accessToken,topicDeleted,callbackUrlDeleted);
+
         const AdminiId = AdminUser._id;
         console.log("AdminiId", AdminiId);
         const redirectUrl = `${frontendUrl}/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&adminId=${encodeURIComponent(AdminiId)}`;
