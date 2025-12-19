@@ -178,7 +178,7 @@ const authCallback = async (req, res) => {
 
         /** Register Order Paid Webhook */
         await registerOrderPaidWebhook(shop, accessToken);
-        await registerOrderDeletedWebhook(shop, accessToken);
+        // await registerOrderDeletedWebhook(shop, accessToken);
 
         const AdminiId = AdminUser._id;
         console.log("AdminiId", AdminiId);
