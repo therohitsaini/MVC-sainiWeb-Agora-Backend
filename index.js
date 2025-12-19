@@ -17,29 +17,22 @@ const shopifyRoute = require("./Routes/shopifyRoute");
 const { webHookRoute } = require("./Routes/webHookRoute");
 
 app.use(cors());
-
-// Register webhook routes BEFORE JSON parsers to preserve raw body
 app.use("/api/webhooks", webHookRoute);
-
-// JSON parsers - skip webhook paths to preserve raw body for HMAC verification
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/webhooks')) {
-    return next(); // Skip JSON parsing for webhooks
+    return next(); 
   }
   express.json()(req, res, next);
 });
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/webhooks')) {
-    return next(); // Skip URL encoding for webhooks
+    return next(); 
   }
   express.urlencoded({ extended: true })(req, res, next);
 });
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Serve React frontend build (consultant-app) statically
-// Assuming sibling folder structure:
-// - MVC-sainiWeb-Agora-Backend (this project)
-// - consultant-app (React project with build/)
 const reactBuildPath = path.join(__dirname, "..", "consultant-app", "build");
 app.use("/static", express.static(path.join(reactBuildPath, "static")));
 app.use("/consultant-app", express.static(reactBuildPath));

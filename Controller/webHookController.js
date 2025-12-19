@@ -3,6 +3,7 @@ const webhooksOrdersCreated = async (req, res) => {
         // req.body is a Buffer at this point (from express.raw())
         const order = JSON.parse(req.body.toString('utf8'));
         console.log("✅ Order Created:", order.id);
+        console.log("order", order);
 
         res.status(200).send("OK");
 
