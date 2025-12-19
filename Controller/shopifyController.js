@@ -511,8 +511,8 @@ const proxyProfileSection = (req, res) => {
     const shopId = req.query.shopId || "";
     console.log("shopId", shopId);
     console.log("consultantId", consultantId);
-    shopId = shopId.toString();
-    console.log("shopId", shopId);
+ 
+    console.log("shopId", shop);
     const iframeUrl = `${frontendUrl}/profile?consultantId=${consultantId}&shop=${shop}&shopId=${shopId}`;
     return renderShopifyPage(
         req,
