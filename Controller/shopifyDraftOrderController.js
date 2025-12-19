@@ -1,6 +1,7 @@
 const { shopModel } = require("../Modal/shopify");
 const mongoose = require("mongoose");
 const axios = require("axios");
+const { ReachargeTransactionHistroy } = require("../Modal/reachargeTransactionHistroy");
 
 /**
  * Create Shopify Draft Order (Latest GraphQL version)
@@ -40,26 +41,26 @@ const createDraftOrder = async (req, res) => {
             `https://${shop}/admin/api/2024-01/graphql.json`,
             {
                 query: `
-                  mutation draftOrderCreate($input: DraftOrderInput!) {
-                    draftOrderCreate(input: $input) {
-                      draftOrder {
-                        id
-                        name
-                        invoiceUrl
-                        totalPriceSet {
-                          shopMoney {
-                            amount
-                            currencyCode
-                          }
+                    mutation draftOrderCreate($input: DraftOrderInput!) {
+                        draftOrderCreate(input: $input) {
+                        draftOrder {
+                            id
+                            name
+                            invoiceUrl
+                            totalPriceSet {
+                            shopMoney {
+                                amount
+                                currencyCode
+                            }
+                            }
                         }
-                      }
-                      userErrors {
-                        field
-                        message
-                      }
+                        userErrors {
+                            field
+                            message
+                        }
+                        }
                     }
-                  }
-                `,
+                    `,
                 variables: {
                     input: {
                         lineItems: [
@@ -88,6 +89,7 @@ const createDraftOrder = async (req, res) => {
 
         const result = response.data?.data?.draftOrderCreate;
 
+
         if (!result) {
             console.log("Unexpected draftOrderCreate response:", response.data);
             return res.status(500).json({
@@ -106,7 +108,19 @@ const createDraftOrder = async (req, res) => {
         }
 
         const draftOrder = result.draftOrder;
-        console.log("draftOrder", draftOrder);
+        const draftOrderId =  draftOrder?.id.split("/").pop();
+
+        const transaction = await ReachargeTransactionHistroy.create({
+            shop,
+            userId,
+            amount,
+            currency: "INR",
+            draftOrderId: draftOrderId,
+            invoiceUrl: draftOrder.invoiceUrl,
+            status: "PENDING",
+            purpose: "RECHARGE"
+        });
+        await transaction.save();
 
         return res.status(200).json({
             success: true,
