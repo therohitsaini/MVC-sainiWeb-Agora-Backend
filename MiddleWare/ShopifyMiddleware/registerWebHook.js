@@ -40,7 +40,7 @@ const registerOrderPaidWebhook = async (shop, accessToken) => {
             throw new Error(response.data.errors[0].message);
         }
         console.log("Webhook user errors:", response.data.data.webhookSubscriptionCreate.userErrors);
-        console.log("Webhook created:", response.data);
+        console.log("Webhook created:", response.data.data.webhookSubscriptionCreate.webhookSubscription);
         return response.data;
     } catch (error) {
         console.log(error);
