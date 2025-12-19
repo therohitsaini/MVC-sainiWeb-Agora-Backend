@@ -175,6 +175,7 @@ const authCallback = async (req, res) => {
 
         /** Register Order Paid Webhook */
         await registerOrderPaidWebhook(shop, accessToken);
+        
         const AdminiId = AdminUser._id;
         console.log("AdminiId", AdminiId);
         const redirectUrl = `${frontendUrl}/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&adminId=${encodeURIComponent(AdminiId)}`;
