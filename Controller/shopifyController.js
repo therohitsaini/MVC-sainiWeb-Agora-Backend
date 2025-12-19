@@ -24,7 +24,7 @@ const frontendUrl = process.env.FRONTEND_URL || "https://hygiene-varieties-estim
 
 const client_id = process.env.SHOPIFY_CLIENT_ID
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET
-const SCOPES = "read_customers,write_customers,write_draft_orders,read_draft_orders,read_orders,write_orders";
+const SCOPES = "read_customers,write_customers,write_draft_orders,read_draft_orders,read_orders,write_orders,read_orders,write_orders";
 const APP_URL = process.env.APP_URL || "http://localhost:5001";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
 const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff";
@@ -172,7 +172,7 @@ const authCallback = async (req, res) => {
         if (!AdminUser) {
             return res.status(400).send("Admin user not found");
         }
-        
+
         /** Register Order Paid Webhook */
         await registerOrderPaidWebhook(shop, accessToken);
         const AdminiId = AdminUser._id;
