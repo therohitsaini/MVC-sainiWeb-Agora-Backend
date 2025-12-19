@@ -5,6 +5,8 @@ dotenv.config();
 function verifyWebhook(req, res, next) {
     const hmacHeader = req.get('X-Shopify-Hmac-Sha256'); // or lowercase
     const secret = process.env.SHOPIFY_API_SECRET;
+    console.log("hmacHeader", hmacHeader);
+    console.log("secret", secret);
 
     // req.body here is still a Buffer, do NOT JSON.stringify
     const hash = crypto
