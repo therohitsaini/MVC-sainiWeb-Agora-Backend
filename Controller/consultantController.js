@@ -72,22 +72,56 @@ const consultantController = async (req, res) => {
             fs.mkdirSync(uploadFolder, { recursive: true });
         }
 
+        // Check if email already exists
+        const existingEmail = await User.findOne({ email: body.email.toLowerCase().trim() });
+        if (existingEmail) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Email already exists. Please use a different email." 
+            });
+        }
+
+        // Check if license number already exists
+        const existingLicense = await User.findOne({ licenseNo: body.licenseIdNumber });
+        if (existingLicense) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "License number already exists. Please use a different license number." 
+            });
+        }
+
         const fileName = Date.now() + "-" + file.originalname;
         const savePath = path.join(uploadFolder, fileName);
         console.log("savePath", savePath);
         await fs.promises.writeFile(savePath, file.buffer);
         const imageURL = savePath;
         console.log("imageURL", imageURL);
-        // const hashPassword = await bcrypt.hash(body.password, 10);
-        // console.log("body.password", body.password);
-        // console.log("hashPassword", hashPassword);
 
-        const randomAgoraUid = Math.floor(100000 + Math.random() * 900000);
+        // Generate unique agoraUid (retry if collision occurs)
+        let randomAgoraUid;
+        let attempts = 0;
+        const maxAttempts = 10;
+        do {
+            randomAgoraUid = Math.floor(100000 + Math.random() * 900000);
+            const existingAgoraUid = await User.findOne({ agoraUid: randomAgoraUid });
+            if (!existingAgoraUid) {
+                break;
+            }
+            attempts++;
+            if (attempts >= maxAttempts) {
+                return res.status(500).json({ 
+                    success: false, 
+                    message: "Failed to generate unique Agora UID. Please try again." 
+                });
+            }
+        } while (true);
+
         console.log("randomAgoraUid", randomAgoraUid);
+        
         const consultantDetails = new User({
             shop_id,
             fullname: body.fullName,
-            email: body.email,
+            email: body.email.toLowerCase().trim(),
             phone: body.phoneNumber,
             password: body.password,
             profession: body.profession,
@@ -113,14 +147,40 @@ const consultantController = async (req, res) => {
         });
 
         await consultantDetails.save();
+        console.log("consultantDetails saved successfully", consultantDetails._id);
 
-        console.log("consultantDetails", consultantDetails);
-        await consultantDetails.save();
-
-        res.status(201).json({ success: true, message: "Consultant created successfully" });
+        res.status(201).json({ 
+            success: true, 
+            message: "Consultant created successfully",
+            consultantId: consultantDetails._id
+        });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ success: false, message: error.message });
+        console.error("Error in consultantController:", error);
+        
+        // Handle specific MongoDB errors
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyPattern)[0];
+            return res.status(400).json({ 
+                success: false, 
+                message: `${field} already exists. Please use a different value.` 
+            });
+        }
+        
+        // Handle validation errors
+        if (error.name === 'ValidationError') {
+            const errors = Object.values(error.errors).map(err => err.message);
+            return res.status(400).json({ 
+                success: false, 
+                message: "Validation error", 
+                errors: errors 
+            });
+        }
+        
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || "Internal server error",
+            error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 };
 
