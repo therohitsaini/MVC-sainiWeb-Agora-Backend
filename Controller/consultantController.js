@@ -83,7 +83,7 @@ const consultantController = async (req, res) => {
         // console.log("hashPassword", hashPassword);
 
         const randomAgoraUid = Math.floor(100000 + Math.random() * 900000);
-
+        console.log("randomAgoraUid", randomAgoraUid);
         const consultantDetails = new User({
             shop_id,
             fullName: body.fullName,
