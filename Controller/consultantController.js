@@ -86,7 +86,7 @@ const consultantController = async (req, res) => {
         console.log("randomAgoraUid", randomAgoraUid);
         const consultantDetails = new User({
             shop_id,
-            fullName: body.fullName,
+            fullname: body.fullName,
             email: body.email,
             phone: body.phoneNumber,
             password: body.password,
