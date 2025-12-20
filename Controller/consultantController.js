@@ -78,9 +78,9 @@ const consultantController = async (req, res) => {
         await fs.promises.writeFile(savePath, file.buffer);
         const imageURL = savePath;
         console.log("imageURL", imageURL);
-        const hashPassword = await bcrypt.hash(body.password, 10);
-        console.log("body.password", body.password);
-        console.log("hashPassword", hashPassword);
+        // const hashPassword = await bcrypt.hash(body.password, 10);
+        // console.log("body.password", body.password);
+        // console.log("hashPassword", hashPassword);
 
         const randomAgoraUid = Math.floor(100000 + Math.random() * 900000);
 
@@ -89,7 +89,7 @@ const consultantController = async (req, res) => {
             fullName: body.fullName,
             email: body.email,
             phone: body.phoneNumber,
-            password: hashPassword,
+            password: body.password,
             profession: body.profession,
             specialization: body.specialization,
             licenseNo: body.licenseIdNumber,
