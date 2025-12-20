@@ -9,7 +9,7 @@ const { User } = require('../Modal/userSchema');
 const { manageShopifyUser } = require('../MiddleWare/ShopifyMiddleware/handleShopifyUser');
 const { createAppMenu } = require('../MiddleWare/shopifySubMenu');
 const { renderShopifyPage } = require('../MiddleWare/ShopifyMiddleware/helperTheme');
-const { registerOrderPaidWebhook, registerOrderDeletedWebhook,  } = require('../MiddleWare/ShopifyMiddleware/registerWebHook');
+const { registerOrderPaidWebhook, registerOrderDeletedWebhook, } = require('../MiddleWare/ShopifyMiddleware/registerWebHook');
 let axios, wrapper, CookieJar;
 try {
     axios = require("axios");
@@ -509,9 +509,11 @@ const proxyProfileSection = (req, res) => {
     const shop = req.query.shop;
     const consultantId = req.query.consultantId || "";
     const shopId = req.query.shopId || "";
+    const customerId = req.query.logged_in_customer_id;
+    console.log("___________customerId___________", customerId);
     console.log("shopId", shopId);
     console.log("consultantId", consultantId);
- 
+
     console.log("shopId", shop);
     const iframeUrl = `${frontendUrl}/profile?&shop=${shop}`;
     return renderShopifyPage(

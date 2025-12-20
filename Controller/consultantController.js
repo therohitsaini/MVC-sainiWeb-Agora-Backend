@@ -11,96 +11,86 @@ const { ChatList } = require("../Modal/chatListSchema");
 
 const randomAgoraUid = Math.floor(Math.random() * 1000000000);
 
+/**
+ * Create a new consultant
+ * @param {Object} req - Request object with shop_id in params, body data, and profileImage file
+ * @param {Object} res - Response object
+ */
 const consultantController = async (req, res) => {
     try {
         const { shop_id } = req.params;
-        console.log("shop_id", shop_id);
         const body = req.body;
         const file = req.file;
-        console.log("body", body);
-        console.log("file", file);
-        if (!mongoose.Types.ObjectId.isValid(shop_id)) {
-            return res
-                .status(400)
-                .json({ success: false, message: "Invalid shop ID" });
+
+        // Validate shop_id
+        if (!shop_id || !mongoose.Types.ObjectId.isValid(shop_id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid shop ID"
+            });
         }
 
+        // Validate required fields
+        const requiredFields = [
+            'fullName', 'email', 'password', 'phoneNumber', 'profession',
+            'specialization', 'licenseIdNumber', 'yearOfExperience',
+            'chargingPerMinute', 'languages', 'displayName', 'gender',
+            'houseNumber', 'streetArea', 'landmark', 'address',
+            'pincode', 'dateOfBirth', 'pancardNumber'
+        ];
 
-        if (!shop_id) {
-            return res
-                .status(400)
-                .json({ success: false, message: "Shop not found" });
+        const missingFields = requiredFields.filter(field => !body[field]);
+        if (missingFields.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required",
+                missingFields
+            });
         }
 
-        console.log("body test after shop_id");
-        if (
-            !body.fullName ||
-            !body.email ||
-            !body.password ||
-            !body.phoneNumber ||
-            !body.profession ||
-            !body.specialization ||
-            !body.licenseIdNumber ||
-            !body.yearOfExperience ||
-            !body.chargingPerMinute ||
-            !body.languages ||
-            !body.displayName ||
-            !body.gender ||
-            !body.houseNumber ||
-            !body.streetArea ||
-            !body.landmark ||
-            !body.address ||
-            !body.pincode ||
-            !body.dateOfBirth ||
-            !body.pancardNumber
-        ) {
-            console.log("All fields are required");
-            return res.status(400).json({ success: false, message: "All fields are required" });
-        }
-
+        // Validate profile image
         if (!file) {
-            console.log("Profile image is required");
-            return res
-                .status(400)
-                .json({ success: false, message: "Profile image is required" });
-        }
-        console.log("file", file);
-
-        const uploadFolder = path.join("uploads", "consultants");
-        console.log("uploadFolder", uploadFolder);
-        if (!fs.existsSync(uploadFolder)) {
-            fs.mkdirSync(uploadFolder, { recursive: true });
+            return res.status(400).json({
+                success: false,
+                message: "Profile image is required"
+            });
         }
 
         // Check if email already exists
         const existingEmail = await User.findOne({ email: body.email.toLowerCase().trim() });
         if (existingEmail) {
-            return res.status(400).json({ 
-                success: false, 
-                message: "Email already exists. Please use a different email." 
+            return res.status(400).json({
+                success: false,
+                message: "Email already exists. Please use a different email."
             });
         }
 
         // Check if license number already exists
         const existingLicense = await User.findOne({ licenseNo: body.licenseIdNumber });
         if (existingLicense) {
-            return res.status(400).json({ 
-                success: false, 
-                message: "License number already exists. Please use a different license number." 
+            return res.status(400).json({
+                success: false,
+                message: "License number already exists. Please use a different license number."
             });
         }
 
-        const fileName = Date.now() + "-" + file.originalname;
+        // Create uploads/consultants directory if it doesn't exist
+        const uploadFolder = path.join("uploads", "consultants");
+        if (!fs.existsSync(uploadFolder)) {
+            fs.mkdirSync(uploadFolder, { recursive: true });
+        }
+
+        // Save profile image
+        const fileName = `${Date.now()}-${file.originalname}`;
         const savePath = path.join(uploadFolder, fileName);
-        console.log("savePath", savePath);
         await fs.promises.writeFile(savePath, file.buffer);
         const imageURL = savePath;
-        console.log("imageURL", imageURL);
 
-        // Generate unique agoraUid (retry if collision occurs)
+        // Generate unique agoraUid
         let randomAgoraUid;
         let attempts = 0;
         const maxAttempts = 10;
+
         do {
             randomAgoraUid = Math.floor(100000 + Math.random() * 900000);
             const existingAgoraUid = await User.findOne({ agoraUid: randomAgoraUid });
@@ -109,27 +99,37 @@ const consultantController = async (req, res) => {
             }
             attempts++;
             if (attempts >= maxAttempts) {
-                return res.status(500).json({ 
-                    success: false, 
-                    message: "Failed to generate unique Agora UID. Please try again." 
+                return res.status(500).json({
+                    success: false,
+                    message: "Failed to generate unique Agora UID. Please try again."
                 });
             }
         } while (true);
 
-        console.log("randomAgoraUid", randomAgoraUid);
-        
+        // Parse languages array
+        let languagesArray;
+        try {
+            languagesArray = JSON.parse(body.languages);
+        } catch (error) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid languages format. Expected JSON array."
+            });
+        }
+        const hashPassword = await bcrypt.hash(body.password, 10);
+        // Create consultant document
         const consultantDetails = new User({
             shop_id,
             fullname: body.fullName,
             email: body.email.toLowerCase().trim(),
             phone: body.phoneNumber,
-            password: body.password,
+            password: hashPassword,
             profession: body.profession,
             specialization: body.specialization,
             licenseNo: body.licenseIdNumber,
-            experience: Number(body.yearOfExperience),
-            fees: Number(body.chargingPerMinute),
-            language: JSON.parse(body.languages),
+            experience: String(body.yearOfExperience),
+            fees: String(body.chargingPerMinute),
+            language: languagesArray,
             displayName: body.displayName,
             gender: body.gender,
             houseNumber: body.houseNumber,
@@ -137,7 +137,7 @@ const consultantController = async (req, res) => {
             landmark: body.landmark,
             address: body.address,
             pincode: body.pincode,
-            dateOfBirth: body.dateOfBirth,
+            dateOfBirth: new Date(body.dateOfBirth),
             pan_cardNumber: body.pancardNumber,
             profileImage: imageURL,
             isActive: true,
@@ -146,40 +146,41 @@ const consultantController = async (req, res) => {
             consultantStatus: false,
         });
 
+        // Save to database
         await consultantDetails.save();
-        console.log("consultantDetails saved successfully", consultantDetails._id);
 
-        res.status(201).json({ 
-            success: true, 
+        return res.status(201).json({
+            success: true,
             message: "Consultant created successfully",
             consultantId: consultantDetails._id
         });
+
     } catch (error) {
         console.error("Error in consultantController:", error);
-        
-        // Handle specific MongoDB errors
+
+        // Handle MongoDB duplicate key error
         if (error.code === 11000) {
             const field = Object.keys(error.keyPattern)[0];
-            return res.status(400).json({ 
-                success: false, 
-                message: `${field} already exists. Please use a different value.` 
+            return res.status(400).json({
+                success: false,
+                message: `${field} already exists. Please use a different value.`
             });
         }
-        
+
         // Handle validation errors
         if (error.name === 'ValidationError') {
             const errors = Object.values(error.errors).map(err => err.message);
-            return res.status(400).json({ 
-                success: false, 
-                message: "Validation error", 
-                errors: errors 
+            return res.status(400).json({
+                success: false,
+                message: "Validation error",
+                errors
             });
         }
-        
-        res.status(500).json({ 
-            success: false, 
-            message: error.message || "Internal server error",
-            error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+
+        // Generic error response
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Internal server error"
         });
     }
 };

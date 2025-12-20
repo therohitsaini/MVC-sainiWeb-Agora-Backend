@@ -40,7 +40,6 @@ const signUp = async (request, response) => {
       const hashPassword = await bcrypt.hash(password, 10)
       const agoraUid = generateAgoraUid();
       const object = new User({
-
          fullname: body.fullname,
          email: body.email,
          password: hashPassword,
