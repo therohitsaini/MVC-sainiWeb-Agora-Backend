@@ -505,6 +505,7 @@ const proxyShopifyChatSection = (req, res) => {
         }
     );
 };
+
 const proxyProfileSection = (req, res) => {
     const shop = req.query.shop;
     const consultantId = req.query.consultantId || "";

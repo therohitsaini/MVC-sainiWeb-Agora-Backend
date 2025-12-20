@@ -20,13 +20,13 @@ app.use(cors());
 app.use("/api/webhooks", webHookRoute);
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/webhooks')) {
-    return next(); 
+    return next();
   }
   express.json()(req, res, next);
 });
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/webhooks')) {
-    return next(); 
+    return next();
   }
   express.urlencoded({ extended: true })(req, res, next);
 });
@@ -55,6 +55,7 @@ const chatRoutes = require("./Routes/chatRoutes");
 const firebaseRouter = require("./Routes/firebaseRoutes");
 const { shopifyDraftOrderRoute } = require("./Routes/shopifyDraftOrderRoute");
 const { userRouter } = require("./Routes/userRoutes");
+const { adminRoute } = require("./Routes/adminRoute");
 
 app.use("/api/video-call", videoCallRouter);
 app.use("/api/auth", signinSignupRouter);
@@ -77,6 +78,7 @@ app.use("/api/draft-order", shopifyDraftOrderRoute);
 
 /** User Routes */
 app.use("/api/users", userRouter);
+app.use("/api/admin", adminRoute);
 ioServer(server);
 
 server.listen(PORT, () => {
