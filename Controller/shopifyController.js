@@ -20,7 +20,7 @@ try {
 }
 
 
-const frontendUrl = process.env.FRONTEND_URL || "https://hygiene-varieties-estimation-learning.trycloudflare.com";
+const frontendUrl = process.env.FRONTEND_URL || "https://shepherd-butterfly-focusing-base.trycloudflare.com";
 
 const client_id = process.env.SHOPIFY_CLIENT_ID
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET
