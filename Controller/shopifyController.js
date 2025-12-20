@@ -172,13 +172,13 @@ const authCallback = async (req, res) => {
         }
 
         const AdminUser = await shopModel.findOne({ shop: shop });
-        if (!AdminUser) {
-            return res.status(400).send("Admin user not found");
+            if (!AdminUser) {
+                return res.status(400).send("Admin user not found");
         }
 
         /** Register Order Paid Webhook */
         await registerOrderPaidWebhook(shop, accessToken);
-        await registerOrderDeletedWebhook(shop, accessToken);
+        await registerOrderDeletedWebhook(shop, accessToken);       
 
         const AdminiId = AdminUser._id;
         console.log("AdminiId", AdminiId);
