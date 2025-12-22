@@ -33,11 +33,10 @@ const callbackUrlCreated = `${APP_URL}/api/webhooks/webhooks/orders-created`;
 const callbackUrlDeleted = `${APP_URL}/api/webhooks/webhooks/orders-deleted`;
 const topicCreated = "ORDERS_CREATED";
 const topicDeleted = "ORDERS_DELETED";
+
 /**
  * STEP 1: Shopify App Installation Function
- * 
  * Ye function tab call hota hai jab user Shopify store se app install karta hai
- * 
  * Flow:
  * 1. User Shopify Admin Panel se app install karta hai
  * 2. Shopify redirect karta hai: http://localhost:5001/app/install?shop=store-name.myshopify.com
@@ -46,7 +45,6 @@ const topicDeleted = "ORDERS_DELETED";
  * 5. Shopify phir callback URL par redirect karta hai (authCallback function)
  */
 const installShopifyApp = (req, res) => {
-
 
     if (!client_id || !SHOPIFY_API_SECRET) {
         return res.status(400).send("client_id or SHOPIFY_API_SECRET is not set");

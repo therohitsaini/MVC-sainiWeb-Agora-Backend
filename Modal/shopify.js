@@ -14,6 +14,15 @@ const shop = new mongoose.Schema({
         type: mongoose.Schema.Types.Decimal128,
         default: mongoose.Types.Decimal128.fromString("0")
     },
+    vouchers: [
+        {
+            voucherCode: String,
+            totalCoin: Number,
+            extraCoin: Number,
+            createdAt: { type: Date, default: Date.now },
+            updatedAt: { type: Date, default: Date.now }
+        }
+    ],
     installedAt: { type: Date, default: Date.now }
 });
 
