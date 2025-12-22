@@ -84,4 +84,42 @@ const voucherController = async (req, res) => {
     }
 }
 
-module.exports = { adminController, voucherController };
+
+const getVouchersController = async (req, res) => {
+    try {
+        const { adminId } = req.params;
+        if (!adminId) {
+            return res.status(400).json({
+                success: false,
+                message: "Admin ID is required"
+            });
+        }
+        if (!mongoose.Types.ObjectId.isValid(adminId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid admin ID"
+            });
+        }
+        const admin = await shopModel.findOne({ _id: adminId }).select("-accessToken").select("vouchers").select("_id");
+        if (!admin) {
+            return res.status(404).json({
+                success: false,
+                message: "Admin not found"
+            });
+        }
+        const vouchers = {
+            voucherCode: admin.vouchers,
+            id: admin._id
+
+        }
+        res.status(200).json({
+            success: true,
+            message: "Vouchers retrieved successfully",
+            data: vouchers
+        });
+    } catch (error) {
+        console.error("Error in getVouchersController:", error);
+    }
+}
+
+module.exports = { adminController, voucherController, getVouchersController };
