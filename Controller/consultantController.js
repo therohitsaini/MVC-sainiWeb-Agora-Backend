@@ -214,6 +214,7 @@ const loginConsultant = async (request, response) => {
         if (!compairPassword) {
             return response.status(400).send({ massage: "Incrrect password ... ! " })
         }
+        console.log("compairPassword", {success: true, message: "Sign in successfully ", userData: find_User, Token});
         const Token = JWT.sign(find_User, JWT_SRCURITE_KEY, { expiresIn: '10h' })
         console.log("Token", Token);
 
