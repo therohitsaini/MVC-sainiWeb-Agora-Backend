@@ -116,71 +116,35 @@ const ioServer = (server) => {
             }
         });
 
-        // socket.on("acceptUserChat", async (acceptData) => {
-        //     const { userId, shopId, consultantId } = acceptData;
-        //     console.log("acceptUserChat____________", userId, shopId, consultantId);
-
-        //     console.log("acceptUserChat____________", userId);
-        //     if (!mongoose.Types.ObjectId.isValid(userId)) {
-        //         console.log("❌ Invalid userId received:", userId);
-        //         return;
-        //     }
-        //     const user = await User.findById(userId);
-        //     console.log("user", user.isChatAccepted);
-        //     if (!user) {
-        //         console.log("❌ User not found:", userId);
-        //         return;
-        //     }
-        //     if (user.isChatAccepted === "request") {
-        //         user.isChatAccepted = "accepted";
-        //         await user.save();
-        //         await TransactionHistroy.updateOne(
-        //             { senderId: userId, receiverId: consultantId, shop_id: shopId },
-        //             { $set: { acceptedAt: new Date() } }
-        //         );
-        //         console.log("user____________", user.isChatAccepted);
-        //     } else {
-        //         console.log("❌ User chat already accepted:", userId);
-        //         return;
-        //     }
 
 
+        socket.on("call-user", async ({ toUid, fromUid, type, channelName }) => {
+            try {
+                const caller = await User.findById(fromUid).select("walletBalance").lean();
+                const callerConsultant = await User.findById(toUid).select("fees").lean();
 
+                const callCost = callerConsultant.fees;
 
-        //     // io.to(id).emit("userChatAccepted", { message: user.isChatAccepted });
-        //     // console.log("✅ User chat accepted:", user.isChatAccepted);
-        // })
+                if (!caller || Number(caller.walletBalance) < callCost) {
+                    console.log(" Insufficient balance, Please recharge your wallet.");
+                    socket.emit("call-failed", { message: "Insufficient balance. Call cannot be connected." });
+                    return;
+                }
+                const receiverSocketId = onlineUsers[toUid];
+                if (receiverSocketId) {
+                    io.to(receiverSocketId).emit("incoming-call", {
+                        fromUid,
+                        type,
+                        channelName
+                    });
+                } else {
+                    console.log(` User ${toUid} is offline`);
+                }
+            } catch (error) {
+                console.error("Error in call-user:", error);
 
-
-
-
-        // socket.on("call-user", async ({ toUid, fromUid, type, channelName }) => {
-        //     try {
-        //         const caller = await User.findById(fromUid).select("walletBalance").lean();
-        //         const callerConsultant = await User.findById(toUid).select("fees").lean();
-
-        //         const callCost = callerConsultant.fees;
-
-        //         if (!caller || Number(caller.walletBalance) < callCost) {
-        //             console.log(" Insufficient balance, Please recharge your wallet.");
-        //             socket.emit("call-failed", { message: "Insufficient balance. Call cannot be connected." });
-        //             return;
-        //         }
-        //         const receiverSocketId = onlineUsers[toUid];
-        //         if (receiverSocketId) {
-        //             io.to(receiverSocketId).emit("incoming-call", {
-        //                 fromUid,
-        //                 type,
-        //                 channelName
-        //             });
-        //         } else {
-        //             console.log(` User ${toUid} is offline`);
-        //         }
-        //     } catch (error) {
-        //         console.error("Error in call-user:", error);
-
-        //     }
-        // });
+            }
+        });
         // socket.on("call-accepted", async ({ toUid, fromUid, type, channelName }) => {
         //     try {
         //         await HistroyMW(toUid, fromUid, type);

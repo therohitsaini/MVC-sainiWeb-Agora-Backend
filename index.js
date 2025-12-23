@@ -46,7 +46,7 @@ app.use((req, res, next) => {
 
 
 
-const videoCallRouter = require("./Routes/videoCallRotes");
+const callRoutes = require("./Routes/videoCallRotes");
 const { signinSignupRouter } = require("./Routes/signin-signupRoute");
 const { userDetailsRouter } = require("./Routes/userDetailsRoutes");
 const { consultantRoute } = require("./Routes/consultantRoute");
@@ -57,7 +57,7 @@ const { shopifyDraftOrderRoute } = require("./Routes/shopifyDraftOrderRoute");
 const { userRouter } = require("./Routes/userRoutes");
 const { adminRoute } = require("./Routes/adminRoute");
 
-app.use("/api/video-call", videoCallRouter);
+app.use("/api/call", callRoutes);
 app.use("/api/auth", signinSignupRouter);
 app.use("/api/users", userDetailsRouter);
 app.use("/api/razerpay-create-order", razerPayRoute)
