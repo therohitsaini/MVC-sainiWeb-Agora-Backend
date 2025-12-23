@@ -9,18 +9,19 @@ const path = require("path");
 const { ChatList } = require("../Modal/chatListSchema");
 
 
-const randomAgoraUid = Math.floor(Math.random() * 1000000000);
 
 /**
  * Create a new consultant
  * @param {Object} req - Request object with shop_id in params, body data, and profileImage file
  * @param {Object} res - Response object
  */
+
 const consultantController = async (req, res) => {
     try {
         const { shop_id } = req.params;
         const body = req.body;
-        const file = req.file;
+        // const file = req.file;
+        console.log("___________body___________", body);
 
         // Validate shop_id
         if (!shop_id || !mongoose.Types.ObjectId.isValid(shop_id)) {
@@ -49,12 +50,12 @@ const consultantController = async (req, res) => {
         }
 
         // Validate profile image
-        if (!file) {
-            return res.status(400).json({
-                success: false,
-                message: "Profile image is required"
-            });
-        }
+        // if (!file) {
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: "Profile image is required"
+        //     });
+        // }
 
         // Check if email already exists
         const existingEmail = await User.findOne({ email: body.email.toLowerCase().trim() });
@@ -81,10 +82,10 @@ const consultantController = async (req, res) => {
         }
 
         // Save profile image
-        const fileName = `${Date.now()}-${file.originalname}`;
-        const savePath = path.join(uploadFolder, fileName);
-        await fs.promises.writeFile(savePath, file.buffer);
-        const imageURL = savePath;
+        // const fileName = `${Date.now()}-${file.originalname}`;
+        // const savePath = path.join(uploadFolder, fileName);
+        // await fs.promises.writeFile(savePath, file.buffer);
+        // const imageURL = savePath;
 
         // Generate unique agoraUid
         let randomAgoraUid;
@@ -140,7 +141,7 @@ const consultantController = async (req, res) => {
             pincode: body.pincode,
             dateOfBirth: new Date(body.dateOfBirth),
             pan_cardNumber: body.pancardNumber,
-            profileImage: imageURL,
+            // profileImage: imageURL,
             isActive: true,
             agoraUid: randomAgoraUid,
             userType: "consultant",
