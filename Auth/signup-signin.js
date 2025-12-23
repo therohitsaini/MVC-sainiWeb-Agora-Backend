@@ -59,7 +59,7 @@ const signIn = async (request, response) => {
    try {
       const body = request.body
 
-      console.log("body",body);
+      console.log("body",body.email,body.password);
 
       let find_User = await User.findOne({ email: body.email })
       console.log("find_User",find_User);

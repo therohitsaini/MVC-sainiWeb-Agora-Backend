@@ -117,6 +117,7 @@ const consultantController = async (req, res) => {
             });
         }
         const hashPassword = await bcrypt.hash(body.password, 10);
+        console.log("hashPassword", hashPassword);
         // Create consultant document
         const consultantDetails = new User({
             shop_id,
@@ -196,7 +197,7 @@ const loginConsultant = async (request, response) => {
     try {
         const body = request.body
 
-        console.log("body", body);
+        console.log("body", body.email, body.password);
 
         let find_User = await User.findOne({ email: body.email })
 
