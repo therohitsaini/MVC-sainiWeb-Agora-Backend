@@ -491,7 +491,10 @@ const proxyShopifyViewProfile = (req, res) => {
 const proxyShopifyChatSection = (req, res) => {
     const shop = req.query.shop;
     const consultantId = req.query.consultantId || "";
-    console.log("consultantId", consultantId);
+    const customerId = req.query.logged_in_customer_id;
+    if(!customerId){
+        return res.redirect(`https://${shop}/account/login`);
+    }
 
     const iframeUrl = `${frontendUrl}/chats?consultantId=${consultantId}&shop=${shop}`;
     return renderShopifyPage(
