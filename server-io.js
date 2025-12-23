@@ -78,7 +78,8 @@ const ioServer = (server) => {
                         receiverId,
                         shop_id,
                         lastMessage: text,
-                        lastMessageTime: timestamp
+                        lastMessageTime: timestamp,
+                        isRequest: false
                     }]);
                 } else {
                     await ChatList.updateOne(
