@@ -46,7 +46,7 @@ app.use((req, res, next) => {
 
 
 
-const callRoutes = require("./Routes/videoCallRotes");
+const { callRoutes } = require("./Routes/videoCallRotes");
 const { signinSignupRouter } = require("./Routes/signin-signupRoute");
 const { userDetailsRouter } = require("./Routes/userDetailsRoutes");
 const { consultantRoute } = require("./Routes/consultantRoute");

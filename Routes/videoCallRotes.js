@@ -7,4 +7,4 @@ const { authenticateToken } = require("../Auth/signup-signin");
 callRoutes.post("/generate-token", generateToken);
 callRoutes.post("/generate-voice-token", generateVoiceToken);
 
-module.exports = callRoutes;
+module.exports = { callRoutes };
