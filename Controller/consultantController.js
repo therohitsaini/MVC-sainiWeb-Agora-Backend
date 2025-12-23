@@ -210,6 +210,7 @@ const loginConsultant = async (request, response) => {
         if (find_User.consultantStatus === false) {
             return response.status(403).send({ massage: "Your account is blocked. Please contact administrator." })
         }
+        console.log("body.password find_User.password", body.password, find_User.password);
         const compairPassword = await bcrypt.compare(body.password, find_User.password)
         if (!compairPassword) {
             return response.status(400).send({ massage: "Incrrect password ... ! " })
