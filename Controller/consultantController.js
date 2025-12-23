@@ -197,11 +197,7 @@ const loginConsultant = async (request, response) => {
     try {
         const body = request.body
 
-        console.log("body", body.email, body.password);
-
         let find_User = await User.findOne({ email: body.email })
-
-
         if (!find_User) {
             return response.status(400).send({ massage: "Incrrect Details ...!" })
         }
@@ -209,15 +205,12 @@ const loginConsultant = async (request, response) => {
             return response.status(403).send({ massage: "Your account is blocked. Please contact administrator." })
         }
         console.log("body.password find_User.password", body.password, find_User.password);
-        // const compairPassword = await bcrypt.compare(body.password, find_User.password)
-        // if (!compairPassword) {
-        //     return response.status(400).send({ massage: "Incrrect password ... ! " })
-        // }
-        console.log("compairPassword", {success: true, message: "Sign in successfully ", userData: find_User, Token});
-        const Token = JWT.sign(find_User, JWT_SRCURITE_KEY, { expiresIn: '10h' })
-        console.log("Token", Token);
+     
+        console.log("compairPassword", {success: true, message: "Sign in successfully ", userData: find_User});
+        // const Token = JWT.sign(find_User, JWT_SRCURITE_KEY, { expiresIn: '10h' })
+        // console.log("Token", Token);
 
-        return response.send({ massage: "Sign in successfully ", userData: find_User, Token })
+        return response.send({ massage: "Sign in successfully ", userData: find_User,})
 
     } catch (err) {
         return response.status(400).send({ massage: "Server Error ...!", err })
