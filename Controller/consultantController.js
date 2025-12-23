@@ -147,7 +147,6 @@ const consultantController = async (req, res) => {
             consultantStatus: false,
         });
 
-        // Save to database
         await consultantDetails.save();
 
         return res.status(201).json({
@@ -491,11 +490,6 @@ const getChatListByShopIdAndConsultantId = async (request, response) => {
         return response.status(500).json({ message: 'Server error' });
     }
 }
-
-
-
-
-
 
 
 module.exports = {

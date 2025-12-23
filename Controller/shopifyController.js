@@ -512,6 +512,9 @@ const proxyProfileSection = (req, res) => {
     console.log("___________customerId___________", customerId);
     console.log("shopId", shopId);
     console.log("consultantId", consultantId);
+    if(!customerId){
+        return res.redirect(`https://${shop}/account/login`);
+    }
 
     console.log("shopId", shop);
     const iframeUrl = `${frontendUrl}/profile?&shop=${shop}&logged_in_customer_Id=${customerId}`;
