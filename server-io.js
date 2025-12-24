@@ -104,6 +104,7 @@ const ioServer = (server) => {
 
                 const receiver = await User.findById(receiverId);
                 if (receiver?.firebaseToken?.token && !receiver?.isActive) {
+                    console.log("receiver.firebaseToken.token", receiver.firebaseToken.token);
                     await sendFCM(
                         receiver.firebaseToken.token,
                         "New Message",

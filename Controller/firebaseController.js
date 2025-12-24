@@ -3,7 +3,7 @@ const { User } = require("../Modal/userSchema");
 const firebaseGetToken = async (req, res) => {
     try {
         const { token, userId, shopId } = req.body;
-        console.log(req.body);
+        console.log("firebaseGetToken____________", req.body);
 
         if (!token || !userId || !shopId) {
             return res.status(400).json({

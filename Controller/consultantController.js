@@ -204,9 +204,9 @@ const loginConsultant = async (request, response) => {
         if (find_User.consultantStatus === false) {
             return response.status(403).send({ massage: "Your account is blocked. Please contact administrator." })
         }
-        console.log("body.password find_User.password", body.password, find_User.password);
+        // console.log("body.password find_User.password", body.password, find_User.password);
      
-        console.log("compairPassword", {success: true, message: "Sign in successfully ", userData: find_User});
+        // console.log("compairPassword", {success: true, message: "Sign in successfully ", userData: find_User});
         // const Token = JWT.sign(find_User, JWT_SRCURITE_KEY, { expiresIn: '10h' })
         // console.log("Token", Token);
 
