@@ -124,7 +124,6 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
           <script>
                 window.addEventListener("message", (event) => {
               
-
                     if (event.data.type === "SHOW_TOAST") {
                       showToast(event.data.message);
                     }
