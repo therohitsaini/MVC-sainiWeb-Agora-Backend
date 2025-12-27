@@ -121,108 +121,70 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
           </footer>
           <!-- Parent script (MUST HAVE) -->
           <script src="https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.6/iframeResizer.min.js"></script>
-          <script>
-                window.addEventListener("message", (event) => {
-                  console.log("Received postMessage:",  event.data);
-                    if (event.data.type === "SHOW_TOAST") {
-                      showToast(event.data.message);
-                    }
-                  });
+         <script>
+  /**
+   * Parent page message listener
+   */
+  window.addEventListener("message", (event) => {
+    try {
+      if (!event.data || typeof event.data !== "object") return;
 
-                    function showToast(message) {
-                      const toast = document.createElement("div");
+      const { type, message, senderName, avatar } = event.data;
+      if (type === "SHOW_TOAST" && message) {
+        console.log("🎯 Received postMessage:", event.data);
+        showToast({ message, senderName, avatar });
+      }
+    } catch (err) {
+      console.error("🛑 postMessage parse error:", err);
+    }
+  });
 
-                      toast.innerHTML = \`
-                        <div style="
-                          display:flex;
-                          gap:12px;
-                          align-items:center;
-                        ">
+  function showToast({ message, senderName, avatar }) {
+    const toast = document.createElement("div");
 
-                          <div style="
-                            width:40px;
-                            height:40px;
-                            border-radius:50%;
-                            overflow:hidden;
-                            background:#eee;
-                            flex-shrink:0;
-                          ">
-                            <img 
-                              src="https://i.pinimg.com/736x/95/2a/ae/952aaea466ae9fb09f02889d33967cf6.jpg"
-                              style="width:100%;height:100%;object-fit:cover;"
-                            />
-                          </div>
+    toast.innerHTML = 
+      <div style="display:flex;gap:12px;align-items:center;">
+        <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;background:#eee;flex-shrink:0;">
+          <img src="${avatar || 'https://via.placeholder.com/40'}" style="width:100%;height:100%;object-fit:cover;" />
+        </div>
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:15px;color:#202223;">${senderName || "Notification"}</div>
+          <div style="font-size:14px;color:#4a4a4a;">${message}</div>
+        </div>
+        <div style="font-size:22px;cursor:pointer;color:#666;padding:4px;" onclick="this.closest('div.toast-container').remove()">×</div>
+      </div>
+    ;
 
-                          <div style="flex:1;">
-                            <div style="
-                              font-weight:600;
-                              font-size:15px;
-                              color:#202223;
-                            ">
-                              New Message
-                            </div>
-                            <div style="
-                              font-size:14px;
-                              color:#4a4a4a;
-                            ">
-                              \${message}
-                            </div>
-                          </div>
+    toast.classList.add("toast-container");
 
-                          <div 
-                            style="
-                              font-size:22px;
-                              cursor:pointer;
-                              color:#666;
-                              padding:4px;
-                            "
-                            onclick="this.parentNode.parentNode.remove()"
-                          >
-                            ×
-                          </div>
-                        </div>
-                      \`;
-                      
+    toast.style.position = "fixed";
+    toast.style.top = "20px";
+    toast.style.right = "20px";
+    toast.style.background = "#fff";
+    toast.style.borderRadius = "12px";
+    toast.style.boxShadow = "0 4px 18px rgba(0,0,0,0.18)";
+    toast.style.padding = "14px 16px";
+    toast.style.minWidth = "280px";
+    toast.style.zIndex = "999999";
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(-10px)";
+    toast.style.transition = "all .3s ease";
 
-                // MAIN CARD STYLE
-                toast.style.position = "fixed";
-                toast.style.top = "20px";
-                toast.style.right = "20px";
-                toast.style.background = "#fff";
-                toast.style.borderRadius = "12px";
-                toast.style.boxShadow = "0 4px 18px rgba(0,0,0,0.18)";
-                toast.style.padding = "14px 16px";
-                toast.style.minWidth = "280px";
-                toast.style.maxWidth = "340px";
-                toast.style.zIndex = "999999";
-                toast.style.opacity = "0";
-                toast.style.transform = "translateY(-10px)";
-                toast.style.transition = "all .3s ease";
+    document.body.appendChild(toast);
 
-                document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = "1";
+      toast.style.transform = "translateY(0)";
+    }, 10);
 
-                // Fade-in
-                setTimeout(() => {
-                  toast.style.opacity = "1";
-                  toast.style.transform = "translateY(0)";
-                }, 10);
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.style.transform = "translateY(-10px)";
+      toast.remove();
+    }, 3500);
+  }
+</script>
 
-                // Auto Remove
-                setTimeout(() => {
-                  toast.style.opacity = "0";
-                  toast.style.transform = "translateY(-10px)";
-                }, 3500);
-
-                setTimeout(() => toast.remove(), 4000);
-              }
-
-            iFrameResize({
-              checkOrigin: false,
-              autoResize: true,
-              heightCalculationMethod: "bodyScroll",
-              minHeight: 90vh,
-            }, "#agora-iframe");
-          </script>
         </body>
       </html>`;
 
