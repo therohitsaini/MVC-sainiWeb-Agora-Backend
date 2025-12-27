@@ -484,14 +484,18 @@ const proxyShopifyCallAccepted = (req, res) => {
     const receiverId = req.query.receiverId;
     const channelName = req.query.channelName;
     const callType = req.query.callType;
-    console.log("callerId", callerId);
-    console.log("receiverId", receiverId);
-    console.log("channelName", channelName);
-    console.log("callType", callType);
+    const customerId = req.query.logged_in_customer_id;
+    if(!customerId){
+        return res.redirect(`https://${shop}/account/login`);
+    }
+    // console.log("callerId", callerId);
+    // console.log("receiverId", receiverId);
+    // console.log("channelName", channelName);
+    // console.log("callType", callType);
     return renderShopifyPage(
         req,
         res,    
-        `${frontendUrl}/video/calling/page?receiverId=${receiverId}&callType=${callType}&shop=${shop}`,
+        `${frontendUrl}/video/calling/page?receiverId=${receiverId}&callType=${callType}&shop=${shop}&customerId=${customerId}`,
         {
             title: "Call Accepted"
         }
