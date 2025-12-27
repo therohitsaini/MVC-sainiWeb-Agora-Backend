@@ -256,7 +256,7 @@ const proxyThemeAssetsController = async (req, res) => {
                   ${headerHtml}
                   <iframe 
                     id="agora-frame"
-                    src="${frontendUrl}/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || ''}" 
+                    src="${frontendUrl}/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || '' }&shop=${shop}" 
                     style="border:none;width:100%;min-height:700px;display:block;"
                   ></iframe>
                   ${footerHtml}
@@ -481,7 +481,6 @@ const proxyProfileSection = (req, res) => {
 }
 const proxyShopifyCallAccepted = (req, res) => {
     const shop = req.query.shop;
-    const callerId = req.query.callerId;
     const receiverId = req.query.receiverId;
     const channelName = req.query.channelName;
     const callType = req.query.callType;
@@ -492,7 +491,7 @@ const proxyShopifyCallAccepted = (req, res) => {
     return renderShopifyPage(
         req,
         res,    
-        `${frontendUrl}/video/calling/page`,
+        `${frontendUrl}/video/calling/page?receiverId=${receiverId}&callType=${callType}&shop=${shop}`,
         {
             title: "Call Accepted"
         }
