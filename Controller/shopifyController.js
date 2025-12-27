@@ -485,6 +485,10 @@ const proxyShopifyCallAccepted = (req, res) => {
     const receiverId = req.query.receiverId;
     const channelName = req.query.channelName;
     const callType = req.query.callType;
+    console.log("callerId", callerId);
+    console.log("receiverId", receiverId);
+    console.log("channelName", channelName);
+    console.log("callType", callType);
     return renderShopifyPage(
         req,
         res,    
