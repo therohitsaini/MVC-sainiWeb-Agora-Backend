@@ -479,6 +479,21 @@ const proxyProfileSection = (req, res) => {
         }
     );
 }
+const proxyShopifyCallAccepted = (req, res) => {
+    const shop = req.query.shop;
+    const callerId = req.query.callerId;
+    const receiverId = req.query.receiverId;
+    const channelName = req.query.channelName;
+    const callType = req.query.callType;
+    return renderShopifyPage(
+        req,
+        res,    
+        `${frontendUrl}/video/calling/page`,
+        {
+            title: "Call Accepted"
+        }
+    );
+}
 
 
 module.exports = {
@@ -491,5 +506,6 @@ module.exports = {
     proxySHopifyConsultantChat,
     proxyShopifyViewProfile,
     proxyShopifyChatSection,
-    proxyProfileSection
+    proxyProfileSection,
+    proxyShopifyCallAccepted
 }
