@@ -481,6 +481,8 @@ const proxyProfileSection = (req, res) => {
 }
 const proxyShopifyCallAccepted = (req, res) => {
     const shop = req.query.shop;
+    const token = req.query.token;
+    const callerId = req.query.callerId;
     const receiverId = req.query.receiverId;
     const channelName = req.query.channelName;
     const callType = req.query.callType;
@@ -495,7 +497,7 @@ const proxyShopifyCallAccepted = (req, res) => {
     return renderShopifyPage(
         req,
         res,    
-        `${frontendUrl}/video/calling/page?receiverId=${receiverId}&callType=${callType}&shop=${shop}&customerId=${customerId}`,
+        `${frontendUrl}/video/calling/page?receiverId=${receiverId}&callType=${callType}&channelName=${channelName}&callerId=${callerId}&token=${token}`,
         {
             title: "Call Accepted"
         }
