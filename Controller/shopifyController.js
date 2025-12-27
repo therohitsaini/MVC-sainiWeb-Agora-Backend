@@ -485,9 +485,9 @@ const proxyShopifyCallAccepted = (req, res) => {
     const channelName = req.query.channelName;
     const callType = req.query.callType;
     const customerId = req.query.logged_in_customer_id;
-    if(!customerId){
-        return res.redirect(`https://${shop}/account/login`);
-    }
+    // if(!customerId){
+    //     return res.redirect(`https://${shop}/account/login`);
+    // }
     // console.log("callerId", callerId);
     // console.log("receiverId", receiverId);
     // console.log("channelName", channelName);
