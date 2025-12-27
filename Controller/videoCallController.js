@@ -98,7 +98,7 @@ const generateVoiceToken = async (req, res) => {
 
 const getCaller_Receiver_Details = async (req, res) => {
    try {
-      const { callerId, receiverId } = req.body;
+      const { callerId, receiverId } = req.params;
       if (!callerId || !receiverId) {
          return res.status(400).json({
             error: "callerId and receiverId are required"
