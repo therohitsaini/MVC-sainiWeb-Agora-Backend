@@ -99,6 +99,7 @@ const generateVoiceToken = async (req, res) => {
 const getCaller_Receiver_Details = async (req, res) => {
    try {
       const { callerId, receiverId } = req.params;
+      console.log("req.params", req);
       console.log("callerId", callerId);
       console.log("receiverId", receiverId);
       if (!callerId || !receiverId) {
