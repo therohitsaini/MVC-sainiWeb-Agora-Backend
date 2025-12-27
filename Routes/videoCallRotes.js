@@ -6,6 +6,6 @@ const { authenticateToken } = require("../Auth/signup-signin");
 // Protected routes - require authentication
 callRoutes.post("/generate-token", generateToken);
 callRoutes.post("/generate-voice-token", generateVoiceToken);
-callRoutes.get("/get-caller-receiver-details", getCaller_Receiver_Details);
+callRoutes.get("/get-caller-receiver-details/:callerId/:receiverId", getCaller_Receiver_Details);
 
 module.exports = { callRoutes };
