@@ -1,5 +1,7 @@
 
 const { RtcTokenBuilder, RtcRole } = require("agora-access-token");
+const { User } = require("../Modal/userSchema");
+const { default: mongoose } = require("mongoose");
 
 
 const generateToken = async (req, res) => {
@@ -94,4 +96,58 @@ const generateVoiceToken = async (req, res) => {
    }
 }
 
-module.exports = { generateToken, generateVoiceToken };
+const getCaller_Receiver_Details = async (req, res) => {
+   try {
+      const { callerId, receiverId } = req.body;
+      if (!callerId || !receiverId) {
+         return res.status(400).json({
+            error: "callerId and receiverId are required"
+         });
+      }
+      if (!mongoose.Types.ObjectId.isValid(callerId) || !mongoose.Types.ObjectId.isValid(receiverId)) {
+         return res.status(400).json({
+            error: "Invalid callerId or receiverId"
+         });
+      }
+      const caller = await User.findById({ _id: callerId });
+      const receiver = await User.findById({ _id: receiverId });
+
+      if (!caller || !receiver) {
+         return res.status(400).json({
+            error: "Caller or receiver not found"
+         });
+      }
+      const payload = [
+         {
+            consultant: {
+               _id: caller._id,
+               fullname: caller.fullname,
+               fees: caller.fees,
+               profileImage: caller.profileImage
+            }
+         },
+         {
+            customer: {
+               _id: receiver._id,
+               fullname: receiver.fullname,
+               fees: receiver.fees,
+               profileImage: receiver.profileImage
+            }
+         }
+      ]
+
+
+      res.status(200).json({
+         success: true,
+         payload
+      });
+   } catch (error) {
+      console.error("Error getting caller and receiver details:", error);
+      res.status(500).json({
+         error: "Failed to get caller and receiver details",
+         details: error.message
+      });
+   }
+}
+
+module.exports = { generateToken, generateVoiceToken, getCaller_Receiver_Details };
