@@ -120,28 +120,31 @@ const ioServer = (server) => {
 
 
 
-        socket.on("call-user", async ({ toUid, fromUid, type, channelName }) => {
+        socket.on("call-user", async ({ callerId, receiverId, channelName, callType }) => {
+            console.log("callerId", callerId);
+            console.log("receiverId", receiverId);
+            console.log("channelName", channelName);
+            console.log("callType", callType);
             try {
-                const caller = await User.findById(fromUid).select("walletBalance").lean();
-                const callerConsultant = await User.findById(toUid).select("fees").lean();
+                // const caller = await User.findById(fromUid).select("walletBalance").lean();
+                // const callerConsultant = await User.findById(toUid).select("fees").lean();
+                // const callCost = callerConsultant.fees;
 
-                const callCost = callerConsultant.fees;
-
-                if (!caller || Number(caller.walletBalance) < callCost) {
-                    console.log(" Insufficient balance, Please recharge your wallet.");
-                    socket.emit("call-failed", { message: "Insufficient balance. Call cannot be connected." });
-                    return;
-                }
-                const receiverSocketId = onlineUsers[toUid];
-                if (receiverSocketId) {
-                    io.to(receiverSocketId).emit("incoming-call", {
-                        fromUid,
-                        type,
-                        channelName
-                    });
-                } else {
-                    console.log(` User ${toUid} is offline`);
-                }
+                // if (!caller || Number(caller.walletBalance) < callCost) {
+                //     console.log(" Insufficient balance, Please recharge your wallet.");
+                //     socket.emit("call-failed", { message: "Insufficient balance. Call cannot be connected." });
+                //     return;
+                // }
+                // const receiverSocketId = onlineUsers[toUid];
+                // if (receiverSocketId) {
+                //     io.to(receiverSocketId).emit("incoming-call", {
+                //         fromUid,
+                //         type,
+                //         channelName
+                //     });
+                // } else {
+                //     console.log(` User ${toUid} is offline`);
+                // }
             } catch (error) {
                 console.error("Error in call-user:", error);
 
