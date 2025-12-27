@@ -127,10 +127,6 @@ const ioServer = (server) => {
                     console.log(" Missing required fields");
                     return;
                 }
-                console.log("callerId", callerId);
-                console.log("receiverId", receiverId);
-                console.log("channelName", channelName);
-                console.log("callType", callType);
                 // const caller = await User.findById(fromUid).select("walletBalance").lean();
                 // const callerConsultant = await User.findById(toUid).select("fees").lean();
                 // const callCost = callerConsultant.fees;
@@ -140,16 +136,16 @@ const ioServer = (server) => {
                 //     socket.emit("call-failed", { message: "Insufficient balance. Call cannot be connected." });
                 //     return;
                 // }
-                // const receiverSocketId = onlineUsers[toUid];
-                // if (receiverSocketId) {
-                //     io.to(receiverSocketId).emit("incoming-call", {
-                //         fromUid,
-                //         type,
-                //         channelName
-                //     });
-                // } else {
-                //     console.log(` User ${toUid} is offline`);
-                // }
+                const receiverSocketId = onlineUsers[receiverId];
+                if (receiverSocketId) {
+                    io.to(receiverSocketId).emit("incoming-call", {
+                        callerId,
+                        callType,
+                        channelName
+                    });
+                } else {
+                    console.log(` User ${receiverId} is offline`);
+                }
             } catch (error) {
                 console.error("Error in call-user:", error);
 
