@@ -152,19 +152,20 @@ const ioServer = (server) => {
             }
         });
         socket.on("call-accepted", async ({ callerId, receiverId, channelName, callType }) => {
+            console.log("call-accepted", callerId, receiverId, channelName, callType);
             try {
                 if (!callerId || !receiverId || !channelName || !callType) {
                     console.log(" Missing required fields");
                     return;
                 }
-                console.log("call-accepted", callerId, receiverId, channelName, callType);
+
                 const callerSocketId = onlineUsers[callerId];
                 const receiverSocketId = onlineUsers[receiverId];
                 if (callerSocketId) {
-                    io.to(callerSocketId).emit("call-accepted", { callerId, receiverId, channelName, callType });
+                    io.to(callerSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType });
                 }
                 if (receiverSocketId) {
-                    io.to(receiverSocketId).emit("call-accepted", { callerId, receiverId, channelName, callType });
+                    io.to(receiverSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType });
                 }
 
             } catch (error) {
