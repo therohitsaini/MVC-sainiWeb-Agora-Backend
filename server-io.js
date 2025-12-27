@@ -151,6 +151,26 @@ const ioServer = (server) => {
 
             }
         });
+        socket.on("call-accepted", async ({ callerId, receiverId, channelName, callType }) => {
+            try {
+                if (!callerId || !receiverId || !channelName || !callType) {
+                    console.log(" Missing required fields");
+                    return;
+                }
+                console.log("call-accepted", callerId, receiverId, channelName, callType);
+                const callerSocketId = onlineUsers[callerId];
+                const receiverSocketId = onlineUsers[receiverId];
+                if (callerSocketId) {
+                    io.to(callerSocketId).emit("call-accepted", { callerId, receiverId, channelName, callType });
+                }
+                if (receiverSocketId) {
+                    io.to(receiverSocketId).emit("call-accepted", { callerId, receiverId, channelName, callType });
+                }
+
+            } catch (error) {
+                console.error("Error in call-accepted:", error);
+            }
+        });
         // socket.on("call-accepted", async ({ toUid, fromUid, type, channelName }) => {
         //     try {
         //         await HistroyMW(toUid, fromUid, type);
@@ -344,87 +364,6 @@ const ioServer = (server) => {
             }, 1000);
 
         });
-
-        // socket.on("endChat", async (data) => {
-        //     const { transactionId, userId, consultantId, shopId } = data;
-        //     console.log("transactionId", transactionId);
-        //     console.log("userId", userId);
-        //     console.log("consultantId", consultantId);
-        //     console.log("shopId", shopId);
-        //     const transaction = await TransactionHistroy.findById(transactionId);
-        //     if (!transaction) return;
-        //     const consultantCost = await User.findById(consultantId);
-        //     if (!consultantCost) return;
-        //     const consultantChatCost = consultantCost.chatCost;
-        //     if (!consultantChatCost) return;
-        //     const shop = await shopModel.findById(shopId);
-        //     if (!shop) return;
-        //     const shopPercentage = Number(shop.adminPersenTage);
-        //     if (!shopPercentage) return;
-
-        //     const endTime = new Date();
-        //     const totalSeconds = Math.floor(
-        //         (endTime - new Date(transaction.startTime)) / 1000
-        //     );
-        //     console.log("totalSeconds", totalSeconds);
-
-        //     // const totalMinutes = Math.ceil(totalSeconds / 60);
-        //     // const totalAmount = totalMinutes * consultantChatCost;
-        //     // ✅ PER-SECOND BILLING LOGIC
-        //     const perSecondCost = consultantChatCost / 60;
-        //     const totalAmount = Number((totalSeconds * perSecondCost).toFixed(2));
-
-
-        //     const adminCommission = totalAmount * shopPercentage / 100;
-        //     const consultantShare = totalAmount - adminCommission;
-        //     const shopShare = adminCommission;
-        //     console.log("adminCommission", adminCommission);
-        //     console.log("consultantShare", consultantShare);
-        //     console.log("shopShare", shopShare);
-        //     // 4️⃣ Update transaction
-        //     transaction.endTime = endTime;
-        //     transaction.totalSeconds = totalSeconds;
-        //     transaction.totalAmount = totalAmount;
-        //     transaction.status = "completed";
-        //     await transaction.save();
-
-        //     // 5️⃣ Wallet update (safe)
-        //     await User.findByIdAndUpdate(userId, {
-        //         $inc: { walletBalance: -totalAmount }
-        //     });
-
-        //     await User.findByIdAndUpdate(consultantId, {
-        //         $inc: { walletBalance: consultantShare }
-        //     });
-
-        //     await shopModel.findByIdAndUpdate(shopId, {
-        //         $inc: { adminWalletBalance: shopShare }
-        //     });
-        //     await TransactionHistroy.findByIdAndUpdate(transactionId, {
-        //         $inc: { adminAmount: adminCommission, consultantAmount: consultantShare, amount: totalAmount }
-        //     });
-
-        //     await User.findByIdAndUpdate(userId, {
-        //         $set: { isChatAccepted: "request" }
-        //     });
-
-
-        //     io.to(userId).emit("chatEnded", {
-        //         transactionId,
-        //         totalSeconds,
-        //         totalAmount,
-        //         reason: "ended"
-        //     });
-
-        //     io.to(consultantId).emit("chatEnded", {
-        //         transactionId,
-        //         totalSeconds,
-        //         totalAmount,
-        //         reason: "ended"
-        //     });
-
-        //     console.log("✅ Chat ended:", transactionId);
-        // });
 
         socket.on("endChat", async (data) => {
             const { transactionId, userId, consultantId, shopId } = data;
