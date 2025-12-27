@@ -122,7 +122,7 @@ const getCaller_Receiver_Details = async (req, res) => {
       }
       const payload = [
          {
-            consultant: {
+            caller: {
                _id: caller._id,
                fullname: caller.fullname,
                fees: caller.fees,
@@ -130,7 +130,7 @@ const getCaller_Receiver_Details = async (req, res) => {
             }
          },
          {
-            customer: {
+            receiver: {
                _id: receiver._id,
                fullname: receiver.fullname,
                fees: receiver.fees,
