@@ -120,24 +120,23 @@ const getCaller_Receiver_Details = async (req, res) => {
             error: "Caller or receiver not found"
          });
       }
-      const payload = [
-         {
-            caller: {
-               _id: caller._id,
-               fullname: caller.fullname,
-               fees: caller.fees,
-               profileImage: caller.profileImage
-            }
+      const payload = {
+
+         caller: {
+            _id: caller._id,
+            fullname: caller.fullname,
+            fees: caller.fees,
+            profileImage: caller.profileImage
          },
-         {
-            receiver: {
-               _id: receiver._id,
-               fullname: receiver.fullname,
-               fees: receiver.fees,
-               profileImage: receiver.profileImage
-            }
+
+         receiver: {
+            _id: receiver._id,
+            fullname: receiver.fullname,
+            fees: receiver.fees,
+            profileImage: receiver.profileImage
          }
-      ]
+
+      }
 
 
       res.status(200).json({
