@@ -121,11 +121,16 @@ const ioServer = (server) => {
 
 
         socket.on("call-user", async ({ callerId, receiverId, channelName, callType }) => {
-            console.log("callerId", callerId);
-            console.log("receiverId", receiverId);
-            console.log("channelName", channelName);
-            console.log("callType", callType);
+
             try {
+                if (!callerId || !receiverId || !channelName || !callType) {
+                    console.log(" Missing required fields");
+                    return;
+                }
+                console.log("callerId", callerId);
+                console.log("receiverId", receiverId);
+                console.log("channelName", channelName);
+                console.log("callType", callType);
                 // const caller = await User.findById(fromUid).select("walletBalance").lean();
                 // const callerConsultant = await User.findById(toUid).select("fees").lean();
                 // const callCost = callerConsultant.fees;
