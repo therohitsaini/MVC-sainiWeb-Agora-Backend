@@ -20,15 +20,15 @@ try {
 }
 
 
-const frontendUrl = process.env.FRONTEND_URL || "https://long-widespread-consequently-collected.trycloudflare.com";
+const frontendUrl = process.env.FRONTEND_URL 
 
 const client_id = process.env.SHOPIFY_CLIENT_ID
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET
 const SCOPES = "read_customers,write_customers,write_draft_orders,read_draft_orders,read_orders,write_orders,read_orders,write_orders";
-const APP_URL = process.env.APP_URL || "http://localhost:5001";
-const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
-const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff";
-const roundingNumber = process.env.PASSWORD_SECRECT_ROUNDING
+const APP_URL = process.env.APP_URL;
+// const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
+// const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff";
+// const roundingNumber = process.env.PASSWORD_SECRECT_ROUNDING
 const callbackUrlCreated = `${APP_URL}/api/webhooks/webhooks/orders-created`;
 const callbackUrlDeleted = `${APP_URL}/api/webhooks/webhooks/orders-deleted`;
 const topicCreated = "ORDERS_CREATED";
@@ -39,10 +39,6 @@ const topicDeleted = "ORDERS_DELETED";
  * Ye function tab call hota hai jab user Shopify store se app install karta hai
  * Flow:
  * 1. User Shopify Admin Panel se app install karta hai
- * 2. Shopify redirect karta hai: http://localhost:5001/app/install?shop=store-name.myshopify.com
- * 3. Ye function Shopify ke OAuth authorize URL par redirect karta hai
- * 4. User Shopify par permissions approve karta hai
- * 5. Shopify phir callback URL par redirect karta hai (authCallback function)
  */
 const installShopifyApp = (req, res) => {
 
@@ -71,22 +67,7 @@ const installShopifyApp = (req, res) => {
 
 
 
-/**
- * STEP 2: OAuth Callback Function
- * 
- * Ye function automatically call hota hai jab:
- * 1. User Shopify par permissions approve kar deta hai
- * 2. Shopify redirect karta hai: http://localhost:5001/app/callback?shop=...&code=...&hmac=...
- * 
- * Complete Flow:
- * 1. User installShopifyApp se Shopify OAuth page par jata hai
- * 2. User permissions approve karta hai
- * 3. Shopify callback URL par redirect karta hai with code aur hmac
- * 4. Ye function HMAC verify karta hai (security check)
- * 5. Code ko access token me convert karta hai
- * 6. Shop info database me save karta hai
- * 7. User ko frontend dashboard par redirect karta hai
- */
+
 const authCallback = async (req, res) => {
     try {
         console.log("🔁 Auth callback triggered");
@@ -189,38 +170,6 @@ const authCallback = async (req, res) => {
     }
 };
 
-// const shopifyLogin = async (req, res) => {
-//     console.log("shopifyLogin");
-//     try {
-//         const { hmac, shop, host, timestamp } = req.query;
-//         if (!hmac || !shop || !timestamp) {
-//             return res.status(400).send("Missing required query params");
-//         }
-//         const params = { ...req.query };
-//         delete params['hmac'];
-//         const message = Object.keys(params).sort().map(k => `${k}=${params[k]}`).join('&');
-//         const generatedHash = crypto.createHmac('sha256', SHOPIFY_API_SECRET).update(message).digest('hex');
-//         if (generatedHash !== hmac) {
-//             return res.status(400).send("HMAC validation failed");
-//         }
-//         // Optionally verify shop exists in DB (installed app)
-//         const shopData = await shopModel.findOne({ shop: shop });
-//         if (!shopData) {
-//             return res.status(403).send("Shop not installed");
-//         }
-
-//         // Issue JWT for your frontend to consume
-//         const token = JWT.sign({ shop }, JWT_SRCURITE_KEY, { expiresIn: '2h' });
-//         const frontend = `${frontendUrl}/home`;
-
-//         const redirectUrl = `${frontend}?shop=${encodeURIComponent(shop)}&token=${encodeURIComponent(token)}`;
-//         console.log("➡️ Redirecting to:", redirectUrl);
-//         return res.redirect(redirectUrl);
-//     } catch (err) {
-//         console.error(err || err);
-//         return res.status(500).send("Failed to login via Shopify");
-//     }
-// }
 
 
 
