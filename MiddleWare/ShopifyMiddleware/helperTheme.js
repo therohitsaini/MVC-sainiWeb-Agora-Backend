@@ -4,104 +4,104 @@ const { wrapper } = require("axios-cookiejar-support");
 const { CookieJar } = require("tough-cookie");
 
 async function fetchWithCookies(url, cookieHeader, userAgent) {
-    return fetch(url, {
-        headers: { Cookie: cookieHeader, "User-Agent": userAgent },
-        redirect: "manual",
-    });
+  return fetch(url, {
+    headers: { Cookie: cookieHeader, "User-Agent": userAgent },
+    redirect: "manual",
+  });
 }
 
 async function handleStorefrontPassword(shop, userAgent) {
-    const storefrontPassword = process.env.STOREFRONT_PASSWORD || null;
-    if (!storefrontPassword) return null;
+  const storefrontPassword = process.env.STOREFRONT_PASSWORD || null;
+  if (!storefrontPassword) return null;
 
-    const jar = new CookieJar();
-    const client = wrapper(
-        axios.create({
-            jar,
-            withCredentials: true,
-            headers: { "User-Agent": userAgent },
-        })
+  const jar = new CookieJar();
+  const client = wrapper(
+    axios.create({
+      jar,
+      withCredentials: true,
+      headers: { "User-Agent": userAgent },
+    })
+  );
+
+  try {
+    await client.get(`https://${shop}/password`).catch(() => { });
+    await client.post(
+      `https://${shop}/password`,
+      new URLSearchParams({ password: storefrontPassword }).toString(),
+      {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        maxRedirects: 0,
+        validateStatus: () => true,
+      }
     );
-
-    try {
-        await client.get(`https://${shop}/password`).catch(() => { });
-        await client.post(
-            `https://${shop}/password`,
-            new URLSearchParams({ password: storefrontPassword }).toString(),
-            {
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                maxRedirects: 0,
-                validateStatus: () => true,
-            }
-        );
-        return client;
-    } catch {
-        return null;
-    }
+    return client;
+  } catch {
+    return null;
+  }
 }
 
 function injectTheme(url, themeId) {
-    return themeId ? `${url}${url.includes("?") ? "&" : "?"}theme_id=${themeId}` : url;
+  return themeId ? `${url}${url.includes("?") ? "&" : "?"}theme_id=${themeId}` : url;
 }
 
 async function loadSections(shop, themeId, cookieHeader, userAgent, client) {
-    const fetchFn = client
-        ? async (url) => (await client.get(url)).data
-        : async (url) => fetchWithCookies(url, cookieHeader, userAgent).then((r) => r.text());
+  const fetchFn = client
+    ? async (url) => (await client.get(url)).data
+    : async (url) => fetchWithCookies(url, cookieHeader, userAgent).then((r) => r.text());
 
-    const header = fetchFn(injectTheme(`https://${shop}/?section_id=header`, themeId));
-    const footer = fetchFn(injectTheme(`https://${shop}/?section_id=footer`, themeId));
+  const header = fetchFn(injectTheme(`https://${shop}/?section_id=header`, themeId));
+  const footer = fetchFn(injectTheme(`https://${shop}/?section_id=footer`, themeId));
 
-    return await Promise.all([header, footer]);
+  return await Promise.all([header, footer]);
 }
 
 /**
  * 🔥 MAIN REUSABLE FUNCTION
  */
-async function renderShopifyPage(req, res, allow, iframeUrl, options = {}) {
-    const shop = req.query.shop;
-    const themeId = req.query.theme_id;
-    const cookieHeader = req.headers.cookie || "";
-    const userAgent = req.headers["user-agent"] || "node";
+async function renderShopifyPage(req, res, allow = "", iframeUrl, options = {}) {
+  const shop = req.query.shop;
+  const themeId = req.query.theme_id;
+  const cookieHeader = req.headers.cookie || "";
+  const userAgent = req.headers["user-agent"] || "node";
 
-    try {
-        let homeResp = await fetchWithCookies(
-            injectTheme(`https://${shop}/`, themeId),
-            cookieHeader,
-            userAgent
-        );
+  try {
+    let homeResp = await fetchWithCookies(
+      injectTheme(`https://${shop}/`, themeId),
+      cookieHeader,
+      userAgent
+    );
 
-        let client = null;
-        if (homeResp.status >= 300 && homeResp.status < 400) {
-            client = await handleStorefrontPassword(shop, userAgent);
-            if (!client) return res.status(401).send("Storefront locked. Provide password.");
-            homeResp = await client.get(injectTheme(`https://${shop}/`, themeId));
-        }
+    let client = null;
+    if (homeResp.status >= 300 && homeResp.status < 400) {
+      client = await handleStorefrontPassword(shop, userAgent);
+      if (!client) return res.status(401).send("Storefront locked. Provide password.");
+      homeResp = await client.get(injectTheme(`https://${shop}/`, themeId));
+    }
 
-        const homeHtml =
-            typeof homeResp.data === "string"
-                ? homeResp.data
-                : await homeResp.text();
+    const homeHtml =
+      typeof homeResp.data === "string"
+        ? homeResp.data
+        : await homeResp.text();
 
-        const headMatch = homeHtml.match(/<head[\s\S]*?<\/head>/i);
-        const headHtml =
-            headMatch?.[0] ||
-            `
+    const headMatch = homeHtml.match(/<head[\s\S]*?<\/head>/i);
+    const headHtml =
+      headMatch?.[0] ||
+      `
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>${options.title || "Shopify Embedded App"}</title>
       </head>`;
 
-        const [headerHtml, footerHtml] = await loadSections(
-            shop,
-            themeId,
-            cookieHeader,
-            userAgent,
-            client
-        );
+    const [headerHtml, footerHtml] = await loadSections(
+      shop,
+      themeId,
+      cookieHeader,
+      userAgent,
+      client
+    );
 
-        const pageHtml = `
+    const pageHtml = `
       <!DOCTYPE html>
       <html>
         ${headHtml}
@@ -230,11 +230,11 @@ async function renderShopifyPage(req, res, allow, iframeUrl, options = {}) {
         </body>
       </html>`;
 
-        return res.status(200).send(pageHtml);
-    } catch (err) {
-        console.error("Shopify proxy error:", err);
-        return res.status(500).send("Failed to load Shopify page");
-    }
+    return res.status(200).send(pageHtml);
+  } catch (err) {
+    console.error("Shopify proxy error:", err);
+    return res.status(500).send("Failed to load Shopify page");
+  }
 }
 
 module.exports = { renderShopifyPage };
