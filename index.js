@@ -44,7 +44,12 @@ app.use((req, res, next) => {
   next();
 });
 
-
+app.use((req, res, next) => {
+  res.setHeader("Permissions-Policy", "microphone=*, camera=*");
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+  res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+  next();
+});
 
 const { callRoutes } = require("./Routes/videoCallRotes");
 const { signinSignupRouter } = require("./Routes/signin-signupRoute");

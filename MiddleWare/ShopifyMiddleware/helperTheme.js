@@ -113,6 +113,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
             <iframe 
               id="agora-iframe"
               src="${iframeUrl}" 
+               allow="microphone; camera"
               style="border:none;width:100%;min-height:90vh;display:block;"
             ></iframe>
           </main>
