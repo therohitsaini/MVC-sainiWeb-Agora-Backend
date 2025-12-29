@@ -44,12 +44,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use((req, res, next) => {
-  res.setHeader("Permissions-Policy", "microphone=*, camera=*");
-  res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
-  res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
-  next();
-});
+
 
 const { callRoutes } = require("./Routes/videoCallRotes");
 const { signinSignupRouter } = require("./Routes/signin-signupRoute");
@@ -84,6 +79,13 @@ app.use("/api/draft-order", shopifyDraftOrderRoute);
 /** User Routes */
 app.use("/api/users", userRouter);
 app.use("/api/admin", adminRoute);
+
+app.use("/apps/consultant-theme/:anyPath(*)", (req, res, next) => {
+  res.setHeader("Permissions-Policy", "microphone=*, camera=*");
+  next();
+});
+
+
 ioServer(server);
 
 server.listen(PORT, () => {
