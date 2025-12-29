@@ -80,7 +80,7 @@ app.use("/api/draft-order", shopifyDraftOrderRoute);
 app.use("/api/users", userRouter);
 app.use("/api/admin", adminRoute);
 
-app.use(/^\/apps\/consultant-theme\/.*$/, (req, res, next) => {
+app.use("/apps/consultant-theme/video-calling-page", (req, res, next) => {
   res.setHeader("Permissions-Policy", "microphone=*, camera=*");
   next();
 });
