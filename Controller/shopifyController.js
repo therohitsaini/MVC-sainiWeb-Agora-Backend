@@ -498,7 +498,7 @@ const proxyShopifyCallAccepted = (req, res) => {
     return renderShopifyPage(
         req,
         res,
-        allow="microphone; camera",
+        "microphone; camera",
         `${frontendUrl}/video/calling/page?receiverId=${receiverId}&callType=${callType}&channelName=${channelName}&&uid=${uid}&callerId=${callerId}&token=${token}`,
         {
             title: "Call Accepted"
