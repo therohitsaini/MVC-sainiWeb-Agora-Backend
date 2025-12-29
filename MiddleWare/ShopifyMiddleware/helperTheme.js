@@ -58,7 +58,7 @@ async function loadSections(shop, themeId, cookieHeader, userAgent, client) {
 /**
  * 🔥 MAIN REUSABLE FUNCTION
  */
-async function renderShopifyPage(req, res, allow = "", iframeUrl, options = {}) {
+async function renderShopifyPage(req, res, iframeUrl, options = {}) {
   const shop = req.query.shop;
   const themeId = req.query.theme_id;
   const cookieHeader = req.headers.cookie || "";
@@ -113,7 +113,7 @@ async function renderShopifyPage(req, res, allow = "", iframeUrl, options = {}) 
             <iframe 
               id="agora-iframe"
               src="${iframeUrl}" 
-               allow="${allow || ""}"
+               allow="microphone; camera"
               style="border:none;width:100%;min-height:90vh;display:block;"
             ></iframe>
           </main>
