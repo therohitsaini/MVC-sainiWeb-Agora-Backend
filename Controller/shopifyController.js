@@ -22,7 +22,7 @@ try {
 
 const frontendUrl = process.env.FRONTEND_URL 
 
-const client_id = process.env.SHOPIFY_CLIENT_ID
+const client_id = "https://training-gay-suitable-align.trycloudflare.com"
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET
 const SCOPES = "read_customers,write_customers,write_draft_orders,read_draft_orders,read_orders,write_orders,read_orders,write_orders";
 const APP_URL = process.env.APP_URL;
