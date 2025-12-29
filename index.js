@@ -22,20 +22,39 @@ const { ioServer } = require("./server-io");
 app.use(
   cors({
     origin: (origin, callback) => {
+      // Allow server-to-server & iframe
       if (!origin) return callback(null, true);
 
+      // Shopify stores
+      if (origin.includes(".myshopify.com")) {
+        return callback(null, true);
+      }
+
+      // Shopify admin
+      if (origin === "https://admin.shopify.com") {
+        return callback(null, true);
+      }
+
+      // Cloudflare tunnel (DEV)
+      if (origin.includes("trycloudflare.com")) {
+        return callback(null, true);
+      }
+
+      // Localhost (DEV)
       if (
-        origin.endsWith(".myshopify.com") ||
-        origin === "https://admin.shopify.com"
+        origin.startsWith("http://localhost") ||
+        origin.startsWith("http://127.0.0.1")
       ) {
         return callback(null, true);
       }
 
-      return callback(new Error("Not allowed by CORS"));
+      console.error("Blocked by CORS:", origin);
+      return callback(null, true); // ❗ allow but log
     },
     credentials: true,
   })
 );
+
 
 /* ---------------- WEBHOOK RAW BODY ---------------- */
 const { webHookRoute } = require("./Routes/webHookRoute");
