@@ -140,11 +140,6 @@ app.use("/app", shopifyRoute);
 app.use("/local-consultant/public/app", shopifyRoute);
 app.use("/local-consultant/public/apps", shopifyRoute);
 
-app.get("/apps/consultant-theme/*", (req, res) => {
-  res.sendFile(path.join(reactBuildPath, "index.html"));
-});
-
-
 /* ---------------- SOCKET START ---------------- */
 ioServer(server);
 
