@@ -136,10 +136,13 @@ const ioServer = (server) => {
                 //     socket.emit("call-failed", { message: "Insufficient balance. Call cannot be connected." });
                 //     return;
                 // }
+                const user_ = await User.findById({ _id: callerId }).select("fullname")
+
                 const receiverSocketId = onlineUsers[receiverId];
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("incoming-call", {
                         callerId,
+                        callerName: user_.fullname,
                         callType,
                         channelName
                     });
