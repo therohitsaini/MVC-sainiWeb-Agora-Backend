@@ -226,14 +226,14 @@ const ioServer = (server) => {
                     if (activeCall.status === "ringing") {
                         activeCall.status = "missed";
 
-                        io.to(onlineUsers[callerId])?.emit("call-missed", { callId });
-                        io.to(onlineUsers[receiverId])?.emit("call-missed", { callId });
+                        io.to(callerId).emit("call-missed", { callId });
+                        io.to(receiverId).emit("call-missed", { callId });
 
                         missCalled({
                             senderId: callerId,
                             receiverId,
                             type: "miss call",
-                       
+
                             reason: "timeout"
                         });
 
