@@ -1,0 +1,29 @@
+const mongoose = require("mongoose")
+
+const missed = new mongoose.Schema({
+    senderId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
+    receiverId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
+    shop_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "shopModel",
+        required: true
+    },
+    type: {
+        type: String,
+    },
+    reason: {
+        type: String,
+    }
+}, { timestamps: true })
+
+const missCalled = mongoose.model("missCalleHistroy", missed)
+
+module.exports = { missCalled }

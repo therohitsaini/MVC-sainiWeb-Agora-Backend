@@ -6,6 +6,7 @@ const { MessageModal } = require("./Modal/messageSchema");
 const sendFCM = require("./firebase/sendNotification");
 const { TransactionHistroy } = require("./Modal/transactionHistroy");
 const { shopModel } = require("./Modal/shopify");
+const { missCalled } = require("./Modal/miscallasHistroy");
 
 const ioServer = (server) => {
     const io = new Server(server, {
@@ -16,6 +17,7 @@ const ioServer = (server) => {
     });
 
     let onlineUsers = {};
+    let activeCalls = new Map();
     io.on("connection", (socket) => {
         console.log("Socket connected:", socket.id);
         socket.on("register", async (user_Id) => {
@@ -127,6 +129,7 @@ const ioServer = (server) => {
                     console.log(" Missing required fields");
                     return;
                 }
+                const callId = `${callerId}_${receiverId}_${channelName}`;
                 // const caller = await User.findById(fromUid).select("walletBalance").lean();
                 // const callerConsultant = await User.findById(toUid).select("fees").lean();
                 // const callCost = callerConsultant.fees;
@@ -136,6 +139,7 @@ const ioServer = (server) => {
                 //     socket.emit("call-failed", { message: "Insufficient balance. Call cannot be connected." });
                 //     return;
                 // }
+
                 const user_ = await User.findById({ _id: callerId }).select("fullname")
 
                 const receiverSocketId = onlineUsers[receiverId];
@@ -149,6 +153,30 @@ const ioServer = (server) => {
                 } else {
                     console.log(` User ${receiverId} is offline`);
                 }
+                const timeout = setTimeout(() => {
+                    const call = activeCalls.get(callId);
+                    if (call && call.status === "ringing") {
+                        call.status = "missed";
+
+                        // Notify both sides
+                        io.to(callerId).emit("call-missed", { callId });
+                        io.to(receiverId).emit("call-missed", { callId });
+
+
+                        const missCalledObj = {
+                            senderId: call.senderId,
+                            receiverId: call.receiverId,
+                            type: "miss call",
+                            endedAt: Date.now(),
+                            reason: "timeout"
+
+                        }
+                        missCalled(missCalledObj);
+                        activeCalls.delete(callId);
+                    }
+                }, 20000);
+                activeCalls.get(callId).timeout = timeout;
+
             } catch (error) {
                 console.error("Error in call-user:", error);
 
@@ -161,6 +189,17 @@ const ioServer = (server) => {
                     console.log(" Missing required fields");
                     return;
                 }
+
+                const callId = `${callerId}_${receiverId}_${channelName}`;
+                const call = activeCalls.get(callId);
+
+                if (!call) {
+                    console.log("❌ Call not found");
+                    return;
+                }
+
+                call.status = "accepted";
+                clearTimeout(call.timeout);
 
                 const callerSocketId = onlineUsers[callerId];
                 const receiverSocketId = onlineUsers[receiverId];
