@@ -122,66 +122,131 @@ const ioServer = (server) => {
 
 
 
-        socket.on("call-user", async ({ callerId, receiverId, channelName, callType }) => {
+        // socket.on("call-user", async ({ callerId, receiverId, channelName, callType }) => {
 
+
+        //     try {
+        //         if (!callerId || !receiverId || !channelName || !callType) {
+        //             console.log(" Missing required fields");
+        //             return;
+        //         }
+        //         const callId = `${callerId}_${receiverId}_${channelName}`;
+        //         // const caller = await User.findById(fromUid).select("walletBalance").lean();
+        //         // const callerConsultant = await User.findById(toUid).select("fees").lean();
+        //         // const callCost = callerConsultant.fees;
+
+        //         // if (!caller || Number(caller.walletBalance) < callCost) {
+        //         //     console.log(" Insufficient balance, Please recharge your wallet.");
+        //         //     socket.emit("call-failed", { message: "Insufficient balance. Call cannot be connected." });
+        //         //     return;
+        //         // }
+
+        //         const user_ = await User.findById({ _id: callerId }).select("fullname")
+
+        //         const receiverSocketId = onlineUsers[receiverId];
+        //         if (receiverSocketId) {
+        //             io.to(receiverSocketId).emit("incoming-call", {
+        //                 callerId,
+        //                 callerName: user_.fullname,
+        //                 callType,
+        //                 channelName
+        //             });
+        //         } else {
+        //             console.log(` User ${receiverId} is offline`);
+        //         }
+        //         const timeout = setTimeout(() => {
+        //             const call = activeCalls.get(callId);
+        //             if (call && call.status === "ringing") {
+        //                 call.status = "missed";
+
+        //                 // Notify both sides
+        //                 io.to(callerId).emit("call-missed", { callId });
+        //                 io.to(receiverId).emit("call-missed", { callId });
+
+
+        //                 const missCalledObj = {
+        //                     senderId: call.senderId,
+        //                     receiverId: call.receiverId,
+        //                     type: "miss call",
+        //                     endedAt: Date.now(),
+        //                     reason: "timeout"
+
+        //                 }
+        //                 missCalled(missCalledObj);
+        //                 activeCalls.delete(callId);
+        //             }
+        //         }, 20000);
+        //         activeCalls.get(callId).timeout = timeout;
+
+        //     } catch (error) {
+        //         console.error("Error in call-user:", error);
+
+        //     }
+        // });
+        socket.on("call-user", async ({ callerId, receiverId, channelName, callType }) => {
             try {
                 if (!callerId || !receiverId || !channelName || !callType) {
-                    console.log(" Missing required fields");
+                    console.log("❌ Missing required fields");
                     return;
                 }
+
                 const callId = `${callerId}_${receiverId}_${channelName}`;
-                // const caller = await User.findById(fromUid).select("walletBalance").lean();
-                // const callerConsultant = await User.findById(toUid).select("fees").lean();
-                // const callCost = callerConsultant.fees;
 
-                // if (!caller || Number(caller.walletBalance) < callCost) {
-                //     console.log(" Insufficient balance, Please recharge your wallet.");
-                //     socket.emit("call-failed", { message: "Insufficient balance. Call cannot be connected." });
-                //     return;
-                // }
-
-                const user_ = await User.findById({ _id: callerId }).select("fullname")
+                const user_ = await User.findById(callerId).select("fullname");
 
                 const receiverSocketId = onlineUsers[receiverId];
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("incoming-call", {
                         callerId,
-                        callerName: user_.fullname,
+                        callerName: user_?.fullname || "Unknown",
                         callType,
                         channelName
                     });
-                } else {
-                    console.log(` User ${receiverId} is offline`);
                 }
-                const timeout = setTimeout(() => {
-                    const call = activeCalls.get(callId);
-                    if (call && call.status === "ringing") {
-                        call.status = "missed";
 
-                        // Notify both sides
-                        io.to(callerId).emit("call-missed", { callId });
-                        io.to(receiverId).emit("call-missed", { callId });
+                // ✅ STEP 1: create call object FIRST
+                const call = {
+                    callId,
+                    callerId,
+                    receiverId,
+                    channelName,
+                    callType,
+                    status: "ringing",
+                    startedAt: Date.now(),
+                    timeout: null
+                };
 
+                activeCalls.set(callId, call);
 
-                        const missCalledObj = {
-                            senderId: call.senderId,
-                            receiverId: call.receiverId,
+                // ✅ STEP 2: now create timeout
+                call.timeout = setTimeout(() => {
+                    const activeCall = activeCalls.get(callId);
+                    if (!activeCall) return;
+
+                    if (activeCall.status === "ringing") {
+                        activeCall.status = "missed";
+
+                        io.to(onlineUsers[callerId])?.emit("call-missed", { callId });
+                        io.to(onlineUsers[receiverId])?.emit("call-missed", { callId });
+
+                        missCalled({
+                            senderId: callerId,
+                            receiverId,
                             type: "miss call",
-                            endedAt: Date.now(),
+                       
                             reason: "timeout"
+                        });
 
-                        }
-                        missCalled(missCalledObj);
                         activeCalls.delete(callId);
+                        console.log("📞 Call auto-ended (missed):", callId);
                     }
                 }, 20000);
-                activeCalls.get(callId).timeout = timeout;
 
             } catch (error) {
-                console.error("Error in call-user:", error);
-
+                console.error("❌ Error in call-user:", error);
             }
         });
+
         socket.on("call-accepted", async ({ callerId, receiverId, channelName, callType }) => {
             console.log("call-accepted", callerId, receiverId, channelName, callType);
             try {
