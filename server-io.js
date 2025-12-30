@@ -227,9 +227,17 @@ const ioServer = (server) => {
                     if (activeCall.status === "ringing") {
                         activeCall.status = "missed";
 
+                        const callerSocketId = onlineUsers[callerId];
+                        const receiverSocketId = onlineUsers[receiverId];
 
-                        io.to(onlineUsers[callerId]).emit("call-missed", { callId });
-                        io.to(receiverId[callerId]).emit("call-missed", { callId });
+                        if (callerSocketId) {
+                            io.to(callerSocketId).emit("call-missed", { callId });
+                            console.log("auto call end event fire ")
+                        }
+
+                        if (receiverSocketId) {
+                            io.to(receiverSocketId).emit("call-missed", { callId });
+                        }
 
                         missCalled({
                             senderId: callerId,
