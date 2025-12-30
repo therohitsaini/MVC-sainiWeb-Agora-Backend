@@ -227,8 +227,9 @@ const ioServer = (server) => {
                     if (activeCall.status === "ringing") {
                         activeCall.status = "missed";
 
-                        io.to(callerId).emit("call-missed", { callId });
-                        io.to(receiverId).emit("call-missed", { callId });
+
+                        io.to(onlineUsers[callerId]).emit("call-missed", { callId });
+                        io.to(receiverId[callerId]).emit("call-missed", { callId });
 
                         missCalled({
                             senderId: callerId,
