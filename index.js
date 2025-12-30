@@ -33,9 +33,27 @@ app.use((req, res, next) => {
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// const reactBuildPath = path.join(__dirname, "..", "consultant-app", "build");
+// app.use("/static", express.static(path.join(reactBuildPath, "static")));
+// app.use("/consultant-app", express.static(reactBuildPath));
 const reactBuildPath = path.join(__dirname, "..", "consultant-app", "build");
+
 app.use("/static", express.static(path.join(reactBuildPath, "static")));
 app.use("/consultant-app", express.static(reactBuildPath));
+
+// 🔔 Serve ringtone & public assets
+app.use(
+  "/sounds",
+  express.static(
+    path.join(__dirname, "..", "consultant-app", "public", "sounds"),
+    {
+      setHeaders: (res) => {
+        res.setHeader("Content-Type", "audio/mpeg");
+      },
+    }
+  )
+);
+
 
 app.use((req, res, next) => {
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
