@@ -229,6 +229,8 @@ const ioServer = (server) => {
 
                         const callerSocketId = onlineUsers[callerId];
                         const receiverSocketId = onlineUsers[receiverId];
+                        console.log("callerSokect", callerSocketId)
+                        console.log("callerSokect", receiverSocketId)
 
                         if (callerSocketId) {
                             io.to(callerSocketId).emit("call-missed", { callId });
@@ -243,7 +245,6 @@ const ioServer = (server) => {
                             senderId: callerId,
                             receiverId,
                             type: "miss call",
-
                             reason: "timeout"
                         });
 
