@@ -21,6 +21,7 @@ const ioServer = (server) => {
     io.on("connection", (socket) => {
         console.log("Socket connected:", socket.id);
         socket.on("register", async (user_Id) => {
+            console.log("user is online", user_Id)
             if (!mongoose.Types.ObjectId.isValid(user_Id)) {
                 console.log("Invalid userId received:", user_Id);
                 return;
