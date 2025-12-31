@@ -194,7 +194,6 @@ const ioServer = (server) => {
                 const callId = `${callerId}_${receiverId}_${channelName}`;
 
                 const user_ = await User.findById(callerId).select("fullname");
-
                 const receiverSocketId = onlineUsers[receiverId];
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("incoming-call", {
