@@ -247,7 +247,7 @@ const ioServer = (server) => {
                         await missCalled.create({
                             senderId: callerId,
                             receiverId,
-                            type: "miss call",
+                            type: callType,
                             reason: "timeout"
                         });
 
