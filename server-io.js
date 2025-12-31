@@ -229,8 +229,8 @@ const ioServer = (server) => {
 
                         const callerSocketId = onlineUsers[callerId];
                         const receiverSocketId = onlineUsers[receiverId];
-                        console.log("callerSokect", callerSocketId)
-                        console.log("callerSokect", receiverSocketId)
+                        console.log("callerSokect_Caller", callerSocketId)
+                        console.log("callerSokect_Receiver", receiverSocketId)
 
                         if (callerSocketId) {
                             io.to(callerSocketId).emit("call-missed", { callId });
