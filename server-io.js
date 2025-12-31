@@ -222,7 +222,10 @@ const ioServer = (server) => {
                 // ✅ STEP 2: now create timeout
                 call.timeout = setTimeout(() => {
                     const activeCall = activeCalls.get(callId);
-                    if (!activeCall) return;
+                    if (!activeCall) {
+                        console.log("❌ Call not found");
+                        return;
+                    }
 
                     if (activeCall.status === "ringing") {
                         activeCall.status = "missed";
