@@ -220,7 +220,7 @@ const ioServer = (server) => {
                 activeCalls.set(callId, call);
 
                 // ✅ STEP 2: now create timeout
-                call.timeout = setTimeout(() => {
+                call.timeout = setTimeout(async () => {
                     const activeCall = activeCalls.get(callId);
                     if (!activeCall) {
                         console.log("❌ Call not found");
@@ -244,7 +244,7 @@ const ioServer = (server) => {
                             io.to(receiverSocketId).emit("call-missed", { callId });
                         }
 
-                        missCalled({
+                        await missCalled.create({
                             senderId: callerId,
                             receiverId,
                             type: "miss call",
