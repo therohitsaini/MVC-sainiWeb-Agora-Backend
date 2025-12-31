@@ -11,11 +11,7 @@ const missed = new mongoose.Schema({
         ref: "User",
         required: true
     },
-    shop_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "shopModel",
-        required: true
-    },
+   
     type: {
         type: String,
     },
