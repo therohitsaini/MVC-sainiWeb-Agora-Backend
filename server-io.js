@@ -192,18 +192,14 @@ const ioServer = (server) => {
                 }
 
                 const callerInfo = await User.findById({ _id: callerId });
-                console.log("callerInfo", callerInfo);
                 if (!callerInfo) throw new Error("Caller not found");
-                console.log("callerInfo.userType", callerInfo.userType);
                 if (callerInfo.userType === "customer") {
                     let isCallTypeCost = callType === "voice" ? "voiceCallCost" : "videoCallCost";
 
                     const receiverInfo = await User.findById({ _id: receiverId }).select(isCallTypeCost).lean();
-                    console.log("receiverInfo", receiverInfo);
                     if (!receiverInfo) throw new Error("Receiver not found");
 
                     const callCost = Number(receiverInfo[isCallTypeCost]);
-                    console.log("callCost", callCost);
 
                     if (Number(callerInfo.walletBalance) < callCost) {
                         io.to(callerId.toString()).emit("balanceError", {
@@ -220,9 +216,7 @@ const ioServer = (server) => {
 
                 const user_ = await User.findById(callerId).select("fullname walletBalance");
                 const receiverSocketId = onlineUsers[receiverId];
-                console.log("receiverSocketId", receiverSocketId);
                 if (receiverSocketId) {
-                    console.log("receiverSocketId", receiverSocketId);
                     io.to(receiverSocketId).emit("incoming-call", {
                         callerId,
                         callerName: user_?.fullname || "Unknown",
@@ -311,13 +305,19 @@ const ioServer = (server) => {
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType });
                 }
+                await missCalled.create({
+                    senderId: callerId,
+                    receiverId,
+                    type: callType,
+                    reason: "rejected"
+                });
 
             } catch (error) {
                 console.error("Error in call-accepted:", error);
             }
         });
         socket.on("reject-call", ({ callerId, receiverId, channelName, callType }) => {
-            console.log("📥 reject-call from receiver", callerId, receiverId);
+            console.log("📥 reject-call from receiver", callerId, receiverId, channelName, callType);
 
             if (!callerId || !receiverId || !channelName || !callType) return;
 
