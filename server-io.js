@@ -199,7 +199,7 @@ const ioServer = (server) => {
                     let isCallTypeCost = callType === "voice" ? "voiceCallCost" : "videoCallCost";
                     console.log("isCallTypeCost", isCallTypeCost);
                     console.log("isCallTypeCost", isCallTypeCost);
-                    const receiverInfo = await User.findById({ _id: receiverId }).select(isCallTypeCost);
+                    const receiverInfo = await User.findById({ _id: receiverId }).select(isCallTypeCost).lean();
                     console.log("receiverInfo", receiverInfo);
                     if (!receiverInfo) throw new Error("Receiver not found");
 
