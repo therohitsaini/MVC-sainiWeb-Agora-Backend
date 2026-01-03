@@ -210,7 +210,8 @@ const ioServer = (server) => {
                         io.to(callerId.toString()).emit("balanceError", {
                             message: "Insufficient wallet balance",
                             required: callCost,
-                            available: callerInfo.walletBalance
+                            available: callerInfo.walletBalance,
+
                         });
                         return;
                     }
@@ -221,6 +222,7 @@ const ioServer = (server) => {
                 const user_ = await User.findById(callerId).select("fullname walletBalance");
                 const receiverSocketId = onlineUsers[receiverId];
                 if (receiverSocketId) {
+                    console.log("receiverSocketId", receiverSocketId);
                     io.to(receiverSocketId).emit("incoming-call", {
                         callerId,
                         callerName: user_?.fullname || "Unknown",
