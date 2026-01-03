@@ -191,9 +191,31 @@ const ioServer = (server) => {
                     return;
                 }
 
+                const callerInfo = await User.findById({ _id: callerId });
+                console.log("callerInfo", callerInfo);
+                if (!callerInfo) throw new Error("Caller not found");
+                console.log("callerInfo.userType", callerInfo.userType);
+                if (callerInfo.userType === "customer") {
+                    const isCallTypeCost = callType === "voice" ? "voiceCallCost" : "videoCallCost";
+                    console.log("isCallTypeCost", isCallTypeCost);
+                    const receiverInfo = await User.findById(receiverId);
+                    if (!receiverInfo) throw new Error("Receiver not found");
+                    const callCost = Number(receiverInfo.isCallTypeCost);
+                    console.log("callCost", callCost);
+
+                    if (Number(callerInfo.walletBalance) < callCost) {
+                        io.to(callerId.toString()).emit("balanceError", {
+                            message: "Insufficient wallet balance",
+                            required: callCost,
+                            available: callerInfo.walletBalance
+                        });
+                        return;
+                    }
+                }
+
                 const callId = `${callerId}_${receiverId}_${channelName}`;
 
-                const user_ = await User.findById(callerId).select("fullname");
+                const user_ = await User.findById(callerId).select("fullname walletBalance");
                 const receiverSocketId = onlineUsers[receiverId];
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("incoming-call", {
@@ -203,8 +225,6 @@ const ioServer = (server) => {
                         channelName
                     });
                 }
-
-                // ✅ STEP 1: create call object FIRST
                 const call = {
                     callId,
                     callerId,
@@ -218,7 +238,6 @@ const ioServer = (server) => {
 
                 activeCalls.set(callId, call);
 
-                // ✅ STEP 2: now create timeout
                 call.timeout = setTimeout(async () => {
                     const activeCall = activeCalls.get(callId);
                     if (!activeCall) {
