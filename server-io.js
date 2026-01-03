@@ -198,9 +198,10 @@ const ioServer = (server) => {
                 if (callerInfo.userType === "customer") {
                     const isCallTypeCost = callType === "voice" ? "voiceCallCost" : "videoCallCost";
                     console.log("isCallTypeCost", isCallTypeCost);
+                    console.log("receiverInfo[isCallTypeCost]", receiverInfo[isCallTypeCost]);
                     const receiverInfo = await User.findById(receiverId);
                     if (!receiverInfo) throw new Error("Receiver not found");
-                    const callCost = Number(receiverInfo.isCallTypeCost);
+                    const callCost = Number(receiverInfo[isCallTypeCost]);
                     console.log("callCost", callCost);
 
                     if (Number(callerInfo.walletBalance) < callCost) {
