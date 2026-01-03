@@ -196,10 +196,10 @@ const ioServer = (server) => {
                 if (!callerInfo) throw new Error("Caller not found");
                 console.log("callerInfo.userType", callerInfo.userType);
                 if (callerInfo.userType === "customer") {
-                    const isCallTypeCost = callType === "voice" ? "voiceCallCost" : "videoCallCost";
+                    let isCallTypeCost = callType === "voice" ? "voiceCallCost" : "videoCallCost";
                     console.log("isCallTypeCost", isCallTypeCost);
                     console.log("isCallTypeCost", isCallTypeCost);
-                    const receiverInfo = await User.findById({ _id: receiverId });
+                    const receiverInfo = await User.findById({ _id: receiverId }).select(isCallTypeCost || "voiceCallCost");
                     console.log("receiverInfo", receiverInfo);
                     if (!receiverInfo) throw new Error("Receiver not found");
                     // const callCost = Number(receiverInfo.isCallTypeCost);
