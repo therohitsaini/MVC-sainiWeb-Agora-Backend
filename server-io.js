@@ -202,9 +202,9 @@ const ioServer = (server) => {
                     const receiverInfo = await User.findById({ _id: receiverId }).select(isCallTypeCost);
                     console.log("receiverInfo", receiverInfo);
                     if (!receiverInfo) throw new Error("Receiver not found");
-                    // const callCost = Number(receiverInfo.isCallTypeCost);
-                    
-                    console.log("callCost", receiverInfo.voiceCallCost);
+
+                    const callCost = Number(receiverInfo[isCallTypeCost]);
+                    console.log("callCost", callCost);
 
                     // if (Number(callerInfo.walletBalance) < callCost) {
                     //     io.to(callerId.toString()).emit("balanceError", {
