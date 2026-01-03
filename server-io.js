@@ -199,12 +199,12 @@ const ioServer = (server) => {
                     let isCallTypeCost = callType === "voice" ? "voiceCallCost" : "videoCallCost";
                     console.log("isCallTypeCost", isCallTypeCost);
                     console.log("isCallTypeCost", isCallTypeCost);
-                    const receiverInfo = await User.findById({ _id: receiverId }).select(isCallTypeCost || "voiceCallCost");
+                    const receiverInfo = await User.findById({ _id: receiverId }).select(isCallTypeCost);
                     console.log("receiverInfo", receiverInfo);
                     if (!receiverInfo) throw new Error("Receiver not found");
                     // const callCost = Number(receiverInfo.isCallTypeCost);
-                    const callCost = receiverInfo.isCallTypeCost
-                    console.log("callCost", callCost);
+                    
+                    console.log("callCost", receiverInfo.voiceCallCost);
 
                     // if (Number(callerInfo.walletBalance) < callCost) {
                     //     io.to(callerId.toString()).emit("balanceError", {
