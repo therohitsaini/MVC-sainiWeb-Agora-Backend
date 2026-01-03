@@ -200,6 +200,7 @@ const ioServer = (server) => {
                     console.log("isCallTypeCost", isCallTypeCost);
                     console.log("isCallTypeCost", isCallTypeCost);
                     const receiverInfo = await User.findById({ _id: receiverId });
+                    console.log("receiverInfo", receiverInfo);
                     if (!receiverInfo) throw new Error("Receiver not found");
                     const callCost = Number(receiverInfo.isCallTypeCost);
                     console.log("callCost", callCost);
