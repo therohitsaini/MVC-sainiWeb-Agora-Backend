@@ -197,8 +197,7 @@ const ioServer = (server) => {
                 console.log("callerInfo.userType", callerInfo.userType);
                 if (callerInfo.userType === "customer") {
                     let isCallTypeCost = callType === "voice" ? "voiceCallCost" : "videoCallCost";
-                    console.log("isCallTypeCost", isCallTypeCost);
-                    console.log("isCallTypeCost", isCallTypeCost);
+
                     const receiverInfo = await User.findById({ _id: receiverId }).select(isCallTypeCost).lean();
                     console.log("receiverInfo", receiverInfo);
                     if (!receiverInfo) throw new Error("Receiver not found");
@@ -317,6 +316,36 @@ const ioServer = (server) => {
                 console.error("Error in call-accepted:", error);
             }
         });
+        socket.on("reject-call", ({ callerId, receiverId, channelName, callType }) => {
+            console.log("📥 reject-call from receiver", callerId, receiverId);
+
+            if (!callerId || !receiverId || !channelName || !callType) return;
+
+            const callId = `${callerId}_${receiverId}_${channelName}`;
+            const call = activeCalls.get(callId);
+            if (!call) return;
+
+            call.status = "rejected";
+            clearTimeout(call.timeout);
+
+            const callerSocketId = onlineUsers[callerId];
+            const receiverSocketId = onlineUsers[receiverId];
+
+            const payload = { callerId, receiverId, channelName, callType };
+
+            if (callerSocketId) {
+                io.to(callerSocketId).emit("call-ended-rejected", payload);
+            }
+
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("call-ended-rejected", payload);
+            }
+
+            activeCalls.delete(callId);
+
+            console.log("📞 Call rejected & ended for both:", callId);
+        });
+
         // socket.on("call-accepted", async ({ toUid, fromUid, type, channelName }) => {
         //     try {
         //         await HistroyMW(toUid, fromUid, type);
