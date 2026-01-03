@@ -221,6 +221,7 @@ const ioServer = (server) => {
 
                 const user_ = await User.findById(callerId).select("fullname walletBalance");
                 const receiverSocketId = onlineUsers[receiverId];
+                console.log("receiverSocketId", receiverSocketId);
                 if (receiverSocketId) {
                     console.log("receiverSocketId", receiverSocketId);
                     io.to(receiverSocketId).emit("incoming-call", {
