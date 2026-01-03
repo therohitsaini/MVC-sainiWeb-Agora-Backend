@@ -202,17 +202,18 @@ const ioServer = (server) => {
                     const receiverInfo = await User.findById({ _id: receiverId });
                     console.log("receiverInfo", receiverInfo);
                     if (!receiverInfo) throw new Error("Receiver not found");
-                    const callCost = Number(receiverInfo.isCallTypeCost);
+                    // const callCost = Number(receiverInfo.isCallTypeCost);
+                    const callCost = receiverInfo.isCallTypeCost
                     console.log("callCost", callCost);
 
-                    if (Number(callerInfo.walletBalance) < callCost) {
-                        io.to(callerId.toString()).emit("balanceError", {
-                            message: "Insufficient wallet balance",
-                            required: callCost,
-                            available: callerInfo.walletBalance
-                        });
-                        return;
-                    }
+                    // if (Number(callerInfo.walletBalance) < callCost) {
+                    //     io.to(callerId.toString()).emit("balanceError", {
+                    //         message: "Insufficient wallet balance",
+                    //         required: callCost,
+                    //         available: callerInfo.walletBalance
+                    //     });
+                    //     return;
+                    // }
                 }
 
                 const callId = `${callerId}_${receiverId}_${channelName}`;
