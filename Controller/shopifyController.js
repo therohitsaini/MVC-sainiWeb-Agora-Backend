@@ -20,7 +20,7 @@ try {
 }
 
 
-const frontendUrl = process.env.FRONTEND_URL
+const frontendUrl = process.env.FRONTEND_URL 
 
 const client_id = process.env.SHOPIFY_CLIENT_ID
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET
@@ -151,41 +151,19 @@ const authCallback = async (req, res) => {
         }
 
         const AdminUser = await shopModel.findOne({ shop: shop });
-        if (!AdminUser) {
-            return res.status(400).send("Admin user not found");
+            if (!AdminUser) {
+                return res.status(400).send("Admin user not found");
         }
 
         /** Register Order Paid Webhook */
         await registerOrderPaidWebhook(shop, accessToken);
-        await registerOrderDeletedWebhook(shop, accessToken);
+        await registerOrderDeletedWebhook(shop, accessToken);       
 
         const AdminiId = AdminUser._id;
         console.log("AdminiId", AdminiId);
-        // const redirectUrl = `${frontendUrl}/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&adminId=${encodeURIComponent(AdminiId)}`;
-        // console.log("➡️ Redirecting to:", redirectUrl);
-        // return res.redirect(redirectUrl);
         const redirectUrl = `${frontendUrl}/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&adminId=${encodeURIComponent(AdminiId)}`;
-
-        return res.status(200).send(`
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="utf-8" />
-      <title>Redirecting...</title>
-      <script>
-        if (window.top) {
-          window.top.location.href = "${redirectUrl}";
-        } else {
-          window.location.href = "${redirectUrl}";
-        }
-      </script>
-    </head>
-    <body>
-      Redirecting to app...
-    </body>
-  </html>
-`);
-
+        console.log("➡️ Redirecting to:", redirectUrl);
+        return res.redirect(redirectUrl);
     } catch (error) {
         console.error(" Auth callback error:", error || error);
         return res.status(500).send("Failed to complete authentication");
@@ -278,7 +256,7 @@ const proxyThemeAssetsController = async (req, res) => {
                   ${headerHtml}
                   <iframe 
                     id="agora-frame"
-                    src="${frontendUrl}/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || ''}&shop=${shop}" 
+                    src="${frontendUrl}/consultant-cards?customerId=${userId?.userId || ''}&shopid=${shopDocId._id || '' }&shop=${shop}" 
                     style="border:none;width:100%;min-height:700px;display:block;"
                   ></iframe>
                   ${footerHtml}
@@ -463,7 +441,7 @@ const proxyShopifyChatSection = (req, res) => {
     const shop = req.query.shop;
     const consultantId = req.query.consultantId || "";
     const customerId = req.query.logged_in_customer_id;
-    if (!customerId) {
+    if(!customerId){
         return res.redirect(`https://${shop}/account/login`);
     }
 
@@ -486,7 +464,7 @@ const proxyProfileSection = (req, res) => {
     console.log("___________customerId___________", customerId);
     console.log("shopId", shopId);
     console.log("consultantId", consultantId);
-    if (!customerId) {
+    if(!customerId){
         return res.redirect(`https://${shop}/account/login`);
     }
 
@@ -520,7 +498,7 @@ const proxyShopifyCallAccepted = (req, res) => {
     return renderShopifyPage(
         req,
         res,
-
+      
         `${frontendUrl}/video/calling/page?receiverId=${receiverId}&callType=${callType}&channelName=${channelName}&&uid=${uid}&callerId=${callerId}&token=${token}`,
         {
             title: "Call Accepted"
