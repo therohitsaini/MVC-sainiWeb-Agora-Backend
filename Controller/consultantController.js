@@ -35,7 +35,7 @@ const consultantController = async (req, res) => {
         const requiredFields = [
             'fullName', 'email', 'password', 'phoneNumber', 'profession',
             'specialization', 'licenseIdNumber', 'yearOfExperience',
-            'chargingPerMinute', 'languages', 'displayName', 'gender',
+             'languages', 'displayName', 'gender',
             'houseNumber', 'streetArea', 'landmark', 'address',
             'pincode', 'dateOfBirth', 'pancardNumber','voicePerMinute','videoPerMinute','chatPerMinute'
         ];
@@ -130,7 +130,7 @@ const consultantController = async (req, res) => {
             specialization: body.specialization,
             licenseNo: body.licenseIdNumber,
             experience: String(body.yearOfExperience),
-            fees: String(body.chargingPerMinute),
+            // fees: String(body.chargingPerMinute),
             language: languagesArray,
             displayName: body.displayName,
             gender: body.gender,
