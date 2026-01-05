@@ -98,6 +98,9 @@ app.use("/api/draft-order", shopifyDraftOrderRoute);
 app.use("/api/users", userRouter);
 app.use("/api/admin", adminRoute);
 
+app.get(/^\/consultant-app(\/.*)?$/, (req, res) => {
+  res.sendFile(path.join(reactBuildPath, "index.html"));
+});
 
 
 
