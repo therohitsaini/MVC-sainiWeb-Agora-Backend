@@ -37,7 +37,7 @@ const consultantController = async (req, res) => {
             'specialization', 'licenseIdNumber', 'yearOfExperience',
             'chargingPerMinute', 'languages', 'displayName', 'gender',
             'houseNumber', 'streetArea', 'landmark', 'address',
-            'pincode', 'dateOfBirth', 'pancardNumber'
+            'pincode', 'dateOfBirth', 'pancardNumber','voicePerMinute','videoPerMinute','chatPerMinute'
         ];
 
         const missingFields = requiredFields.filter(field => !body[field]);
@@ -146,6 +146,9 @@ const consultantController = async (req, res) => {
             agoraUid: randomAgoraUid,
             userType: "consultant",
             consultantStatus: false,
+            voicePerMinute: body.voicePerMinute,
+            videoPerMinute: body.videoPerMinute,
+            chatPerMinute: body.chatPerMinute,
         });
 
         await consultantDetails.save();

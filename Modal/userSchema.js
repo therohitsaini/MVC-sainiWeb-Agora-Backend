@@ -126,6 +126,18 @@ const registerUserSchema = new mongoose.Schema(
             type: Number,
             // default: 0,
         },
+        voicePerMinute: {
+            type: Number,
+            // default: 0,
+        },
+        videoPerMinute: {
+            type: Number,
+            // default: 0,
+        },
+        chatPerMinute: {
+            type: Number,
+            // default: 0,
+        },
         isChatAccepted: {
             type: String,
             enum: ["request", "accepted", "rejected", "pending"],
