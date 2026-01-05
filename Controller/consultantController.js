@@ -20,10 +20,8 @@ const consultantController = async (req, res) => {
     try {
         const { shop_id } = req.params;
         const body = req.body;
-        // const file = req.file;
         console.log("___________body___________", body);
 
-        // Validate shop_id
         if (!shop_id || !mongoose.Types.ObjectId.isValid(shop_id)) {
             return res.status(400).json({
                 success: false,
@@ -31,7 +29,6 @@ const consultantController = async (req, res) => {
             });
         }
 
-        // Validate required fields
         const requiredFields = [
             'fullName', 'email', 'password', 'phoneNumber', 'profession',
             'specialization', 'licenseIdNumber', 'yearOfExperience',
@@ -49,7 +46,6 @@ const consultantController = async (req, res) => {
             });
         }
 
-        // Validate profile image
         // if (!file) {
         //     return res.status(400).json({
         //         success: false,
@@ -57,7 +53,6 @@ const consultantController = async (req, res) => {
         //     });
         // }
 
-        // Check if email already exists
         const existingEmail = await User.findOne({ email: body.email.toLowerCase().trim() });
         if (existingEmail) {
             return res.status(400).json({
@@ -66,7 +61,6 @@ const consultantController = async (req, res) => {
             });
         }
 
-        // Check if license number already exists
         const existingLicense = await User.findOne({ licenseNo: body.licenseIdNumber });
         if (existingLicense) {
             return res.status(400).json({
@@ -75,19 +69,11 @@ const consultantController = async (req, res) => {
             });
         }
 
-        // Create uploads/consultants directory if it doesn't exist
         const uploadFolder = path.join("uploads", "consultants");
         if (!fs.existsSync(uploadFolder)) {
             fs.mkdirSync(uploadFolder, { recursive: true });
         }
 
-        // Save profile image
-        // const fileName = `${Date.now()}-${file.originalname}`;
-        // const savePath = path.join(uploadFolder, fileName);
-        // await fs.promises.writeFile(savePath, file.buffer);
-        // const imageURL = savePath;
-
-        // Generate unique agoraUid
         let randomAgoraUid;
         let attempts = 0;
         const maxAttempts = 10;
@@ -107,7 +93,6 @@ const consultantController = async (req, res) => {
             }
         } while (true);
 
-        // Parse languages array
         let languagesArray;
         try {
             languagesArray = JSON.parse(body.languages);
@@ -118,8 +103,6 @@ const consultantController = async (req, res) => {
             });
         }
         const hashPassword = await bcrypt.hash(body.password, 10);
-        console.log("hashPassword", hashPassword);
-        // Create consultant document
         const consultantDetails = new User({
             shop_id,
             fullname: body.fullName,
@@ -162,7 +145,6 @@ const consultantController = async (req, res) => {
     } catch (error) {
         console.error("Error in consultantController:", error);
 
-        // Handle MongoDB duplicate key error
         if (error.code === 11000) {
             const field = Object.keys(error.keyPattern)[0];
             return res.status(400).json({
@@ -171,7 +153,6 @@ const consultantController = async (req, res) => {
             });
         }
 
-        // Handle validation errors
         if (error.name === 'ValidationError') {
             const errors = Object.values(error.errors).map(err => err.message);
             return res.status(400).json({
@@ -181,7 +162,6 @@ const consultantController = async (req, res) => {
             });
         }
 
-        // Generic error response
         return res.status(500).json({
             success: false,
             message: error.message || "Internal server error"
