@@ -68,6 +68,115 @@ const installShopifyApp = (req, res) => {
 
 
 
+// const authCallback = async (req, res) => {
+//     try {
+//         console.log("🔁 Auth callback triggered");
+//         const { shop, hmac, code, host } = req.query;
+//         console.log("shop", shop);
+//         console.log("hmac", hmac);
+//         console.log("code", code);
+//         console.log("host___Update___", host);
+//         if (!shop || !hmac || !code) {
+//             console.log("❌ Missing required parameters");
+//             return res.status(400).send("Missing required parameters");
+//         }
+
+//         // --- STEP 2: HMAC validation ke liye message banayo
+//         // HMAC security ke liye hota hai - verify karta hai ki request Shopify se hi aayi hai
+//         // hmac aur signature ko exclude karo (ye validation ke liye use hoga)
+
+//         const params = { ...req.query };
+//         delete params.hmac;
+//         delete params.signature;
+
+//         const sortedKeys = Object.keys(params).sort();
+//         const message = sortedKeys
+//             .map((key) => `${key}=${params[key]}`)
+//             .join("&");
+
+//         const generatedHmac = crypto
+//             .createHmac("sha256", SHOPIFY_API_SECRET)
+//             .update(message)
+//             .digest("hex");
+
+//         if (generatedHmac.toLowerCase() !== hmac.toLowerCase()) {
+//             console.log("❌ HMAC validation failed");
+//             return res.status(400).send("HMAC validation failed");
+//         }
+
+//         console.log("✅ HMAC validation successful");
+
+//         const tokenResponse = await axios.post(
+//             `https://${shop}/admin/oauth/access_token`,
+//             {
+//                 client_id: client_id,
+//                 client_secret: SHOPIFY_API_SECRET,
+//                 code,
+//             }
+//         );
+
+//         const accessToken = tokenResponse.data.access_token;
+//         if (!accessToken) {
+//             return res.status(400).send("Failed to get access token");
+//         }
+
+//         const shopInfo = await axios.get(
+//             `https://${shop}/admin/api/2024-01/shop.json`,
+//             {
+//                 headers: {
+//                     "X-Shopify-Access-Token": accessToken
+//                 }
+//             }
+//         );
+//         const shopId = shopInfo.data.shop.id;
+//         const ownerEmail = shopInfo.data.shop.email;
+
+//         let shopDoc = await shopModel.findOne({ shop });
+
+//         if (shopDoc) {
+//             shopDoc.accessToken = accessToken;
+//             shopDoc.shopId = shopId;
+//             shopDoc.email = ownerEmail;
+//             shopDoc.installedAt = new Date();
+//             await shopDoc.save();
+//         } else {
+//             await new shopModel({
+//                 shop,
+//                 accessToken,
+//                 shopId,
+//                 email: ownerEmail,
+//                 installedAt: new Date(),
+
+//             }).save();
+//         }
+
+//         const AdminUser = await shopModel.findOne({ shop: shop });
+//         if (!AdminUser) {
+//             return res.status(400).send("Admin user not found");
+//         }
+
+//         /** Register Order Paid Webhook */
+//         await registerOrderPaidWebhook(shop, accessToken);
+//         await registerOrderDeletedWebhook(shop, accessToken);
+
+//         const AdminiId = AdminUser._id;
+//         console.log("AdminiId", AdminiId);
+//         // const redirectUrl = `${frontendUrl}/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&adminId=${encodeURIComponent(AdminiId)}`;
+//         const redirectUrl =
+//             `${frontendUrl}/?shop=${encodeURIComponent(shop)}` +
+//             `&host=${encodeURIComponent(host)}` +
+//             `&adminId=${encodeURIComponent(AdminiId)}` +
+//             `&embedded=1`;
+
+//         console.log("➡️ Redirecting to:", redirectUrl);
+//         return res.redirect(redirectUrl);
+//     } catch (error) {
+//         console.error(" Auth callback error:", error || error);
+//         return res.status(500).send("Failed to complete authentication");
+//     }
+// };
+
+
 const authCallback = async (req, res) => {
     try {
         console.log("🔁 Auth callback triggered");
@@ -161,23 +270,48 @@ const authCallback = async (req, res) => {
 
         const AdminiId = AdminUser._id;
         console.log("AdminiId", AdminiId);
-        // const redirectUrl = `${frontendUrl}/?shop=${encodeURIComponent(shop)}&host=${encodeURIComponent(host)}&adminId=${encodeURIComponent(AdminiId)}`;
-        const redirectUrl =
-            `${frontendUrl}/?shop=${encodeURIComponent(shop)}` +
-            `&host=${encodeURIComponent(host)}` +
-            `&adminId=${encodeURIComponent(AdminiId)}` +
-            `&embedded=1`;
 
-        console.log("➡️ Redirecting to:", redirectUrl);
+        // ✅ CRITICAL FIX: Shopify App Bridge ke liye proper host
+        // Agar Shopify host nahi de raha (custom installation flow), toh hum generate karenge
+        let finalHost = host;
+
+        if (!finalHost || !finalHost.startsWith('YWRtaW4')) {
+            console.log("⚠️ Shopify host missing or invalid. Generating one...");
+            // Shopify compatible Base64 host generate karo
+            // Format: "admin.shopify.com/store/{shop-name}"
+            const shopDomain = shop.replace('.myshopify.com', '');
+            const hostString = `admin.shopify.com/store/${shopDomain}`;
+            finalHost = Buffer.from(hostString).toString('base64');
+            console.log("🛠️ Generated host:", finalHost.substring(0, 50) + '...');
+        } else {
+            console.log("✅ Using Shopify provided host");
+        }
+
+        // ✅ URL parameters complete set
+        const redirectUrl = `${frontendUrl}/?` + new URLSearchParams({
+            shop: shop,
+            host: finalHost, // ✅ Shopify compatible Base64 host
+            embedded: '1',   // ✅ Required for embedded apps
+            adminId: AdminiId.toString(),
+            source: 'shopify_auth',
+            timestamp: Date.now().toString(), // Cache prevent
+            session: require('crypto').randomBytes(16).toString('hex')
+        }).toString();
+
+        console.log("➡️ Redirecting to:", {
+            frontend: frontendUrl,
+            hasHost: !!finalHost,
+            hostPreview: finalHost ? finalHost.substring(0, 30) + '...' : 'none',
+            adminId: AdminiId,
+            isEmbedded: true
+        });
+
         return res.redirect(redirectUrl);
     } catch (error) {
-        console.error(" Auth callback error:", error || error);
+        console.error("❌ Auth callback error:", error.message || error);
         return res.status(500).send("Failed to complete authentication");
     }
 };
-
-
-
 
 /** Proxy for Shopify Theme Assets 
  * 1. GET /apps/theme/header?shop=store.myshopify.com
