@@ -321,7 +321,8 @@ const ioServer = (server) => {
 
             const callerSocketId = onlineUsers[callerId];
             const receiverSocketId = onlineUsers[receiverId];
-
+            console.log("callerSocketId", callerSocketId)
+            console.log("receiverSocketId", receiverSocketId)
             const payload = { callerId, receiverId, channelName, callType };
 
             if (callerSocketId) {
