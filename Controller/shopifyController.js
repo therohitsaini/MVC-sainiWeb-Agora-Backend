@@ -165,6 +165,7 @@ const authCallback = async (req, res) => {
         const redirectUrl =
             `${frontendUrl}/?shop=${encodeURIComponent(shop)}` +
             `&host=${encodeURIComponent(host)}` +
+            `&adminId=${encodeURIComponent(AdminiId)}` +
             `&embedded=1`;
 
         console.log("➡️ Redirecting to:", redirectUrl);
