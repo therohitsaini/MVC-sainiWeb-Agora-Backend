@@ -58,9 +58,9 @@ const manageShopifyUser = async (shop, customerId) => {
                     shopifyCustomerId: id,
                     shop_id: getShop._id,
                     userType: "customer",
-                    email: customer.email,
+                     walletBalance: 100,
+                   email: customer.email,
                     fullname: fullname,
-                    walletBalance: 100,
                     isChatAccepted: "request",
                     createdAt: customer.createdAt,
                     numberOfOrders: customer.numberOfOrders

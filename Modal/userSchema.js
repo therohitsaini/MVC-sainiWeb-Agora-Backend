@@ -140,7 +140,7 @@ const registerUserSchema = new mongoose.Schema(
         },
         isChatAccepted: {
             type: String,
-            enum: ["request", "accepted", "rejected", "pending"],
+            default: "request",
 
         },
         firebaseToken: {
