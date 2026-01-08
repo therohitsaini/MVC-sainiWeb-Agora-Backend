@@ -92,27 +92,27 @@ const ioServer = (server) => {
                     );
                 }
 
-                const savedChat = await MessageModal.create([{
+                const savedChat = await MessageModal.create({
                     senderId,
                     receiverId,
                     shop_id,
                     text,
                     timestamp,
                     isRead: false
-                }],);
-                const senderInfo = await User.findById(senderId).select(
-                    "fullname profileImage"
-                ).lean();
-                console.log("senderInfo", senderInfo)
-                // 3️⃣ Message object enrich karo
+                });
+
+                const senderInfo = await User.findById(senderId)
+                    .select("fullname profileImage")
+                    .lean();
+
                 const messageWithSender = {
-                    ...savedChat.toObject(),
+                    ...savedChat.toObject(), // ✅ now works
                     senderName: senderInfo?.fullname || "User",
                     avatar: senderInfo?.profileImage || null
                 };
 
-                // 4️⃣ Emit enriched message
                 io.emit("receiveMessage", messageWithSender);
+
 
 
                 // io.emit("receiveMessage", savedChat[0]);
