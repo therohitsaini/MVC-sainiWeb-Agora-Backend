@@ -28,14 +28,8 @@ const ioServer = (server) => {
             }
             const roomId = user_Id.toString();
             socket.join(roomId);
-            if (!onlineUsers.has(roomId)) {
-                onlineUsers.set(roomId, new Set());
-            }
-            onlineUsers.get(roomId).add(socket.id);
-            socket.roomId = roomId;
+            onlineUsers[roomId] = socket.id;
 
-            console.log("🧠 onlineUsers after register:");
-            console.log([...onlineUsers.entries()]);
             try {
                 await User.findByIdAndUpdate(roomId, { isActive: true });
             } catch (err) {
@@ -275,7 +269,7 @@ const ioServer = (server) => {
 
             const callerSocketId = onlineUsers.get(callerId);
             const receiverSocketId = onlineUsers.get(receiverId);
-            console.log("callerSocketId___Rejectedq ", callerSocketId)
+            console.log("callerSocketId___Rejected___", callerSocketId)
             console.log("receiverSocketId", receiverSocketId)
             const payload = { callerId, receiverId, channelName, callType };
 
