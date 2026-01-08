@@ -28,8 +28,14 @@ const ioServer = (server) => {
             }
             const roomId = user_Id.toString();
             socket.join(roomId);
-            onlineUsers[roomId] = socket.id;
+            if (!onlineUsers.has(roomId)) {
+                onlineUsers.set(roomId, new Set());
+            }
+            onlineUsers.get(roomId).add(socket.id);
+            socket.roomId = roomId;
 
+            console.log("🧠 onlineUsers after register:");
+            console.log([...onlineUsers.entries()]);
             try {
                 await User.findByIdAndUpdate(roomId, { isActive: true });
             } catch (err) {
