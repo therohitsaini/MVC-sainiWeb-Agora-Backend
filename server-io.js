@@ -193,8 +193,8 @@ const ioServer = (server) => {
                     if (activeCall.status === "ringing") {
                         activeCall.status = "missed";
 
-                        const callerSocketId = onlineUsers[callerId];
-                        const receiverSocketId = onlineUsers[receiverId];
+                        const callerSocketId = onlineUsers.get(callerId);
+                        const receiverSocketId = onlineUsers.get(receiverId);
                         console.log("callerSokect_Caller", callerSocketId)
                         console.log("callerSokect_Receiver", receiverSocketId)
 
