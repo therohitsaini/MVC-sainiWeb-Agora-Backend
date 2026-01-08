@@ -192,7 +192,6 @@ const ioServer = (server) => {
 
                     if (activeCall.status === "ringing") {
                         activeCall.status = "missed";
-
                         const callerSocketId = onlineUsers.get(callerId);
                         const receiverSocketId = onlineUsers.get(receiverId);
                         console.log("callerSokect_Caller", callerSocketId)
@@ -268,9 +267,9 @@ const ioServer = (server) => {
             call.status = "rejected";
             clearTimeout(call.timeout);
 
-            const callerSocketId = onlineUsers[callerId];
-            const receiverSocketId = onlineUsers[receiverId];
-            console.log("callerSocketId", callerSocketId)
+            const callerSocketId = onlineUsers.get(callerId);
+            const receiverSocketId = onlineUsers.get(receiverId);
+            console.log("callerSocketId___Rejectedq ", callerSocketId)
             console.log("receiverSocketId", receiverSocketId)
             const payload = { callerId, receiverId, channelName, callType };
 
