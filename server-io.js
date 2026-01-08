@@ -21,21 +21,35 @@ const ioServer = (server) => {
     io.on("connection", (socket) => {
         console.log("Socket connected:", socket.id);
         socket.on("register", async (user_Id) => {
-            console.log("user is online", user_Id)
+            console.log("user is online", user_Id);
+
             if (!mongoose.Types.ObjectId.isValid(user_Id)) {
                 console.log("Invalid userId received:", user_Id);
                 return;
             }
-            const roomId = user_Id.toString();
-            socket.join(roomId);
-            onlineUsers[roomId] = socket.id;
+
+            const userId = user_Id.toString();
+            socket.userId = userId; // 👈 important
+
+            // 🔹 agar pehli baar user aaya
+            if (!onlineUsers.has(userId)) {
+                onlineUsers.set(userId, new Set());
+            }
+
+            // 🔹 socket add karo
+            onlineUsers.get(userId).add(socket.id);
+
+            socket.join(userId);
+
+            console.log("Online users map:", onlineUsers);
 
             try {
-                await User.findByIdAndUpdate(roomId, { isActive: true });
+                await User.findByIdAndUpdate(userId, { isActive: true });
             } catch (err) {
                 console.error("Error updating user active status:", err);
             }
         });
+
 
         socket.on("sendMessage", async (data) => {
             const { senderId, receiverId, shop_id, text, timestamp } = data;
@@ -547,23 +561,30 @@ const ioServer = (server) => {
 
 
         socket.on("disconnect", async () => {
-            for (let uid in onlineUsers) {
-                if (!mongoose.Types.ObjectId.isValid(uid)) {
-                    console.log(" Invalid uid received:", uid);
-                    return;
-                }
-                if (onlineUsers[uid] === socket.id) {
-                    delete onlineUsers[uid];
-                    console.log(" User disconnected:", uid);
-                    console.log(" Remaining online users:", Object.keys(onlineUsers));
+            const userId = socket.userId;
+            if (!userId) return;
+
+            const sockets = onlineUsers.get(userId);
+
+            if (sockets) {
+                sockets.delete(socket.id);
+
+                // agar user ke saare tabs close ho gaye
+                if (sockets.size === 0) {
+                    onlineUsers.delete(userId);
+                    console.log("User fully offline:", userId);
+
                     try {
-                        await User.findByIdAndUpdate(uid, { isActive: false });
+                        await User.findByIdAndUpdate(userId, { isActive: false });
                     } catch (err) {
                         console.error("Error updating user inactive status:", err);
                     }
                 }
             }
+
+            console.log("Socket disconnected:", socket.id);
         });
+
     });
 
 
