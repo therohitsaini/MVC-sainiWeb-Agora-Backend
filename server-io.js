@@ -269,12 +269,12 @@ const ioServer = (server) => {
 
             const callerSocketId = onlineUsers.get(callerId);
             const receiverSocketId = onlineUsers.get(receiverId);
-            console.log("callerSocketId___Rejectedq", callerSocketId)
+            console.log("callerSocketId___Rejected", callerSocketId)
             console.log("receiverSocketId", receiverSocketId)
             const payload = { callerId, receiverId, channelName, callType };
 
-            if (callerId) {
-                io.to(callerId).emit("call-ended-rejected", payload);
+            if (callerSocketId) {
+                io.to(callerSocketId).emit("call-ended-rejected", payload);
             }
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit("call-ended-rejected", payload);
