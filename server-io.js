@@ -103,7 +103,7 @@ const ioServer = (server) => {
                 const senderInfo = await User.findById(senderId).select(
                     "fullname profileImage"
                 ).lean();
-
+                console.log("senderInfo", senderInfo)
                 // 3️⃣ Message object enrich karo
                 const messageWithSender = {
                     ...savedChat.toObject(),
