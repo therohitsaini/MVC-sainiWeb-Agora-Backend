@@ -156,7 +156,7 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
 
           <div style="flex:1;">
             <div style="font-weight:600;">New Message</div>
-            <div style="font-size:14px;">${message || "New Message"}</div>
+            <div style="font-size:14px;">${ "New Message"}</div>
           </div>
 
           <div 
