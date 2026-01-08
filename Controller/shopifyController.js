@@ -590,6 +590,7 @@ const proxyShopifyChatSection = (req, res) => {
         req,
         res,
         iframeUrl,
+        chat = "chatSection",
         {
             title: "Chat Section"
         }

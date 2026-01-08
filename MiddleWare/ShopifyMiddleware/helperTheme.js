@@ -58,7 +58,7 @@ async function loadSections(shop, themeId, cookieHeader, userAgent, client) {
 /**
  * 🔥 MAIN REUSABLE FUNCTION
  */
-async function renderShopifyPage(req, res, iframeUrl, options = {}) {
+async function renderShopifyPage(req, res, iframeUrl, chat = "", options = {}) {
   const shop = req.query.shop;
   const themeId = req.query.theme_id;
   const cookieHeader = req.headers.cookie || "";
@@ -118,7 +118,8 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
             ></iframe>
           </main>
           <footer style="flex-shrink:0;">
-            ${footerHtml}
+
+            ${chat === "chatSection" ? "" : footerHtml}
           </footer>
           <!-- Parent script (MUST HAVE) -->
           <script src="https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.6/iframeResizer.min.js"></script>
