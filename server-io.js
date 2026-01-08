@@ -100,10 +100,22 @@ const ioServer = (server) => {
                     timestamp,
                     isRead: false
                 }],);
+                const senderInfo = await User.findById(senderId).select(
+                    "fullname profileImage"
+                );
+
+                // 3️⃣ Message object enrich karo
+                const messageWithSender = {
+                    ...savedChat.toObject(),
+                    senderName: senderInfo?.fullname || "User",
+                    avatar: senderInfo?.profileImage || null
+                };
+
+                // 4️⃣ Emit enriched message
+                io.emit("receiveMessage", messageWithSender);
 
 
-
-                io.emit("receiveMessage", savedChat[0]);
+                // io.emit("receiveMessage", savedChat[0]);
 
                 const receiver = await User.findById(receiverId);
                 if (receiver?.firebaseToken?.token && !receiver?.isActive) {
