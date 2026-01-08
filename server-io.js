@@ -273,8 +273,8 @@ const ioServer = (server) => {
             console.log("receiverSocketId", receiverSocketId)
             const payload = { callerId, receiverId, channelName, callType };
 
-            if (callerSocketId) {
-                io.to(callerSocketId).emit("call-ended-rejected", payload);
+            if (callerId) {
+                io.to(callerId).emit("call-ended-rejected", payload);
             }
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit("call-ended-rejected", payload);
