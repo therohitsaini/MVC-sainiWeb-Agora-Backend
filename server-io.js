@@ -16,7 +16,7 @@ const ioServer = (server) => {
         }
     });
 
-    let onlineUsers = {};
+    const onlineUsers = new Map();
     let activeCalls = new Map();
     io.on("connection", (socket) => {
         console.log("Socket connected:", socket.id);
@@ -277,7 +277,6 @@ const ioServer = (server) => {
             if (callerSocketId) {
                 io.to(callerSocketId).emit("call-ended-rejected", payload);
             }
-
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit("call-ended-rejected", payload);
             }
