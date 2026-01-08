@@ -110,14 +110,12 @@ async function renderShopifyPage(req, res, iframeUrl, options = {}) {
             ${headerHtml}
           </header>
           <main style="flex:1;overflow:hidden;position:relative;">
-          <iframe
+            <iframe 
               id="agora-iframe"
-              src="${iframeUrl}"
-              allow="microphone; camera"
-              sandbox="allow-scripts allow-same-origin allow-forms"
-              style="border:none;width:100%;min-height:90vh;"
+              src="${iframeUrl}" 
+               allow="microphone; camera"
+              style="border:none;width:100%;min-height:90vh;display:block;"
             ></iframe>
-
           </main>
           <footer style="flex-shrink:0;">
             ${footerHtml}
