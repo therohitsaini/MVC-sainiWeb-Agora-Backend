@@ -20,7 +20,7 @@ const ioServer = (server) => {
     let activeCalls = new Map();
 
     io.on("connection", (socket) => {
-        console.log("🔌 Socket connected:", socket.id);
+        console.log(" Socket connected:", socket.id);
 
         socket.on("register", async (user_Id) => {
             console.log("👤 register:", user_Id);
@@ -114,7 +114,7 @@ const ioServer = (server) => {
                     .lean();
 
                 const messageWithSender = {
-                    ...savedChat.toObject(), // ✅ now works
+                    ...savedChat.toObject(), 
                     senderName: senderInfo?.fullname || "User",
                     avatar: senderInfo?.profileImage || null
                 };
