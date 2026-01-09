@@ -274,7 +274,7 @@ const ioServer = (server) => {
                 console.log("callerSocketId___Rejected_EMIT", callerSocketId)
                 io.to(callerSocketId).emit("call-ended-rejected", payload);
             }
-            if (receiverSocketId) {
+            if (receiverId) {
                 console.log("receiverSocketId___Rejected_EMIT", receiverSocketId)
                 io.to(receiverSocketId).emit("call-ended-rejected", payload);
             }
