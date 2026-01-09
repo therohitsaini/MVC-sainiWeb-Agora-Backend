@@ -2,6 +2,7 @@ const express = require('express');
 const shopifyRoute = express.Router();
 const { installShopifyApp,
     authCallback,
+    appIsInstalled,
     proxyThemeAssetsController,
     proxyShopifyConsultantPage,
     proxyShopifyConsultantLoginPage,
@@ -24,4 +25,5 @@ shopifyRoute.get('/consultant-theme/view-profile', proxyShopifyViewProfile);
 shopifyRoute.get('/consultant-theme/chats-c', proxyShopifyChatSection);
 shopifyRoute.get('/consultant-theme/profile', proxyProfileSection);
 shopifyRoute.get('/consultant-theme/video-calling-page', proxyShopifyCallAccepted);
+shopifyRoute.get('/app/is-installed/:shop', appIsInstalled);
 module.exports = shopifyRoute;
