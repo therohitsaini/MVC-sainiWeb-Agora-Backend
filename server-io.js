@@ -157,9 +157,8 @@ const ioServer = (server) => {
                 }
 
                 const callId = `${callerId}_${receiverId}_${channelName}`;
-
                 const user_ = await User.findById(callerId).select("fullname walletBalance");
-                const receiverSocketId = onlineUsers[receiverId];
+                const receiverSocketId = onlineUsers.get(receiverId);
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("incoming-call", {
                         callerId,
@@ -240,8 +239,8 @@ const ioServer = (server) => {
                 call.status = "accepted";
                 clearTimeout(call.timeout);
 
-                const callerSocketId = onlineUsers[callerId];
-                const receiverSocketId = onlineUsers[receiverId];
+                const callerSocketId = onlineUsers.get(callerId);
+                const receiverSocketId = onlineUsers.get(receiverId);
                 if (callerSocketId) {
                     io.to(callerSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType });
                 }
@@ -291,124 +290,7 @@ const ioServer = (server) => {
             console.log("📞 Call rejected & ended for both:", callId);
         });
 
-        // socket.on("call-accepted", async ({ toUid, fromUid, type, channelName }) => {
-        //     try {
-        //         await HistroyMW(toUid, fromUid, type);
-        //     } catch (error) {
-        //         console.error("Error in call-accepted:", error);
-        //     }
-
-        //     const callerSocketId = onlineUsers[fromUid];
-        //     const receiverSocketId = onlineUsers[toUid];
-        //     if (callerSocketId) {
-        //         io.to(callerSocketId).emit("call-accepted", { toUid, type, channelName });
-        //     }
-        //     if (receiverSocketId) {
-        //         io.to(receiverSocketId).emit("call-accepted", { fromUid, type, channelName });
-        //     }
-
-        //     let chargePerMinute = await User.findById(fromUid).select("fees").lean();
-        //     const rate = chargePerMinute.fees;
-        //     const intervalId = setInterval(async () => {
-        //         try {
-        //             let fromObjectId;
-        //             try {
-        //                 fromObjectId = new mongoose.Types.ObjectId(toUid);
-        //             } catch (e) {
-        //                 console.error("Invalid fromUid ObjectId:", toUid);
-        //                 clearInterval(intervalId);
-        //                 if (callerSocketId) {
-        //                     io.to(callerSocketId).emit("call-ended", { reason: "Invalid caller ID" });
-        //                 }
-        //                 return;
-        //             }
-        //             const currentUser = await User.findById(fromObjectId).select("walletBalance").lean();
-        //             const numericBalance = Number(currentUser && currentUser.walletBalance);
-
-        //             if (!currentUser || Number.isNaN(numericBalance)) {
-        //                 clearInterval(intervalId);
-        //                 if (callerSocketId) {
-        //                     io.to(callerSocketId).emit("call-ended", { reason: "Caller not found" });
-        //                 }
-        //                 return;
-        //             }
-
-        //             if (numericBalance < Number(rate)) {
-        //                 clearInterval(intervalId);
-        //                 if (callerSocketId) {
-        //                     io.to(callerSocketId).emit("call-ended", { reason: "Insufficient balance" });
-        //                 }
-
-        //                 return;
-        //             }
-
-        //             const updatedCaller = await User.findByIdAndUpdate(
-        //                 fromObjectId,
-        //                 { $inc: { walletBalance: -Number(rate) } },
-        //                 { new: true }
-        //             ).lean();
-
-        //             if (!updatedCaller) {
-        //                 clearInterval(intervalId);
-        //                 if (callerSocketId) {
-        //                     io.to(callerSocketId).emit("call-ended", { reason: "Insufficient balance" });
-        //                 }
-
-        //                 return;
-        //             }
-
-        //         } catch (err) {
-        //             console.error("Error deducting balance:", err);
-        //             clearInterval(intervalId);
-        //         }
-        //     }, 60 * 1000);
-
-        //     socket.callIntervalId = intervalId;
-        // });
-
-        // socket.on("call-rejected", ({ toUid, fromUid }) => {
-        //     const callerSocketId = onlineUsers[toUid];
-        //     if (callerSocketId) {
-        //         io.to(callerSocketId).emit("call-rejected", { fromUid });
-        //         console.log(` Call rejected by ${fromUid} for caller ${toUid}`);
-        //     } else {
-        //         console.log(` Caller ${toUid} is offline`);
-        //     }
-        // });
-
-        // socket.on("call-ended", async ({ fromUid, toUid }) => {
-
-        //     try {
-
-        //         const conversation = await Conversation.findOne({
-        //             consultantId: fromUid,
-        //             userId: toUid,
-        //             endTime: { $exists: false }
-        //         });
-
-        //         if (conversation) {
-        //             const endTime = new Date();
-        //             const durationSeconds = Math.floor((endTime - conversation.startTime) / 1000);
-
-        //             await Conversation.findByIdAndUpdate(conversation._id, {
-        //                 endTime: endTime,
-        //                 durationSeconds: durationSeconds
-        //             });
-
-
-        //         } else {
-        //             console.log(" No active conversation found to end");
-        //         }
-        //     } catch (error) {
-        //         console.error(" Error updating conversation:", error);
-        //     }
-
-
-        //     const receiverSocketId = onlineUsers[toUid];
-        //     if (receiverSocketId) {
-        //         io.to(receiverSocketId).emit("call-ended", { fromUid });
-        //     }
-        // });
+     
         socket.on("acceptUserChat", async (acceptData) => {
             const { userId, shopId, consultantId } = acceptData;
             if (!mongoose.Types.ObjectId.isValid(userId)) return;
