@@ -345,7 +345,6 @@ const ioServer = (server) => {
                 if (remainingBalance >= perSecondCost) {
                     remainingBalance -= perSecondCost;
                     chatSeconds++;
-                    // update frontend timer if needed
                 } else {
                     clearInterval(interval);
                     console.log("🔥 BACKEND: autoChatEnded EMIT", {
@@ -384,7 +383,6 @@ const ioServer = (server) => {
                 const shop = await shopModel.findById(shopId).session(session);
                 if (!shop) throw new Error("Shop not found");
 
-                // Calculate amounts
                 const endTime = new Date();
                 const totalSeconds = Math.floor((endTime - new Date(transaction.startTime)) / 1000);
                 const perSecondCost = consultantCost.chatCost / 60;
@@ -393,14 +391,12 @@ const ioServer = (server) => {
                 const consultantShare = totalAmount - adminCommission;
                 const shopShare = adminCommission;
 
-                // 1️⃣ Update transaction
                 transaction.endTime = endTime;
                 transaction.totalSeconds = totalSeconds;
                 transaction.totalAmount = totalAmount;
                 transaction.status = "completed";
                 await transaction.save({ session });
 
-                // 2️⃣ Update wallets
                 await User.findByIdAndUpdate(userId, { $inc: { walletBalance: -totalAmount } }, { session });
                 await User.findByIdAndUpdate(consultantId, { $inc: { walletBalance: consultantShare } }, { session });
                 await shopModel.findByIdAndUpdate(shopId, { $inc: { adminWalletBalance: shopShare } }, { session });
@@ -411,10 +407,8 @@ const ioServer = (server) => {
 
                 await User.findByIdAndUpdate(userId, { $set: { isChatAccepted: "request" } }, { session });
 
-                // 3️⃣ Commit
                 await session.commitTransaction();
 
-                // 4️⃣ Emit events
                 io.to(userId).emit("chatEnded", { transactionId, totalSeconds, totalAmount, reason: "ended" });
                 io.to(consultantId).emit("chatEnded", { transactionId, totalSeconds, totalAmount, reason: "ended" });
 
