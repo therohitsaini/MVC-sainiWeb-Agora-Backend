@@ -139,6 +139,7 @@ const ioServer = (server) => {
                     console.log("❌ Missing required fields");
                     return;
                 }
+                console.log("❌❌❌❌❌ caller is calling to receiver", callerId, receiverId)
                 const callerInfo = await User.findById({ _id: callerId });
                 if (!callerInfo) throw new Error("Caller not found");
                 if (callerInfo.userType === "customer") {
