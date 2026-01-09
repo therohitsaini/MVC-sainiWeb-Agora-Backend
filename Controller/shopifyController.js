@@ -42,7 +42,7 @@ const topicDeleted = "ORDERS_DELETED";
  */
 
 const appIsInstalled = async (req, res) => {
-    const shop = req.query;
+    const shop = req.params.shop;
     console.log("shop____appIsInstalled", shop);
     if (!shop) return res.status(400).send("Missing shop param");
     const shopDoc = await shopModel.findOne({ shop });
