@@ -46,7 +46,12 @@ const appIsInstalled = async (req, res) => {
     console.log("shop____appIsInstalled", shop);
     if (!shop) return res.status(400).send("Missing shop param");
     const shopDoc = await shopModel.findOne({ shop: shop });
-    console.log("shopDoc____appIsInstalled", shopDoc);
+    // console.log("shopDoc____appIsInstalled", shopDoc);
+    if (shopDoc.accessToken) {
+        return res.status(200).send(true);
+    } else {
+        return res.status(200).send(false);
+    }
 
 }
 
