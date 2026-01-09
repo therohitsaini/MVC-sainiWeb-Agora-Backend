@@ -20,21 +20,18 @@ const ioServer = (server) => {
     let activeCalls = new Map();
     io.on("connection", (socket) => {
         console.log("Socket connected:", socket.id);
-        socket.on("register", async (user_Id) => {
-            console.log("user is online", user_Id)
-            if (!mongoose.Types.ObjectId.isValid(user_Id)) {
-                console.log("Invalid userId received:", user_Id);
-                return;
-            }
-            const roomId = user_Id.toString();
-            socket.join(roomId);
-            onlineUsers[roomId] = socket.id;
 
-            try {
-                await User.findByIdAndUpdate(roomId, { isActive: true });
-            } catch (err) {
-                console.error("Error updating user active status:", err);
-            }
+        socket.on("register", async (user_Id) => {
+            if (!mongoose.Types.ObjectId.isValid(user_Id)) return;
+
+            const uid = user_Id.toString();
+            socket.join(uid);
+
+            onlineUsers.set(uid, socket.id);
+
+            console.log("🟢 ONLINE USERS:", [...onlineUsers.entries()]);
+
+            await User.findByIdAndUpdate(uid, { isActive: true });
         });
 
         socket.on("sendMessage", async (data) => {
@@ -548,25 +545,30 @@ const ioServer = (server) => {
             }
         });
 
-
         socket.on("disconnect", async () => {
-            for (let uid in onlineUsers) {
-                if (!mongoose.Types.ObjectId.isValid(uid)) {
-                    console.log(" Invalid uid received:", uid);
-                    return;
-                }
-                if (onlineUsers[uid] === socket.id) {
-                    delete onlineUsers[uid];
-                    console.log(" User disconnected:", uid);
-                    console.log(" Remaining online users:", Object.keys(onlineUsers));
+            console.log("❌ Socket disconnected:", socket.id);
+
+            for (const [uid, socketId] of onlineUsers.entries()) {
+                if (socketId === socket.id) {
+                    onlineUsers.delete(uid);
+
+                    console.log("👤 User disconnected:", uid);
+                    console.log(
+                        "📊 Remaining online users:",
+                        Array.from(onlineUsers.keys())
+                    );
+
                     try {
                         await User.findByIdAndUpdate(uid, { isActive: false });
                     } catch (err) {
                         console.error("Error updating user inactive status:", err);
                     }
+
+                    break; 
                 }
             }
         });
+
     });
 
 
