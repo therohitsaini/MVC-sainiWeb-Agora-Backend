@@ -267,7 +267,7 @@ const ioServer = (server) => {
             const callerSocketId = onlineUsers.get(callerId);
             const receiverSocketId = onlineUsers.get(receiverId);
             console.log("callerSocketId___Rejected", callerSocketId)
-            console.log("receiverSocketId", receiverSocketId)
+            console.log("receiverSocketId___Rejected", receiverSocketId)
             const payload = { callerId, receiverId, channelName, callType };
 
             if (callerSocketId) {
@@ -278,6 +278,7 @@ const ioServer = (server) => {
                 console.log("receiverSocketId___Rejected_EMIT", receiverSocketId)
                 io.to(receiverSocketId).emit("call-ended-rejected", payload);
             }
+            console.log("activeCalls___Rejected", activeCalls)
 
             activeCalls.delete(callId);
             await missCalled.create({
