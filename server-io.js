@@ -18,30 +18,22 @@ const ioServer = (server) => {
 
     const onlineUsers = new Map();
     let activeCalls = new Map();
-
     io.on("connection", (socket) => {
-        console.log(" Socket connected:", socket.id);
-
+        console.log("Socket connected:", socket.id);
         socket.on("register", async (user_Id) => {
-            console.log("👤 register:", user_Id);
-
+            console.log("user is online", user_Id)
             if (!mongoose.Types.ObjectId.isValid(user_Id)) {
-                console.log("❌ Invalid userId:", user_Id);
+                console.log("Invalid userId received:", user_Id);
                 return;
             }
-
-            const userId = user_Id.toString();
-
-            onlineUsers.set(userId, socket.id);
-
-            socket.join(userId);
-
-            console.log("✅ ONLINE USERS:", [...onlineUsers.entries()]);
+            const roomId = user_Id.toString();
+            socket.join(roomId);
+            onlineUsers[roomId] = socket.id;
 
             try {
-                await User.findByIdAndUpdate(userId, { isActive: true });
+                await User.findByIdAndUpdate(roomId, { isActive: true });
             } catch (err) {
-                console.error("DB error:", err);
+                console.error("Error updating user active status:", err);
             }
         });
 
@@ -114,7 +106,7 @@ const ioServer = (server) => {
                     .lean();
 
                 const messageWithSender = {
-                    ...savedChat.toObject(), 
+                    ...savedChat.toObject(), // ✅ now works
                     senderName: senderInfo?.fullname || "User",
                     avatar: senderInfo?.profileImage || null
                 };
