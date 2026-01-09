@@ -48,9 +48,13 @@ const appIsInstalled = async (req, res) => {
     const shopDoc = await shopModel.findOne({ shop: shop });
     // console.log("shopDoc____appIsInstalled", shopDoc);
     if (shopDoc.accessToken) {
-        return res.status(200).send(true);
+        return res.status(200).send({
+            installed: true,
+        });
     } else {
-        return res.status(200).send(false);
+        return res.status(200).send({
+            installed: false,
+        });
     }
 
 }
