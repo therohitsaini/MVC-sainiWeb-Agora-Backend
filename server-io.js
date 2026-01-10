@@ -291,7 +291,7 @@ const ioServer = (server) => {
             console.log("📞 Call rejected & ended for both:", callId);
         });
 
-     
+
         socket.on("acceptUserChat", async (acceptData) => {
             const { userId, shopId, consultantId } = acceptData;
             if (!mongoose.Types.ObjectId.isValid(userId)) return;
@@ -367,9 +367,27 @@ const ioServer = (server) => {
 
         });
 
+        socket.on("call-ended", async (data) => {
+            const { callerId, receiverId, channelName, callType } = data;
+            console.log("call-ended__________________________", callerId, receiverId, channelName, callType);
+            // const session = await mongoose.startSession();
+            // session.startTransaction();
+
+            // try {
+            //     const transaction = await TransactionHistroy.create({
+            //         senderId: callerId,
+            //         receiverId,
+            //         shop_id: shopId,
+            //     });
+            // } catch (error) {
+            //     console.error("Error in call-ended:", error);
+            // } finally {
+            //     session.endSession();
+            // }
+        });
+
         socket.on("endChat", async (data) => {
             const { transactionId, userId, consultantId, shopId } = data;
-
             const session = await mongoose.startSession();
             session.startTransaction();
 
@@ -441,7 +459,7 @@ const ioServer = (server) => {
                         console.error("Error updating user inactive status:", err);
                     }
 
-                    break; 
+                    break;
                 }
             }
         });
