@@ -53,7 +53,7 @@ const transactionSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ["chat", "voice-call", "video-call"],
+        enum: ["chat", "voice", "video"],
         required: true
     }
 }, { timestamps: true });
