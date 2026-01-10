@@ -46,7 +46,7 @@ const appIsInstalled = async (req, res) => {
     console.log("shop____appIsInstalled", shop);
     if (!shop) return res.status(400).send("Missing shop param");
     const shopDoc = await shopModel.findOne({ shop: shop });
-    // console.log("shopDoc____appIsInstalled", shopDoc);
+    console.log("shopDoc____appIsInstalled", shopDoc);
     if (shopDoc.accessToken) {
         return res.status(200).send({
             installed: true,
@@ -64,8 +64,9 @@ const installShopifyApp = (req, res) => {
     if (!client_id || !SHOPIFY_API_SECRET) {
         return res.status(400).send("client_id or SHOPIFY_API_SECRET is not set");
     }
-
+    console.log("req.query____installShopifyApp", req.query);
     const shop = req.query.shop;
+    console.log("shop____installShopifyApp", shop);
     if (!shop) return res.status(400).send("Missing shop param");
 
     const state = crypto.randomBytes(16).toString('hex');

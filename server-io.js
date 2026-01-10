@@ -130,6 +130,8 @@ const ioServer = (server) => {
             }
         });
 
+        // ------------- call user --------------//
+
         socket.on("call-user", async ({ callerId, receiverId, channelName, callType }) => {
             try {
                 if (!callerId || !receiverId || !channelName || !callType) {
@@ -220,8 +222,9 @@ const ioServer = (server) => {
             }
         });
 
-        socket.on("call-accepted", async ({ callerId, receiverId, channelName, callType ,shopId}) => {
-            console.log("call-accepted>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", callerId, receiverId, channelName, callType);
+        //---------------- accept call logics ----------------
+
+        socket.on("call-accepted", async ({ callerId, receiverId, channelName, callType, shopId }) => {
             try {
                 if (!callerId || !receiverId || !channelName || !callType) {
                     console.log(" Missing required fields");
@@ -237,7 +240,6 @@ const ioServer = (server) => {
                 }
 
                 call.status = "accepted";
-
                 clearTimeout(call.timeout);
                 const transaction = await TransactionHistroy.create({
                     senderId: callerId,
@@ -245,10 +247,10 @@ const ioServer = (server) => {
                     shop_id: shopId,
                     startTime: new Date(),
                     status: "active",
-                    type: callType
+                    type: callType,
+                    duration: 0
                 });
                 await transaction.save();
-                console.log("transaction__________________________", transaction);
                 const callerSocketId = onlineUsers.get(callerId);
                 const receiverSocketId = onlineUsers.get(receiverId);
                 if (callerSocketId) {
@@ -257,11 +259,57 @@ const ioServer = (server) => {
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType, transactionId: transaction._id });
                 }
+                const callerInfo = await User.findById(callerId);
+                let userBalance = Number(callerInfo?.walletBalance);
+                const receiverInfo = await User.findById(receiverId);
+                const receiverCallCost = Number(receiverInfo?.[callType === "voice" ? "voiceCallCost" : "videoCallCost"]);
+                const perSecondCost = receiverCallCost / 60;
+                if (userBalance < perSecondCost) {
+                    console.log("Insufficient balance to start call");
+                    return;
+                }
+                const maxChatSeconds = Math.floor(userBalance / perSecondCost);
+                const minutes = Math.floor(maxChatSeconds / 60);
+                const seconds = maxChatSeconds % 60;
+
+                console.log(`User can call for ${minutes} minutes and ${seconds} seconds`);
+                let remainingBalance = userBalance;
+                let chatSeconds = 0;
+                const interval = setInterval(async () => {
+                    if (remainingBalance >= perSecondCost) {
+                        remainingBalance -= perSecondCost;
+                        chatSeconds++;
+                    } else {
+                        clearInterval(interval);
+                        transaction.duration = chatSeconds;
+                        transaction.status = "completed";
+                        transaction.endTime = new Date();
+                        await transaction.save();
+                        console.log("🔥 BACKEND: autoChatEnded EMIT", {
+                            transactionId: transaction._id,
+                            userId: callerId,
+                            receiverId: receiverId
+                        });
+
+                        io.to(callerId).emit("autoCallEnded-no-balance", {
+                            transactionId: transaction._id,
+                            reason: "no-balance"
+                        });
+
+                        io.to(receiverId).emit("autoCallEnded-no-balance", {
+                            transactionId: transaction._id,
+                            reason: "no-balance"
+                        });
+                    }
+                }, 1000);
 
             } catch (error) {
                 console.error("Error in call-accepted:", error);
             }
         });
+
+        //---------------- reject call logics ----------------
+
         socket.on("reject-call", async ({ callerId, receiverId, channelName, callType }) => {
             console.log("📥 reject-call from receiver", callerId, receiverId, channelName, callType);
 
@@ -340,10 +388,9 @@ const ioServer = (server) => {
             const perSecondCost = consultantChatCost / 60;
             if (userBalance < perSecondCost) {
                 console.log("Insufficient balance to start chat");
-                return; // Ya frontend ko notify karo
+                return;
             }
             const maxChatSeconds = Math.floor(userBalance / perSecondCost);
-
             const minutes = Math.floor(maxChatSeconds / 60);
             const seconds = maxChatSeconds % 60;
 
@@ -377,24 +424,116 @@ const ioServer = (server) => {
 
         });
 
+        //---------------- end call logics ----------------
         socket.on("call-ended", async (data) => {
-            const { callerId, receiverId, channelName, callType } = data;
-            console.log("call-ended__________________________", callerId, receiverId, channelName, callType);
-            // const session = await mongoose.startSession();
-            // session.startTransaction();
+            const { transactionId, callerId, receiverId, shopId, callType } = data;
 
-            // try {
-            //     const transaction = await TransactionHistroy.create({
-            //         senderId: callerId,
-            //         receiverId,
-            //         shop_id: shopId,
-            //     });
-            // } catch (error) {
-            //     console.error("Error in call-ended:", error);
-            // } finally {
-            //     session.endSession();
-            // }
+            const session = await mongoose.startSession();
+            session.startTransaction();
+
+            try {
+                const transaction = await TransactionHistroy.findById(transactionId).session(session);
+                if (!transaction) throw new Error("Transaction not found");
+
+                const caller = await User.findById(callerId).session(session);
+                if (!caller) throw new Error("Caller not found");
+
+                const receiver = await User.findById(receiverId).session(session);
+                if (!receiver) throw new Error("Receiver not found");
+
+                const shop = await shopModel.findById(shopId).session(session);
+                if (!shop) throw new Error("Shop not found");
+
+                const endTime = new Date();
+                const totalSeconds = Math.floor(
+                    (endTime - new Date(transaction.startTime)) / 1000
+                );
+
+                const callCostPerMinute =
+                    callType === "voice"
+                        ? Number(receiver.voiceCallCost)
+                        : Number(receiver.videoCallCost);
+
+                const perSecondCost = callCostPerMinute / 60;
+
+                const totalAmount = Number((totalSeconds * perSecondCost).toFixed(2));
+
+                const adminCommission =
+                    (totalAmount * Number(shop.adminPersenTage)) / 100;
+
+                const receiverShare = totalAmount - adminCommission;
+                const shopShare = adminCommission;
+
+                transaction.endTime = endTime;
+                transaction.duration = totalSeconds;
+                transaction.totalAmount = totalAmount;
+                transaction.status = "completed";
+                transaction.type = callType;
+
+                await transaction.save({ session });
+
+                await User.findByIdAndUpdate(
+                    callerId,
+                    { $inc: { walletBalance: -totalAmount } },
+                    { session }
+                );
+
+                await User.findByIdAndUpdate(
+                    receiverId,
+                    { $inc: { walletBalance: receiverShare } },
+                    { session }
+                );
+
+                await shopModel.findByIdAndUpdate(
+                    shopId,
+                    { $inc: { adminWalletBalance: shopShare } },
+                    { session }
+                );
+
+                await TransactionHistroy.findByIdAndUpdate(
+                    transactionId,
+                    {
+                        $inc: {
+                            adminAmount: adminCommission,
+                            consultantAmount: receiverShare,
+                            amount: totalAmount
+                        }
+                    },
+                    { session }
+                );
+
+                await User.findByIdAndUpdate(
+                    callerId,
+                    { $set: { isCallAccepted: false } },
+                    { session }
+                );
+
+                await session.commitTransaction();
+
+                io.to(callerId).emit("callEnded", {
+                    transactionId,
+                    totalSeconds,
+                    totalAmount,
+                    reason: "ended"
+                });
+
+                io.to(receiverId).emit("callEnded", {
+                    transactionId,
+                    totalSeconds,
+                    totalAmount,
+                    reason: "ended"
+                });
+
+                console.log("✅ Call ended successfully:", transactionId);
+
+            } catch (error) {
+                console.error("❌ Call transaction error:", error);
+                await session.abortTransaction();
+            } finally {
+                session.endSession();
+            }
         });
+
 
         socket.on("endChat", async (data) => {
             const { transactionId, userId, consultantId, shopId } = data;
