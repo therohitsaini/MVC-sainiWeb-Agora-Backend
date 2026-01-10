@@ -52,7 +52,9 @@ const appIsInstalled = async (req, res) => {
             installed: true,
         });
     } else {
-       return res.redirect(`${APP_URL}/app/install?shop=${shop}`);
+        return res.status(200).send({
+            installed: false,
+        });
     }
 
 }
@@ -62,7 +64,6 @@ const installShopifyApp = (req, res) => {
     if (!client_id || !SHOPIFY_API_SECRET) {
         return res.status(400).send("client_id or SHOPIFY_API_SECRET is not set");
     }
-    console.log("req.query____installShopifyApp", req.query);
     const shop = req.query.shop;
     console.log("shop____installShopifyApp", shop);
     if (!shop) return res.status(400).send("Missing shop param");
