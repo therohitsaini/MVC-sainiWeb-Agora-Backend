@@ -221,7 +221,7 @@ const ioServer = (server) => {
         });
 
         socket.on("call-accepted", async ({ callerId, receiverId, channelName, callType }) => {
-            console.log("call-accepted", callerId, receiverId, channelName, callType);
+            console.log("call-accepted>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", callerId, receiverId, channelName, callType);
             try {
                 if (!callerId || !receiverId || !channelName || !callType) {
                     console.log(" Missing required fields");
