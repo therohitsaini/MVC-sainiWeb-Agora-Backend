@@ -237,15 +237,25 @@ const ioServer = (server) => {
                 }
 
                 call.status = "accepted";
-                clearTimeout(call.timeout);
 
+                clearTimeout(call.timeout);
+                const transaction = await TransactionHistroy.create({
+                    senderId: callerId,
+                    receiverId: receiverId,
+                    shop_id: "",
+                    startTime: new Date(),
+                    status: "active",
+                    type: callType
+                });
+                await transaction.save();
+                console.log("transaction__________________________", transaction);
                 const callerSocketId = onlineUsers.get(callerId);
                 const receiverSocketId = onlineUsers.get(receiverId);
                 if (callerSocketId) {
-                    io.to(callerSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType });
+                    io.to(callerSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType, transactionId: transaction._id });
                 }
                 if (receiverSocketId) {
-                    io.to(receiverSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType });
+                    io.to(receiverSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType, transactionId: transaction._id });
                 }
 
             } catch (error) {
