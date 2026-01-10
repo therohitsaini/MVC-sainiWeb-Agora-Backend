@@ -220,7 +220,7 @@ const ioServer = (server) => {
             }
         });
 
-        socket.on("call-accepted", async ({ callerId, receiverId, channelName, callType }) => {
+        socket.on("call-accepted", async ({ callerId, receiverId, channelName, callType ,shopId}) => {
             console.log("call-accepted>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", callerId, receiverId, channelName, callType);
             try {
                 if (!callerId || !receiverId || !channelName || !callType) {
@@ -242,7 +242,7 @@ const ioServer = (server) => {
                 const transaction = await TransactionHistroy.create({
                     senderId: callerId,
                     receiverId: receiverId,
-                    shop_id: "",
+                    shop_id: shopId,
                     startTime: new Date(),
                     status: "active",
                     type: callType
