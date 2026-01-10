@@ -52,9 +52,7 @@ const appIsInstalled = async (req, res) => {
             installed: true,
         });
     } else {
-        return res.status(200).send({
-            installed: false,
-        });
+       return res.redirect(`${APP_URL}/app/install?shop=${shop}`);
     }
 
 }
