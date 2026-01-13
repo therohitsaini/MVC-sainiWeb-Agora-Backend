@@ -189,7 +189,7 @@ const authCallback = async (req, res) => {
         await registerOrderDeletedWebhook(shop, accessToken);
 
         const AdminiId = AdminUser._id;
-        console.log("AdminiId", AdminiId);
+        console.log("AdminiId--------------", AdminiId);
 
         // ✅ CRITICAL FIX: Shopify App Bridge ke liye proper host
         // Agar Shopify host nahi de raha (custom installation flow), toh hum generate karenge
