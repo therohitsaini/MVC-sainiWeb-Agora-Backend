@@ -70,7 +70,9 @@ const installShopifyApp = async (req, res) => {
     if (!shop) return res.status(400).send("Missing shop param");
     const shopDoc = await shopModel.findOne({ shop: shop });
     if (shopDoc.accessToken) {
-        return res.status(400).send("Shop already installed");
+        return res.status(200).send({
+            installed: true,
+        });
     } else {
         const state = crypto.randomBytes(16).toString('hex');
         let baseUrl = APP_URL;
@@ -86,7 +88,10 @@ const installShopifyApp = async (req, res) => {
             }&redirect_uri=${encodeURIComponent(redirectUri)
             }&state=${state}`;
         console.log("installUrl", installUrl);
-        return res.status(200).send(installUrl);
+        return res.status(200).send({
+            installed: false,
+            installUrl: installUrl,
+        });
     }
 
 };
