@@ -60,32 +60,36 @@ const appIsInstalled = async (req, res) => {
 }
 
 
-const installShopifyApp = (req, res) => {
+const installShopifyApp = async (req, res) => {
     if (!client_id || !SHOPIFY_API_SECRET) {
         return res.status(400).send("client_id or SHOPIFY_API_SECRET is not set");
     }
-    const shop = req.query.shop;
+    const { shop } = req.params;
+    // const shop = req.query.shop;
     console.log("shop____installShopifyApp", shop);
     if (!shop) return res.status(400).send("Missing shop param");
-
-    const state = crypto.randomBytes(16).toString('hex');
-    let baseUrl = APP_URL;
-    if (!baseUrl || baseUrl.includes('${HOST}') || baseUrl.includes('${PORT}')) {
-        const protocol = req.protocol || 'http';
-        const host = req.get('host') || req.headers.host || 'localhost:5001';
-        baseUrl = `${protocol}://${host}`;
+    const shopDoc = await shopModel.findOne({ shop: shop });
+    if (shopDoc.accessToken) {
+        return res.status(400).send("Shop already installed");
+    } else {
+        const state = crypto.randomBytes(16).toString('hex');
+        let baseUrl = APP_URL;
+        if (!baseUrl || baseUrl.includes('${HOST}') || baseUrl.includes('${PORT}')) {
+            const protocol = req.protocol || 'http';
+            const host = req.get('host') || req.headers.host || 'localhost:5001';
+            baseUrl = `${protocol}://${host}`;
+        }
+        const redirectUri = `${baseUrl}/app/callback`;
+        console.log("redirectUri", redirectUri);
+        const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${client_id
+            }&scope=${SCOPES
+            }&redirect_uri=${encodeURIComponent(redirectUri)
+            }&state=${state}`;
+        console.log("installUrl", installUrl);
+        return res.status(200).send(installUrl);
     }
-    const redirectUri = `${baseUrl}/app/callback`;
-    console.log("redirectUri", redirectUri);
-    const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${client_id
-        }&scope=${SCOPES
-        }&redirect_uri=${encodeURIComponent(redirectUri)
-        }&state=${state}`;
-    console.log("installUrl", installUrl);
-    res.redirect(installUrl);
+
 };
-
-
 
 
 const authCallback = async (req, res) => {

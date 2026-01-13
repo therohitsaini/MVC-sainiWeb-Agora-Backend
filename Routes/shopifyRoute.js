@@ -14,7 +14,7 @@ const { installShopifyApp,
 } = require('../Controller/shopifyController');
 const { deleteConsultant } = require('../Controller/consultantController');
 // Original route (Shopify automatically hit karta hai - MUST KEEP THIS!)
-shopifyRoute.get('/install', installShopifyApp);
+shopifyRoute.get('/install/:shop', installShopifyApp);
 shopifyRoute.get('/callback', authCallback);
 // shopifyRoute.get('/login', shopifyLogin);
 shopifyRoute.get('/consultant-theme', proxyThemeAssetsController);
