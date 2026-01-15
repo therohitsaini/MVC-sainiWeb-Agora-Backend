@@ -110,7 +110,7 @@ app.get(/^\/consultant-app(\/.*)?$/, (req, res) => {
 });
 
 // ALL routes handle for proxy
-app.get("/proxy*", (req, res) => {
+app.get(/^\/proxy/, (req, res) => {
   const filePath = path.join(process.cwd(), "build", "index.html");
   let html = fs.readFileSync(filePath, "utf8");
 
