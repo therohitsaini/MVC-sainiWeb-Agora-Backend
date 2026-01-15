@@ -111,12 +111,18 @@ app.get(/^\/consultant-app(\/.*)?$/, (req, res) => {
 
 // ALL routes handle for proxy
 app.get(/^\/proxy/, (req, res) => {
-  const filePath = path.join(process.cwd(), "build", "index.html");
+  const filePath = path.join(__dirname, "build", "index.html");
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(500).send("React build not found");
+  }
+
   let html = fs.readFileSync(filePath, "utf8");
 
+  // fix CRA static paths
   html = html.replace(/\/static\//g, "/apps/cra-app/static/");
 
-  res.set("Content-Type", "text/html");
+  res.setHeader("Content-Type", "text/html");
   res.send(html);
 });
 
