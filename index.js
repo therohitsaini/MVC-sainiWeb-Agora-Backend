@@ -36,10 +36,10 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // const reactBuildPath = path.join(__dirname, "..", "consultant-app", "build");
 // app.use("/static", express.static(path.join(reactBuildPath, "static")));
 // app.use("/consultant-app", express.static(reactBuildPath));
-// const reactBuildPath = path.join(__dirname, "..", "consultant-app", "build");
+const reactBuildPath = path.join(__dirname, "..", "consultant-app", "build");
 
-// app.use("/static", express.static(path.join(reactBuildPath, "static")));
-// app.use("/consultant-app", express.static(reactBuildPath));
+app.use("/static", express.static(path.join(reactBuildPath, "static")));
+app.use("/consultant-app", express.static(reactBuildPath));
 
 // 🔔 Serve ringtone & public assets
 app.use(

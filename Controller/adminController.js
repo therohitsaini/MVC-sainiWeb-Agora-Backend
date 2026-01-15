@@ -1,5 +1,6 @@
 const { shopModel } = require("../Modal/shopify");
 const mongoose = require("mongoose");
+const { TransactionHistroy } = require("../Modal/transactionHistroy");
 
 const adminController = async (req, res) => {
     try {
@@ -153,4 +154,37 @@ const deleteAdminController = async (req, res) => {
     }
 }
 
-module.exports = { adminController, voucherController, getVouchersController, deleteAdminController };
+const getTransactionController = async (req, res) => {
+    try {
+        const { adminId } = req.params;
+        console.log("adminId____getTransactionController", adminId);
+        if (!adminId) {
+            return res.status(400).json({
+                success: false,
+                message: "Admin ID is required"
+            });
+        }
+        if (!mongoose.Types.ObjectId.isValid(adminId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid admin ID"
+            });
+        }
+        const transactions = await TransactionHistroy.find({ shop_id: adminId })
+        if (!transactions) {
+            return res.status(404).json({
+                success: false,
+                message: "Transactions not found"
+            });
+        }
+        res.status(200).json({
+            success: true,
+            message: "Transactions retrieved successfully",
+            data: transactions
+        });
+    } catch (error) {
+        console.error("Error in getTransactionController:", error);
+    }
+}
+
+module.exports = { adminController, voucherController, getVouchersController, deleteAdminController, getTransactionController };
