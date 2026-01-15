@@ -76,6 +76,7 @@ const installShopifyApp = async (req, res) => {
     if (shopDoc.accessToken) {
         return res.status(200).send({
             installed: true,
+            adminId: shopDoc._id,
         });
     } else {
         const state = crypto.randomBytes(16).toString('hex');
