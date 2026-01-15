@@ -9,7 +9,7 @@ const { User } = require('../Modal/userSchema');
 const { manageShopifyUser } = require('../MiddleWare/ShopifyMiddleware/handleShopifyUser');
 const { createAppMenu } = require('../MiddleWare/shopifySubMenu');
 const { renderShopifyPage } = require('../MiddleWare/ShopifyMiddleware/helperTheme');
-const { registerOrderPaidWebhook, registerOrderDeletedWebhook, } = require('../MiddleWare/ShopifyMiddleware/registerWebHook');
+const { registerOrderPaidWebhook, registerOrderDeletedWebhook, registerAppUninstallWebhook, } = require('../MiddleWare/ShopifyMiddleware/registerWebHook');
 let axios, wrapper, CookieJar;
 try {
     axios = require("axios");
@@ -70,6 +70,12 @@ const installShopifyApp = async (req, res) => {
     if (!shop) return res.status(400).send("Missing shop param");
     const shopDoc = await shopModel.findOne({ shop: shop });
     console.log("shopDoc____installShopifyApp", shopDoc);
+    if (!shopDoc) {
+        return res.status(200).send({
+            installed: false,
+            installUrl: installUrl, // jo aap generate kar rahe ho
+        });
+    }
     if (shopDoc.accessToken) {
         return res.status(200).send({
             installed: true,
@@ -188,18 +194,17 @@ const authCallback = async (req, res) => {
         /** Register Order Paid Webhook */
         await registerOrderPaidWebhook(shop, accessToken);
         await registerOrderDeletedWebhook(shop, accessToken);
+        await registerAppUninstallWebhook(shop, accessToken);
 
         const AdminiId = AdminUser._id;
         console.log("AdminiId--------------", AdminiId);
 
-        // ✅ CRITICAL FIX: Shopify App Bridge ke liye proper host
-        // Agar Shopify host nahi de raha (custom installation flow), toh hum generate karenge
+
         let finalHost = host;
 
         if (!finalHost || !finalHost.startsWith('YWRtaW4')) {
             console.log("⚠️ Shopify host missing or invalid. Generating one...");
-            // Shopify compatible Base64 host generate karo
-            // Format: "admin.shopify.com/store/{shop-name}"
+  
             const shopDomain = shop.replace('.myshopify.com', '');
             const hostString = `admin.shopify.com/store/${shopDomain}`;
             finalHost = Buffer.from(hostString).toString('base64');
@@ -208,11 +213,10 @@ const authCallback = async (req, res) => {
             console.log("✅ Using Shopify provided host");
         }
 
-        // ✅ URL parameters complete set
         const redirectUrl = `${frontendUrl}/?` + new URLSearchParams({
             shop: shop,
-            host: finalHost, // ✅ Shopify compatible Base64 host
-            embedded: '1',   // ✅ Required for embedded apps
+            host: finalHost, 
+            embedded: '1', 
             adminId: AdminiId.toString(),
             source: 'shopify_auth',
             timestamp: Date.now().toString(), // Cache prevent
