@@ -100,7 +100,7 @@ app.use("/api/users", userRouter);
 app.use("/api/admin", adminRoute);
 app.post("/api/webhooks/app-uninstalled", async (req, res) => {
   const shop = req.headers["x-shopify-shop-domain"];
-
+console.log("shop____app-uninstalled", shop);
   await shopModel.findOneAndUpdate(
     { shop },
     {
