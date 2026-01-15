@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.css": "/static/css/main.dad6bdbd.css",
+    "main.js": "/static/js/main.09565c50.js",
+    "static/media/web-vitals.umd.cjs": "/static/media/web-vitals.umd.5c9b7d9b25b4b8f4a270.cjs",
+    "index.html": "/index.html",
+    "main.dad6bdbd.css.map": "/static/css/main.dad6bdbd.css.map",
+    "main.09565c50.js.map": "/static/js/main.09565c50.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.dad6bdbd.css",
+    "static/js/main.09565c50.js"
+  ]
+}
