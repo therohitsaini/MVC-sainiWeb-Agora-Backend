@@ -149,7 +149,4 @@ const registerAppUninstallWebhook = async (shop, accessToken) => {
   }
 };
 
-module.exports = { registerAppUninstallWebhook };
-
-
 module.exports = { registerOrderPaidWebhook, registerOrderDeletedWebhook, registerAppUninstallWebhook };

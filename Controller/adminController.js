@@ -122,4 +122,35 @@ const getVouchersController = async (req, res) => {
     }
 }
 
-module.exports = { adminController, voucherController, getVouchersController };
+const deleteAdminController = async (req, res) => {
+    try {
+        const shop = req.headers["x-shopify-shop-domain"];
+
+        const admin = await shopModel.findOneAndUpdate(
+            { shop },
+            {
+                accessToken: null,
+                uninstalledAt: new Date(),
+            }
+        );
+        if (!admin) {
+            return res.status(404).json({
+                success: false,
+                message: "Admin not found"
+            });
+        }
+        res.status(200).json({
+            success: true,
+            message: "Admin deleted successfully",
+        });
+    } catch (error) {
+        console.error("Error in deleteAdminController:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete admin",
+            error: error.message
+        });
+    }
+}
+
+module.exports = { adminController, voucherController, getVouchersController, deleteAdminController };

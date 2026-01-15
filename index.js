@@ -74,6 +74,7 @@ const firebaseRouter = require("./Routes/firebaseRoutes");
 const { shopifyDraftOrderRoute } = require("./Routes/shopifyDraftOrderRoute");
 const { userRouter } = require("./Routes/userRoutes");
 const { adminRoute } = require("./Routes/adminRoute");
+const { shopModel } = require("./Modal/shopify");
 
 app.use("/api/call", callRoutes);
 app.use("/api/auth", signinSignupRouter);
@@ -97,7 +98,20 @@ app.use("/api/draft-order", shopifyDraftOrderRoute);
 /** User Routes */
 app.use("/api/users", userRouter);
 app.use("/api/admin", adminRoute);
+app.post("/api/webhooks/app-uninstalled", async (req, res) => {
+  const shop = req.headers["x-shopify-shop-domain"];
 
+  await shopModel.findOneAndUpdate(
+    { shop },
+    {
+      shop: null,
+      accessToken: null,
+
+      // uninstalledAt: new Date(),
+    }
+  );
+  res.status(200).send("OK");
+});
 app.get(/^\/consultant-app(\/.*)?$/, (req, res) => {
   res.sendFile(path.join(reactBuildPath, "index.html"));
 });
