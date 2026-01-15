@@ -65,15 +65,12 @@ const installShopifyApp = async (req, res) => {
         return res.status(400).send("client_id or SHOPIFY_API_SECRET is not set");
     }
     const { shop } = req.params;
-    // const shop = req.query.shop;
-    console.log("shop____installShopifyApp", shop);
     if (!shop) return res.status(400).send("Missing shop param");
     const shopDoc = await shopModel.findOne({ shop: shop });
-    console.log("shopDoc____installShopifyApp", shopDoc);
     if (!shopDoc) {
         return res.status(200).send({
             installed: false,
-            installUrl: installUrl, // jo aap generate kar rahe ho
+            installUrl: installUrl, 
         });
     }
     if (shopDoc.accessToken) {
@@ -94,7 +91,6 @@ const installShopifyApp = async (req, res) => {
             }&scope=${SCOPES
             }&redirect_uri=${encodeURIComponent(redirectUri)
             }&state=${state}`;
-        console.log("installUrl", installUrl);
         return res.status(200).send({
             installed: false,
             installUrl: installUrl,
