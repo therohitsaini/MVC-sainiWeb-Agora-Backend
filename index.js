@@ -8,6 +8,7 @@ const { connectDB } = require("./Utils/db");
 dotenv.config();
 connectDB();
 const path = require("path");
+const fs = require("fs");
 const app = express();
 const PORT = process.env.MVC_BACKEND_PORT || 3001;
 const server = http.createServer(app);
@@ -40,6 +41,12 @@ const reactBuildPath = path.join(__dirname, "..", "consultant-app", "build");
 
 app.use("/static", express.static(path.join(reactBuildPath, "static")));
 app.use("/consultant-app", express.static(reactBuildPath));
+
+// Static files serve for cra-app
+app.use(
+  "/apps/cra-app/static",
+  express.static(path.join(process.cwd(), "build", "static"))
+);
 
 // 🔔 Serve ringtone & public assets
 app.use(
@@ -100,6 +107,17 @@ app.use("/api/admin", adminRoute);
 
 app.get(/^\/consultant-app(\/.*)?$/, (req, res) => {
   res.sendFile(path.join(reactBuildPath, "index.html"));
+});
+
+// ALL routes handle for proxy
+app.get("/proxy*", (req, res) => {
+  const filePath = path.join(process.cwd(), "build", "index.html");
+  let html = fs.readFileSync(filePath, "utf8");
+
+  html = html.replace(/\/static\//g, "/apps/cra-app/static/");
+
+  res.set("Content-Type", "text/html");
+  res.send(html);
 });
 
 
