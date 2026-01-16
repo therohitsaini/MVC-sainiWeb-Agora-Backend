@@ -157,21 +157,38 @@ const deleteAdminController = async (req, res) => {
 const getTransactionController = async (req, res) => {
     try {
         const { adminId } = req.params;
-        console.log("adminId____getTransactionController", adminId);
+
         if (!adminId) {
             return res.status(400).json({
                 success: false,
-                message: "Admin ID is required"
+                message: 'Admin ID is required',
             });
         }
+
         if (!mongoose.Types.ObjectId.isValid(adminId)) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid admin ID"
+                message: 'Invalid admin ID',
             });
         }
-        const transactions = await TransactionHistroy.find({ shop_id: adminId }).populate({ path: 'senderId', select: 'fullname email profileImage userType' }).populate({ path: 'receiverId', select: 'fullname email profileImage userType' }).sort({ createdAt: -1 }).limit(14);
-        console.log("transactions____getTransactionController", transactions);
+
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const filter = { shop_id: adminId };
+        if (req.query.type) filter.type = req.query.type;
+
+        const transactions = await TransactionHistroy.find(filter)
+            .populate('senderId', 'fullname email profileImage userType')
+            .populate('receiverId', 'fullname email profileImage userType')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        const totalItems = await TransactionHistroy.countDocuments(filter);
+
         if (transactions.length === 0) {
             return res.status(404).json({
                 success: false,
@@ -181,12 +198,19 @@ const getTransactionController = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: "Transactions retrieved successfully",
-            data: transactions
+            message: 'Transactions retrieved successfully',
+            data: transactions,
+            totalItems,
+            page,
+            limit,
         });
     } catch (error) {
-        console.error("Error in getTransactionController:", error);
+        console.error('Error in getTransactionController:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+        });
     }
-}
+};
 
 module.exports = { adminController, voucherController, getVouchersController, deleteAdminController, getTransactionController };
