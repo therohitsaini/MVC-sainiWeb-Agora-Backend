@@ -176,10 +176,11 @@ const getTransactionController = async (req, res) => {
         const limit = Number(req.query.limit) || 10;
         const skip = (page - 1) * limit;
         const type = req.query.type || "";
-        console.log("_________________>", page, limit, skip,type);
+        console.log("_________________>", page, limit, skip,"______________",type);
 
-        const filter = { shop_id: adminId };
-        if (req.query.type) filter.type = req.query.type;
+        if (req.query.type && req.query.type !== 'all') {
+            filter.type = req.query.type;   // chat | voice | video
+          }
 
         const transactions = await TransactionHistroy.find(filter)
             .populate('senderId', 'fullname email profileImage userType')
