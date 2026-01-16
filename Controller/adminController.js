@@ -170,7 +170,7 @@ const getTransactionController = async (req, res) => {
                 message: "Invalid admin ID"
             });
         }
-        const transactions = await TransactionHistroy.find({ shop_id: adminId })
+        const transactions = await TransactionHistroy.find({ shop_id: adminId }).limit(10).sort({ createdAt: -1 });
         if (!transactions) {
             return res.status(404).json({
                 success: false,
