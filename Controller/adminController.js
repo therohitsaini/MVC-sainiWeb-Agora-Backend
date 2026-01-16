@@ -170,7 +170,7 @@ const getTransactionController = async (req, res) => {
                 message: "Invalid admin ID"
             });
         }
-        const transactions = await TransactionHistroy.find({ shop_id: adminId }).populate({ path: 'senderId', select: 'fullname email profileImage userType' }).populate({ path: 'receiverId', select: 'fullname email profileImage userType' }).sort({ createdAt: -1 }).limit(10);
+        const transactions = await TransactionHistroy.find({ shop_id: adminId }).populate({ path: 'senderId', select: 'fullname email profileImage userType' }).populate({ path: 'receiverId', select: 'fullname email profileImage userType' }).sort({ createdAt: -1 }).limit(14);
         console.log("transactions____getTransactionController", transactions);
         if (transactions.length === 0) {
             return res.status(404).json({
