@@ -232,7 +232,7 @@ const getUserConsultantController = async (req, res) => {
         const customers = await User.find({
             shop_id: adminId,
         })
-            .select("fullname email profileImage userType walletBalance updatedAt phone")
+            .select("fullname email profileImage userType walletBalance updatedAt phone").limit(10)
             .lean();
 
         if (!customers || customers.length === 0) {
