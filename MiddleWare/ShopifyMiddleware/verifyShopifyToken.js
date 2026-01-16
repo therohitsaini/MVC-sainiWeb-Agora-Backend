@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 dotenv.config();
 
- const verifyShopifyToken = (req, res, next) => {
+const verifyShopifyToken = (req, res, next) => {
     try {
         const auth = req.headers.authorization || req.headers.Authorization;
 
@@ -20,7 +20,7 @@ dotenv.config();
         // values Shopify guarantees
         req.shop = payload.dest.replace("https://", "");
         req.shopifyUserId = payload.sub;
-
+        console.log(">>>>>>>>>>>>>>>> Verify Shopify Token");
         next();
     } catch (err) {
         return res.status(401).json({
