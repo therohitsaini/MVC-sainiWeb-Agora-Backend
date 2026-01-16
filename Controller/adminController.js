@@ -220,9 +220,8 @@ const getTransactionController = async (req, res) => {
 const getUserConsultantController = async (req, res) => {
     try {
         const { adminId } = req.params;
-        const token = req.headers.authorization || "";
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-        console.log("Ttoken_________________>", token);
+        // const token = req.headers.authorization || "";
+        // console.log("Ttoken_________________>", token);
         if (!mongoose.Types.ObjectId.isValid(adminId)) {
             return res.status(400).json({
                 success: false,
