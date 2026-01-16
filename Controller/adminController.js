@@ -1,6 +1,7 @@
 const { shopModel } = require("../Modal/shopify");
 const mongoose = require("mongoose");
 const { TransactionHistroy } = require("../Modal/transactionHistroy");
+const { User } = require("../Modal/userSchema");
 
 const adminController = async (req, res) => {
     try {
@@ -183,7 +184,6 @@ const getTransactionController = async (req, res) => {
             filter.type = typeValue;
         }
 
-        console.log("Filter_________________>", filter);
         const transactions = await TransactionHistroy.find(filter)
             .populate('senderId', 'fullname email profileImage userType')
             .populate('receiverId', 'fullname email profileImage userType')
@@ -191,7 +191,6 @@ const getTransactionController = async (req, res) => {
             .skip(skip)
             .limit(limit)
             .lean();
-        console.log("Transactions_________________>", transactions);
 
         const totalItems = await TransactionHistroy.countDocuments(filter);
 
@@ -218,5 +217,53 @@ const getTransactionController = async (req, res) => {
         });
     }
 };
+const getUserConsultantController = async (req, res) => {
+    try {
+        const { adminId } = req.params;
+        const token = req.headers.authorization || "";
+        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+        console.log("Ttoken_________________>", token);
+        if (!mongoose.Types.ObjectId.isValid(adminId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid admin ID",
+            });
+        }
 
-module.exports = { adminController, voucherController, getVouchersController, deleteAdminController, getTransactionController };
+        const customers = await User.find({
+            shop_id: adminId,
+        })
+            .select("fullname email profileImage userType walletBalance")
+            .lean();
+
+        if (!customers || customers.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Customers not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Customers retrieved successfully",
+            data: customers,
+        });
+
+    } catch (error) {
+        console.error("Error in getUserConsultantController:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to get customers",
+        });
+    }
+};
+
+
+module.exports = {
+    adminController,
+    voucherController,
+    getVouchersController,
+    deleteAdminController,
+    getTransactionController,
+    getUserConsultantController
+};
