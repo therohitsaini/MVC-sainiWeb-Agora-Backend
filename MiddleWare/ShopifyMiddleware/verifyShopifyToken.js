@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 dotenv.config();
 
-export const verifyShopifyToken = (req, res, next) => {
+ const verifyShopifyToken = (req, res, next) => {
     try {
         const auth = req.headers.authorization || req.headers.Authorization;
 
@@ -28,3 +28,4 @@ export const verifyShopifyToken = (req, res, next) => {
         });
     }
 };
+module.exports = { verifyShopifyToken };
