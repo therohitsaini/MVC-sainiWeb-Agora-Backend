@@ -179,7 +179,9 @@ const getTransactionController = async (req, res) => {
         console.log("_________________>", page, limit, skip, "______________", type);
         const typeValue = type === 0 ? 'all' : type === 1 ? 'chat' : type === 2 ? 'voice' : type === 3 ? 'video' : 'all';
         const filter = { shop_id: adminId };
-        if (typeValue && typeValue !== 'all') filter.type = typeValue;
+        if (type !== 'all') {
+            filter.type = typeValue; // chat | voice | video
+          }
         console.log("Filter_________________>", filter);
         const transactions = await TransactionHistroy.find(filter)
             .populate('senderId', 'fullname email profileImage userType')
