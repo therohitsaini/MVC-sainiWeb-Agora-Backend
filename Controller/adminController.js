@@ -180,7 +180,7 @@ const getTransactionController = async (req, res) => {
         const typeValue = type === 0 ? 'all' : type === 1 ? 'chat' : type === 2 ? 'voice' : type === 3 ? 'video' : 'all';
         const filter = { shop_id: adminId };
         if (typeValue && typeValue !== 'all') filter.type = typeValue;
-        console.log("_________________>", filter);
+        console.log("Filter_________________>", filter);
         const transactions = await TransactionHistroy.find(filter)
             .populate('senderId', 'fullname email profileImage userType')
             .populate('receiverId', 'fullname email profileImage userType')
@@ -188,7 +188,7 @@ const getTransactionController = async (req, res) => {
             .skip(skip)
             .limit(limit)
             .lean();
-        console.log("_________________>", transactions);
+        console.log("Transactions_________________>", transactions);
 
         const totalItems = await TransactionHistroy.countDocuments(filter);
 
