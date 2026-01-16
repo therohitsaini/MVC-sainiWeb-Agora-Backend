@@ -3,12 +3,12 @@ const mongoose = require("mongoose")
 const missed = new mongoose.Schema({
     senderId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: "ragisterUser",
         required: true
     },
     receiverId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: "ragisterUser",
         required: true
     },
    

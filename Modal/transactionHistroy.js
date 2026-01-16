@@ -3,12 +3,12 @@ const mongoose = require("mongoose");
 const transactionSchema = new mongoose.Schema({
     senderId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: "ragisterUser",
         required: true
     },
     receiverId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: "ragisterUser",
         required: true
     },
     shop_id: {
@@ -22,12 +22,12 @@ const transactionSchema = new mongoose.Schema({
     },
     debitFrom: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: "ragisterUser",
         // required: true
     },
     creditTo: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        ref: "ragisterUser",
         // required: true
     },
     adminAmount: {
