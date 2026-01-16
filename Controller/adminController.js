@@ -176,11 +176,11 @@ const getTransactionController = async (req, res) => {
         const limit = Number(req.query.limit) || 10;
         const skip = (page - 1) * limit;
         const type = req.query.type || "";
-        console.log("_________________>", page, limit, skip,"______________",type);
-
+        console.log("_________________>", page, limit, skip, "______________", type);
+        const typeValue = type === 0 ? 'all' : type === 1 ? 'chat' : type === 2 ? 'voice' : type === 3 ? 'video' : 'all';
         const filter = { shop_id: adminId };
-        if (type && type !== 'all') filter.type = type;
-
+        if (typeValue && typeValue !== 'all') filter.type = typeValue;
+        console.log("_________________>", filter);
         const transactions = await TransactionHistroy.find(filter)
             .populate('senderId', 'fullname email profileImage userType')
             .populate('receiverId', 'fullname email profileImage userType')
@@ -188,6 +188,7 @@ const getTransactionController = async (req, res) => {
             .skip(skip)
             .limit(limit)
             .lean();
+        console.log("_________________>", transactions);
 
         const totalItems = await TransactionHistroy.countDocuments(filter);
 
