@@ -194,18 +194,12 @@ const authCallback = async (req, res) => {
         await registerAppUninstallWebhook(shop, accessToken);
 
         const AdminiId = AdminUser._id;
-        console.log("AdminiId--------------", AdminiId);
-
-
         let finalHost = host;
-
         if (!finalHost || !finalHost.startsWith('YWRtaW4')) {
-            console.log("⚠️ Shopify host missing or invalid. Generating one...");
   
             const shopDomain = shop.replace('.myshopify.com', '');
             const hostString = `admin.shopify.com/store/${shopDomain}`;
             finalHost = Buffer.from(hostString).toString('base64');
-            console.log("🛠️ Generated host:", finalHost.substring(0, 50) + '...');
         } else {
             console.log("✅ Using Shopify provided host");
         }
@@ -219,15 +213,6 @@ const authCallback = async (req, res) => {
             timestamp: Date.now().toString(), // Cache prevent
             session: require('crypto').randomBytes(16).toString('hex')
         }).toString();
-
-        console.log("➡️ Redirecting to:", {
-            frontend: frontendUrl,
-            hasHost: !!finalHost,
-            hostPreview: finalHost ? finalHost.substring(0, 30) + '...' : 'none',
-            adminId: AdminiId,
-            isEmbedded: true
-        });
-
         return res.redirect(redirectUrl);
     } catch (error) {
         console.error("❌ Auth callback error:", error.message || error);
