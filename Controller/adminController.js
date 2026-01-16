@@ -178,9 +178,8 @@ const getTransactionController = async (req, res) => {
         const type = req.query.type || "";
         console.log("_________________>", page, limit, skip,"______________",type);
 
-        if (req.query.type && req.query.type !== 'all') {
-            filter.type = req.query.type;   // chat | voice | video
-          }
+        const filter = { shop_id: adminId };
+        if (type && type !== 'all') filter.type = type;
 
         const transactions = await TransactionHistroy.find(filter)
             .populate('senderId', 'fullname email profileImage userType')
