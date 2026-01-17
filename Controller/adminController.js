@@ -155,84 +155,174 @@ const deleteAdminController = async (req, res) => {
         });
     }
 }
-
 const getTransactionController = async (req, res) => {
     try {
         const { adminId } = req.params;
 
-        if (!adminId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Admin ID is required',
-            });
-        }
-
         if (!mongoose.Types.ObjectId.isValid(adminId)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid admin ID',
-            });
+            return res.status(400).json({ success: false, message: "Invalid admin ID" });
         }
 
-        const page = Number(req.query.page) || 3;
-        const limit = Number(req.query.limit) || 14;
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 10;
         const skip = (page - 1) * limit;
-        const type = req.query.type || "";
         const search = req.query.searchQuery || "";
-        console.log("search", search);
-        const typeValue = type === 0 ? 'all' : type === 1 ? 'chat' : type === 2 ? 'voice' : type === 3 ? 'video' : 'all';
-        const filter = {
-            shop_id: new mongoose.Types.ObjectId(adminId)
+        const type = req.query.type || "";
+
+        const shopObjectId = new mongoose.Types.ObjectId(adminId);
+
+        const matchStage = {
+            shop_id: shopObjectId,
         };
 
-        if (typeValue && typeValue !== 'all') {
-            filter.type = typeValue;
+        if (type && type !== "all") {
+            matchStage.type = type;
         }
 
-        if (search) {
-            filter.$or = [
-                { senderName: { $regex: search, $options: "i" } },
-                { receiverName: { $regex: search, $options: "i" } },
-                { senderEmail: { $regex: search, $options: "i" } },
-                { receiverEmail: { $regex: search, $options: "i" } },
-                { status: { $regex: search, $options: "i" } },
-                { type: { $regex: search, $options: "i" } },
-            ];
-        }
-        console.log("filter", filter);
-        const transactions = await TransactionHistroy.find(filter)
-            .populate('senderId', 'fullname email profileImage userType')
-            .populate('receiverId', 'fullname email profileImage userType')
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .lean();
-        console.log("transactions", transactions);
-        const totalItems = await TransactionHistroy.countDocuments(filter);
+        const searchMatch =
+            search.trim().length > 0
+                ? {
+                    $or: [
+                        { "sender.fullname": { $regex: search, $options: "i" } },
+                        { "receiver.fullname": { $regex: search, $options: "i" } },
+                        { "sender.email": { $regex: search, $options: "i" } },
+                        { "receiver.email": { $regex: search, $options: "i" } },
+                        { status: { $regex: search, $options: "i" } },
+                        { type: { $regex: search, $options: "i" } },
+                    ],
+                }
+                : {};
 
-        if (transactions.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'No transactions found',
-            });
-        }
+        const pipeline = [
+            { $match: matchStage },
+
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "senderId",
+                    foreignField: "_id",
+                    as: "sender",
+                },
+            },
+            { $unwind: { path: "$sender", preserveNullAndEmptyArrays: true } },
+
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "receiverId",
+                    foreignField: "_id",
+                    as: "receiver",
+                },
+            },
+            { $unwind: { path: "$receiver", preserveNullAndEmptyArrays: true } },
+
+            { $match: searchMatch },
+
+            { $sort: { createdAt: -1 } },
+
+            {
+                $facet: {
+                    data: [{ $skip: skip }, { $limit: limit }],
+                    total: [{ $count: "count" }],
+                },
+            },
+        ];
+
+        const result = await TransactionHistroy.aggregate(pipeline);
+
+        const transactions = result[0].data;
+        const totalItems = result[0].total[0]?.count || 0;
 
         res.status(200).json({
             success: true,
-            message: 'Transactions retrieved successfully',
             data: transactions,
             totalItems,
             page,
             limit,
         });
     } catch (error) {
-        console.error('Error in getTransactionController:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal server error',
-        });
+        console.error("Error in getTransactionController:", error);
+        res.status(500).json({ success: false, message: "Server error" });
     }
 };
+
+// const getTransactionController = async (req, res) => {
+//     try {
+//         const { adminId } = req.params;
+
+//         if (!adminId) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Admin ID is required',
+//             });
+//         }
+
+//         if (!mongoose.Types.ObjectId.isValid(adminId)) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Invalid admin ID',
+//             });
+//         }
+
+//         const page = Number(req.query.page) || 3;
+//         const limit = Number(req.query.limit) || 14;
+//         const skip = (page - 1) * limit;
+//         const type = req.query.type || "";
+//         const search = req.query.searchQuery || "";
+//         console.log("search", search);
+//         const typeValue = type === 0 ? 'all' : type === 1 ? 'chat' : type === 2 ? 'voice' : type === 3 ? 'video' : 'all';
+//         const filter = {
+//             shop_id: new mongoose.Types.ObjectId(adminId)
+//         };
+
+//         if (typeValue && typeValue !== 'all') {
+//             filter.type = typeValue;
+//         }
+
+//         if (search) {
+//             filter.$or = [
+//                 { senderName: { $regex: search, $options: "i" } },
+//                 { receiverName: { $regex: search, $options: "i" } },
+//                 { senderEmail: { $regex: search, $options: "i" } },
+//                 { receiverEmail: { $regex: search, $options: "i" } },
+//                 { status: { $regex: search, $options: "i" } },
+//                 { type: { $regex: search, $options: "i" } },
+//             ];
+//         }
+//         console.log("filter", filter);
+//         const transactions = await TransactionHistroy.find(filter)
+//             .populate('senderId', 'fullname email profileImage userType')
+//             .populate('receiverId', 'fullname email profileImage userType')
+//             .sort({ createdAt: -1 })
+//             .skip(skip)
+//             .limit(limit)
+//             .lean();
+//         console.log("transactions", transactions);
+//         const totalItems = await TransactionHistroy.countDocuments(filter);
+
+//         if (transactions.length === 0) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'No transactions found',
+//             });
+//         }
+
+//         res.status(200).json({
+//             success: true,
+//             message: 'Transactions retrieved successfully',
+//             data: transactions,
+//             totalItems,
+//             page,
+//             limit,
+//         });
+//     } catch (error) {
+//         console.error('Error in getTransactionController:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Internal server error',
+//         });
+//     }
+// };
 const getUserConsultantController = async (req, res) => {
     try {
         const { adminId } = req.params;
