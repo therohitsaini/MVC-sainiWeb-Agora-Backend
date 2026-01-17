@@ -173,9 +173,9 @@ const getTransactionController = async (req, res) => {
             });
         }
 
-        const page = Number(req.params.page) || 2;
+        const page = Number(req.params.page) || 3;
         console.log("page", page);
-        const limit = Number(req.query.limit) || 11;
+        const limit = Number(req.query.limit) || 14;
         console.log("limit", limit);
         const skip = (page - 1) * limit;
         console.log("skip", skip);
