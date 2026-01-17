@@ -185,6 +185,17 @@ const getTransactionController = async (req, res) => {
             filter.type = typeValue;
         }
 
+        if (search) {
+            filter.$or = [
+                { senderName: { $regex: search, $options: "i" } },
+                { receiverName: { $regex: search, $options: "i" } },
+                { senderEmail: { $regex: search, $options: "i" } },
+                { receiverEmail: { $regex: search, $options: "i" } },
+                { status: { $regex: search, $options: "i" } },
+                { type: { $regex: search, $options: "i" } },
+            ];
+        }
+
         const transactions = await TransactionHistroy.find(filter)
             .populate('senderId', 'fullname email profileImage userType')
             .populate('receiverId', 'fullname email profileImage userType')
