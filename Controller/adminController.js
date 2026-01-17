@@ -270,13 +270,49 @@ const getShopAllUserController = async (req, res) => {
         const users = await User.find({
             shop_id: adminId, userType: "customer",
         })
-            .select("fullname email profileImage userType walletBalance updatedAt phone").limit(10)
+            .select("fullname email profileImage userType walletBalance updatedAt phone")
             .lean();
 
         if (!users || users.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: "Users not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Users retrieved successfully",
+            data: users,
+        });
+    } catch (error) {
+        console.error("Error in getShopAllUserController:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to get users",
+        });
+    }
+}
+
+const getShopAllConsultantController = async (req, res) => {
+    try {
+        const { adminId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(adminId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid admin ID",
+            });
+        }
+        const users = await User.find({
+            shop_id: adminId, userType: "consultant",
+        })
+            .select("fullname email profileImage userType walletBalance updatedAt phone")
+            .lean();
+
+        if (!users || users.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Consultants not found",
             });
         }
 
@@ -300,5 +336,6 @@ module.exports = {
     deleteAdminController,
     getTransactionController,
     getUserConsultantController,
-    getShopAllUserController
+    getShopAllUserController,
+    getShopAllConsultantController
 };
