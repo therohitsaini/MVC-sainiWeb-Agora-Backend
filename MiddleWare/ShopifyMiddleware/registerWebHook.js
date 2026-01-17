@@ -126,6 +126,7 @@ const registerAppUninstallWebhook = async (shop, accessToken) => {
         },
       }
     );
+    console.log("response", response.data);
 
     if (response.data.errors) {
       console.log("Uninstall webhook creation error:", response.data.errors);
