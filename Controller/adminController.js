@@ -195,7 +195,7 @@ const getTransactionController = async (req, res) => {
                 { type: { $regex: search, $options: "i" } },
             ];
         }
-
+        console.log("filter", filter);
         const transactions = await TransactionHistroy.find(filter)
             .populate('senderId', 'fullname email profileImage userType')
             .populate('receiverId', 'fullname email profileImage userType')
