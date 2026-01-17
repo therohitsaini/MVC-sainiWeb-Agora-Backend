@@ -173,7 +173,7 @@ const getTransactionController = async (req, res) => {
             });
         }
 
-        const page = Number(req.params.page) || 1;
+        const page = Number(req.params.page) || 2;
         console.log("page", page);
         const limit = Number(req.query.limit) || 11;
         console.log("limit", limit);
