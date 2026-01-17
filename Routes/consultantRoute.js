@@ -18,7 +18,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 
 consultantRoute.post("/add-consultant/:shop_id", upload.single("profileImage"), consultantController)
-consultantRoute.get("/api-find-consultant/:shop_id",verifyShopifyToken, getConsultant)
+consultantRoute.get("/api-find-consultant/:shop_id", getConsultant)
 consultantRoute.put("/api-consultant-update-status/:id", updateConsultantStatus)
 consultantRoute.get("/consultantid/:id", getConsultantById)
 consultantRoute.get("/consultant-history/:id", getConsultantHistory)
