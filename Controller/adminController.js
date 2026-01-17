@@ -158,8 +158,6 @@ const deleteAdminController = async (req, res) => {
 const getTransactionController = async (req, res) => {
     try {
         const { adminId } = req.params;
-        const { page, limit, type } = req.body;
-        const skip = (page - 1) * limit;
 
         if (!adminId) {
             return res.status(400).json({
@@ -175,7 +173,13 @@ const getTransactionController = async (req, res) => {
             });
         }
 
-
+        const page = Number(req.params.page) || 1;
+        console.log("page", page);
+        const limit = Number(req.query.limit) || 11;
+        console.log("limit", limit);
+        const skip = (page - 1) * limit;
+        console.log("skip", skip);
+        const type = req.query.type || "";
         console.log("_________________>", page, limit, skip, "______________", type);
         const typeValue = type === 0 ? 'all' : type === 1 ? 'chat' : type === 2 ? 'voice' : type === 3 ? 'video' : 'all';
         const filter = { shop_id: adminId };
