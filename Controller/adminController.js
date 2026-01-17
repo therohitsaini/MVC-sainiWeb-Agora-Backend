@@ -2,7 +2,7 @@ const { shopModel } = require("../Modal/shopify");
 const mongoose = require("mongoose");
 const { TransactionHistroy } = require("../Modal/transactionHistroy");
 const { User } = require("../Modal/userSchema");
-const { Mongoose } = require("mongoose");
+
 
 const adminController = async (req, res) => {
     try {
