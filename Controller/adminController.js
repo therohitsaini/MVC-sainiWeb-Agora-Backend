@@ -182,7 +182,7 @@ const getTransactionController = async (req, res) => {
         console.log("search", search);
         const typeValue = type === 0 ? 'all' : type === 1 ? 'chat' : type === 2 ? 'voice' : type === 3 ? 'video' : 'all';
         const filter = {
-            shop_id: new Mongoose.Types.ObjectId(adminId)
+            shop_id: new mongoose.Types.ObjectId(adminId)
         };
 
         if (typeValue && typeValue !== 'all') {
