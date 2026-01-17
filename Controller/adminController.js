@@ -203,7 +203,7 @@ const getTransactionController = async (req, res) => {
             .skip(skip)
             .limit(limit)
             .lean();
-
+        console.log("transactions", transactions);
         const totalItems = await TransactionHistroy.countDocuments(filter);
 
         if (transactions.length === 0) {
