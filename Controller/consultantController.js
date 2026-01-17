@@ -32,9 +32,9 @@ const consultantController = async (req, res) => {
         const requiredFields = [
             'fullName', 'email', 'password', 'phoneNumber', 'profession',
             'specialization', 'licenseIdNumber', 'yearOfExperience',
-             'languages', 'displayName', 'gender',
+            'languages', 'displayName', 'gender',
             'houseNumber', 'streetArea', 'landmark', 'address',
-            'pincode', 'dateOfBirth', 'pancardNumber','voicePerMinute','videoPerMinute','chatPerMinute'
+            'pincode', 'dateOfBirth', 'pancardNumber', 'voicePerMinute', 'videoPerMinute', 'chatPerMinute'
         ];
 
         const missingFields = requiredFields.filter(field => !body[field]);
@@ -188,12 +188,12 @@ const loginConsultant = async (request, response) => {
             return response.status(403).send({ massage: "Your account is blocked. Please contact administrator." })
         }
         // console.log("body.password find_User.password", body.password, find_User.password);
-     
+
         // console.log("compairPassword", {success: true, message: "Sign in successfully ", userData: find_User});
         // const Token = JWT.sign(find_User, JWT_SRCURITE_KEY, { expiresIn: '10h' })
         // console.log("Token", Token);
 
-        return response.send({ massage: "Sign in successfully ", userData: find_User,})
+        return response.send({ massage: "Sign in successfully ", userData: find_User, })
 
     } catch (err) {
         return response.status(400).send({ massage: "Server Error ...!", err })
@@ -205,12 +205,14 @@ const loginConsultant = async (request, response) => {
 const getConsultant = async (req, res) => {
     try {
         const { shop_id } = req.params;
+        console.log("shop_id", shop_id);
         if (!mongoose.Types.ObjectId.isValid(shop_id)) {
             return res
                 .status(400)
                 .json({ success: false, message: "Invalid shop ID" });
         }
         let consultants = await User.find({ userType: "consultant", shop_id: shop_id }).select("-password");
+        console.log("consultants$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$", consultants);
         consultants = consultants.map(item => {
             return {
                 ...item._doc,
