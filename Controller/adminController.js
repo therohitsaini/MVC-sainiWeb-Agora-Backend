@@ -174,13 +174,11 @@ const getTransactionController = async (req, res) => {
         }
 
         const page = Number(req.query.page) || 3;
-        console.log("page", page);
         const limit = Number(req.query.limit) || 14;
-        console.log("limit", limit);
         const skip = (page - 1) * limit;
-        console.log("skip", skip);
         const type = req.query.type || "";
-        console.log("_________________>", page, limit, skip, "______________", type);
+        const search = req.query.searchQuery || "";
+        console.log("search", search);
         const typeValue = type === 0 ? 'all' : type === 1 ? 'chat' : type === 2 ? 'voice' : type === 3 ? 'video' : 'all';
         const filter = { shop_id: adminId };
         if (typeValue && typeValue !== 'all') {
