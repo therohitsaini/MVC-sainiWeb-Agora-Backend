@@ -2,6 +2,7 @@ const { shopModel } = require("../Modal/shopify");
 const mongoose = require("mongoose");
 const { TransactionHistroy } = require("../Modal/transactionHistroy");
 const { User } = require("../Modal/userSchema");
+const { Mongoose } = require("mongoose");
 
 const adminController = async (req, res) => {
     try {
@@ -180,7 +181,10 @@ const getTransactionController = async (req, res) => {
         const search = req.query.searchQuery || "";
         console.log("search", search);
         const typeValue = type === 0 ? 'all' : type === 1 ? 'chat' : type === 2 ? 'voice' : type === 3 ? 'video' : 'all';
-        const filter = { shop_id: adminId };
+        const filter = {
+            shop_id: new Mongoose.Types.ObjectId(adminId)
+        };
+
         if (typeValue && typeValue !== 'all') {
             filter.type = typeValue;
         }
