@@ -2,6 +2,7 @@ const { shopModel } = require("../Modal/shopify");
 const mongoose = require("mongoose");
 const { TransactionHistroy } = require("../Modal/transactionHistroy");
 const { User } = require("../Modal/userSchema");
+const { WalletHistory } = require("../Modal/walletHistory");
 
 const adminController = async (req, res) => {
     try {
@@ -226,10 +227,17 @@ const getUserConsultantController = async (req, res) => {
             });
         }
 
-        const customers = await User.find({
+        const customers = await WalletHistory.find({
             shop_id: adminId,
         })
-            .select("fullname email profileImage userType walletBalance updatedAt phone").limit(10)
+            .populate({
+                path: "userId",
+                select: "fullname email profileImage phone userType"
+            })
+            .populate({
+                path: "consultantId",
+                select: "fullname email profileImage phone userType"
+            }).limit(10)
             .lean();
 
         if (!customers || customers.length === 0) {
@@ -241,7 +249,7 @@ const getUserConsultantController = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: "Customers retrieved successfully",
+            message: "Customers retrieved successfullyaaaaa",
             data: customers,
         });
 
