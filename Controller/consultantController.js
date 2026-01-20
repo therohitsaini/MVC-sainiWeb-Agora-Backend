@@ -481,7 +481,7 @@ const removeChatListAndConsultantIdFromChatList = async (req, res) => {
         if (!id || !senderId) {
             return res.status(400).json({ message: 'Chat list ID is required' });
         }
-        const updateUserChatRequest = await User.findOne(senderId);
+        const updateUserChatRequest = await User.findById(senderId);
         if (!updateUserChatRequest) {
             return res.status(400).json({ message: 'User not found' });
         }
