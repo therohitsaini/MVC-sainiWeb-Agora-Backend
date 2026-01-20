@@ -474,13 +474,20 @@ const getChatListByShopIdAndConsultantId = async (request, response) => {
 
 const removeChatListAndConsultantIdFromChatList = async (req, res) => {
     try {
-        const { id } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        const { id, senderId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(senderId)) {
             return res.status(400).json({ message: 'Invalid chat list ID' });
         }
-        if (!id) {
+        if (!id || !senderId) {
             return res.status(400).json({ message: 'Chat list ID is required' });
         }
+        const updateUserChatRequest = await User.findOne(senderId);
+        if (!updateUserChatRequest) {
+            return res.status(400).json({ message: 'User not found' });
+        }
+        updateUserChatRequest.isChatAccepted = "request";
+        await updateUserChatRequest.save();
+
         const chatList = await ChatList.findByIdAndDelete(id);
         if (!chatList) {
             return res.status(400).json({ message: 'Chat list not found' });
