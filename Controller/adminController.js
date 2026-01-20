@@ -249,7 +249,7 @@ const getUserConsultantController = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: "Customers retrieved successfullyaaaaa",
+            message: "Customers retrieved successfully ?",
             data: customers,
         });
 
@@ -259,7 +259,7 @@ const getUserConsultantController = async (req, res) => {
             success: false,
             message: "Failed to get customers",
         });
-    }
+    }   
 };
 
 const getShopAllUserController = async (req, res) => {
