@@ -7,6 +7,7 @@ const sendFCM = require("./firebase/sendNotification");
 const { TransactionHistroy } = require("./Modal/transactionHistroy");
 const { shopModel } = require("./Modal/shopify");
 const { missCalled } = require("./Modal/miscallasHistroy");
+const { WalletHistory } = require("./Modal/walletHistory");
 
 const ioServer = (server) => {
     const io = new Server(server, {

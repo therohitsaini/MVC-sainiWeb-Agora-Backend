@@ -79,5 +79,5 @@ const walletHistorySchema = new mongoose.Schema({
         default: "success"
     }
 }, { timestamps: true });
-
-module.exports = mongoose.model("WalletHistory", walletHistorySchema);
+const WalletHistory = mongoose.model("WalletHistory", walletHistorySchema);
+module.exports = { WalletHistory };
