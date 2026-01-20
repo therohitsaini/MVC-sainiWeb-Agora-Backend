@@ -4,6 +4,11 @@ const walletHistorySchema = new mongoose.Schema({
         ref: "ragisterUser",
         required: true
     },
+    consultantId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ragisterUser",
+        required: true
+    },
 
     shop_id: {
         type: mongoose.Schema.Types.ObjectId,
@@ -48,7 +53,7 @@ const walletHistorySchema = new mongoose.Schema({
 
     referenceId: {
         type: mongoose.Schema.Types.ObjectId,
-        default: null 
+        default: null
     },
 
     direction: {

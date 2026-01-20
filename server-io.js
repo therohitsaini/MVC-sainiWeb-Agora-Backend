@@ -425,6 +425,7 @@ const ioServer = (server) => {
         });
 
         //---------------- end call logics ----------------
+
         socket.on("call-ended", async (data) => {
             const { transactionId, callerId, receiverId, shopId, callType } = data;
 
@@ -443,7 +444,7 @@ const ioServer = (server) => {
 
                 const shop = await shopModel.findById(shopId).session(session);
                 if (!shop) throw new Error("Shop not found");
-
+                const balanceBefore = caller.walletBalance;
                 const endTime = new Date();
                 const totalSeconds = Math.floor(
                     (endTime - new Date(transaction.startTime)) / 1000
@@ -507,6 +508,20 @@ const ioServer = (server) => {
                     { $set: { isCallAccepted: false } },
                     { session }
                 );
+
+                await WalletHistory.create({
+                    userId: callerId,
+                    consultantId: receiverId,
+                    shop_id: shopId,
+                    amount: totalAmount,
+                    balanceBefore: balanceBefore,
+                    balanceAfter: balanceBefore - totalAmount,
+                    transactionType: "usage",
+                    referenceType: callType,
+                    direction: "debit",
+                    description: `Call ended for ${totalSeconds} seconds`,
+                    status: "success",
+                });
 
                 await session.commitTransaction();
 
