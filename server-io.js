@@ -564,7 +564,9 @@ const ioServer = (server) => {
 
                 const shop = await shopModel.findById(shopId).session(session);
                 if (!shop) throw new Error("Shop not found");
-
+                const user_ = await User.findById(userId).session(session);
+                if (!user_) throw new Error("User not found");
+                const balanceBefore = user_.walletBalance;
                 const endTime = new Date();
                 const totalSeconds = Math.floor((endTime - new Date(transaction.startTime)) / 1000);
                 const perSecondCost = consultantCost.chatCost / 60;
@@ -588,6 +590,20 @@ const ioServer = (server) => {
                 }, { session });
 
                 await User.findByIdAndUpdate(userId, { $set: { isChatAccepted: "request" } }, { session });
+
+                await WalletHistory.create({
+                    userId: userId,
+                    consultantId: consultantId,
+                    shop_id: shopId,
+                    amount: totalAmount,
+                    balanceBefore: balanceBefore,
+                    balanceAfter: balanceBefore - totalAmount,
+                    transactionType: "usage",
+                    referenceType: "chat",
+                    direction: "debit",
+                    description: `Chat ended for ${totalSeconds} seconds`,
+                    status: "success",
+                });
 
                 await session.commitTransaction();
 
