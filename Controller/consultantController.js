@@ -470,6 +470,28 @@ const getChatListByShopIdAndConsultantId = async (request, response) => {
     }
 }
 
+// remove chat list  and consultant id from chat list
+
+const removeChatListAndConsultantIdFromChatList = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: 'Invalid chat list ID' });
+        }
+        if (!id) {
+            return res.status(400).json({ message: 'Chat list ID is required' });
+        }
+        const chatList = await ChatList.findByIdAndDelete(id);
+        if (!chatList) {
+            return res.status(400).json({ message: 'Chat list not found' });
+        }
+        return res.status(200).json({ success: true, message: 'Chat list removed successfully' });
+    } catch (error) {
+        console.error(error);
+        return response.status(500).json({ message: 'Server error' });
+    }
+}
+
 
 module.exports = {
     consultantController,
@@ -482,5 +504,6 @@ module.exports = {
     deleteConsultant,
     getConsultantByShopIdAndConsultantId,
     loginConsultant,
-    getChatListByShopIdAndConsultantId
+    getChatListByShopIdAndConsultantId,
+    removeChatListAndConsultantIdFromChatList
 }

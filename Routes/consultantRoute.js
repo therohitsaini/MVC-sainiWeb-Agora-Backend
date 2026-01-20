@@ -9,7 +9,8 @@ const { consultantController,
    deleteConsultant,
    getConsultantByShopIdAndConsultantId,
    loginConsultant,
-   getChatListByShopIdAndConsultantId
+   getChatListByShopIdAndConsultantId,
+   removeChatListAndConsultantIdFromChatList
 } = require("../Controller/consultantController")
 const consultantRoute = express.Router()
 const multer = require("multer");
@@ -28,7 +29,7 @@ consultantRoute.delete('/delete-consultant/:id', deleteConsultant);
 consultantRoute.get("/consultant-by-shop-id-and-consultant-id/:shop_id/:consultant_id", getConsultantByShopIdAndConsultantId);
 consultantRoute.post("/login-consultant", loginConsultant);
 consultantRoute.get("/get/chat-list/:shop_id/:consultant_id", getChatListByShopIdAndConsultantId);
-
+consultantRoute.delete("/remove/user/chat-list/:id", removeChatListAndConsultantIdFromChatList);
 
 module.exports = { consultantRoute }
 

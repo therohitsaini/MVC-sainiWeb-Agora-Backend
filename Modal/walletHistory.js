@@ -48,7 +48,7 @@ const walletHistorySchema = new mongoose.Schema({
 
     referenceId: {
         type: mongoose.Schema.Types.ObjectId,
-        default: null // link to Transaction _id if usage
+        default: null 
     },
 
     direction: {
