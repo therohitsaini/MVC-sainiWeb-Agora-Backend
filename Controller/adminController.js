@@ -220,7 +220,7 @@ const getTransactionController = async (req, res) => {
 const getUserConsultantController = async (req, res) => {
     try {
         const { adminId } = req.params;
-        const page = Number(req.query.page) || 3;
+        const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 14;
         console.log("page", page);
         console.log("limit", limit);
