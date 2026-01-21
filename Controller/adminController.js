@@ -243,7 +243,7 @@ const getUserConsultantController = async (req, res) => {
                 path: "userId",
                 select: "fullname email profileImage phone userType",
                 match: search
-                    ? { fullname: { $regex: search, $options: "i" }, userType: { $regex: search, $options: "i" } }
+                    ? { fullname: { $regex: search, $options: "i" }, email: { $regex: search, $options: "i" } }
                     : {},
             })
             .skip(skip)
