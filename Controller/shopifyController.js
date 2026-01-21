@@ -10,6 +10,7 @@ const { manageShopifyUser } = require('../MiddleWare/ShopifyMiddleware/handleSho
 const { createAppMenu } = require('../MiddleWare/shopifySubMenu');
 const { renderShopifyPage } = require('../MiddleWare/ShopifyMiddleware/helperTheme');
 const { registerOrderPaidWebhook, registerOrderDeletedWebhook, registerAppUninstallWebhook, } = require('../MiddleWare/ShopifyMiddleware/registerWebHook');
+const { deleteAllAppUninstallWebhooks } = require('../MiddleWare/ShopifyMiddleware/deleteWebHook');
 let axios, wrapper, CookieJar;
 try {
     axios = require("axios");
@@ -70,7 +71,7 @@ const installShopifyApp = async (req, res) => {
     if (!shopDoc) {
         return res.status(200).send({
             installed: false,
-            installUrl: installUrl, 
+            installUrl: installUrl,
         });
     }
     if (shopDoc.accessToken) {
@@ -191,12 +192,13 @@ const authCallback = async (req, res) => {
         /** Register Order Paid Webhook */
         await registerOrderPaidWebhook(shop, accessToken);
         await registerOrderDeletedWebhook(shop, accessToken);
+        await deleteAllAppUninstallWebhooks(shop, accessToken);
         await registerAppUninstallWebhook(shop, accessToken);
 
         const AdminiId = AdminUser._id;
         let finalHost = host;
         if (!finalHost || !finalHost.startsWith('YWRtaW4')) {
-  
+
             const shopDomain = shop.replace('.myshopify.com', '');
             const hostString = `admin.shopify.com/store/${shopDomain}`;
             finalHost = Buffer.from(hostString).toString('base64');
@@ -206,8 +208,8 @@ const authCallback = async (req, res) => {
 
         const redirectUrl = `${frontendUrl}/?` + new URLSearchParams({
             shop: shop,
-            host: finalHost, 
-            embedded: '1', 
+            host: finalHost,
+            embedded: '1',
             adminId: AdminiId.toString(),
             source: 'shopify_auth',
             timestamp: Date.now().toString(), // Cache prevent
