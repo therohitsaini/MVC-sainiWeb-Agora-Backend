@@ -2,6 +2,46 @@ const axios = require("axios");
 const dotenv = require("dotenv");
 dotenv.config();
 
+
+
+
+// check webhook is already registered midle ware function
+const getExistingWebhooks = async (shop, accessToken) => {
+  const query = `
+    query {
+      webhookSubscriptions(first: 100) {
+        edges {
+          node {
+            id
+            topic
+            endpoint {
+              ... on WebhookHttpEndpoint {
+                callbackUrl
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const response = await axios.post(
+    `https://${shop}/admin/api/2024-01/graphql.json`,
+    { query },
+    {
+      headers: {
+        "X-Shopify-Access-Token": accessToken,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data.data.webhookSubscriptions.edges;
+};
+
+// check webhook is already registered midle ware function end
+
+
 const registerOrderPaidWebhook = async (shop, accessToken,) => {
   try {
 
@@ -151,21 +191,34 @@ const registerOrderDeletedWebhook = async (shop, accessToken) => {
 // };
 const registerAppUninstallWebhook = async (shop, accessToken) => {
   try {
-    const query = `
-      mutation webhookSubscriptionCreate(
-        $topic: WebhookSubscriptionTopic!, 
-        $webhookSubscription: WebhookSubscriptionInput!
-      ) {
-        webhookSubscriptionCreate(topic: $topic, webhookSubscription: $webhookSubscription) {
+    const callbackUrl = `${process.env.APP_URL}/api/webhooks/app-uninstalled`;
+
+    // 1️⃣ Get existing webhooks
+    const webhooks = await getExistingWebhooks(shop, accessToken);
+    console.log("webhooks", webhooks);
+    // 2️⃣ Check if already exists
+    const alreadyRegistered = webhooks.some(({ node }) =>
+      node.topic === "APP_UNINSTALLED" &&
+      node.endpoint?.callbackUrl === callbackUrl
+    );
+
+    if (alreadyRegistered) {
+      console.log("✅ APP_UNINSTALLED webhook already registered");
+      return { status: "already_registered" };
+    }
+
+    // 3️⃣ Create webhook
+    const mutation = `
+      mutation {
+        webhookSubscriptionCreate(
+          topic: APP_UNINSTALLED,
+          webhookSubscription: {
+            callbackUrl: "${callbackUrl}",
+            format: JSON
+          }
+        ) {
           webhookSubscription {
             id
-            topic
-            endpoint {
-              __typename
-              ... on WebhookHttpEndpoint {
-                callbackUrl
-              }
-            }
           }
           userErrors {
             field
@@ -175,16 +228,9 @@ const registerAppUninstallWebhook = async (shop, accessToken) => {
       }
     `;
 
-    const variables = {
-      topic: "APP_UNINSTALLED",
-      webhookSubscription: {
-        callbackUrl: `${process.env.APP_URL}/api/webhooks/app-uninstalled`
-      },
-    };
-
-    const { data } = await axios.post(
-      `https://${shop}/admin/api/2024-10/graphql.json`,
-      { query, variables },
+    const response = await axios.post(
+      `https://${shop}/admin/api/2024-01/graphql.json`,
+      { query: mutation },
       {
         headers: {
           "X-Shopify-Access-Token": accessToken,
@@ -193,24 +239,20 @@ const registerAppUninstallWebhook = async (shop, accessToken) => {
       }
     );
 
-    const response = data.data.webhookSubscriptionCreate;
-
-    if (response.userErrors.length) {
-      console.error("❌ Webhook user errors:", response.userErrors);
-      return null;
+    const errors = response.data.data.webhookSubscriptionCreate.userErrors;
+    if (errors.length) {
+      throw new Error(errors[0].message);
     }
 
-    console.log(
-      "✅ Uninstall webhook created:",
-      response.webhookSubscription
-    );
+    console.log("🎉 APP_UNINSTALLED webhook created successfully");
+    return response.data;
 
-    return response.webhookSubscription;
   } catch (error) {
-    console.error("Webhook subscription error:", error.response?.data || error);
+    console.error("❌ Register uninstall webhook error:", error.message);
     throw error;
   }
 };
+
 
 
 module.exports = { registerOrderPaidWebhook, registerOrderDeletedWebhook, registerAppUninstallWebhook };
