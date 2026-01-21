@@ -360,6 +360,11 @@ const updateUserConsultantController = async (req, res) => {
             direction: "credit",
             status: "success",
         });
+        res.status(200).json({
+            success: true,
+            message: "User wallet updated successfully",
+            data: user,
+        });
 
     } catch (error) {
         console.error("Error in updateUserConsultantController:", error);
