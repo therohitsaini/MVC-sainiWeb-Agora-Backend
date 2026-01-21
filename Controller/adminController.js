@@ -357,7 +357,7 @@ const updateUserConsultantController = async (req, res) => {
             referenceType: "manual",
             description: body.description,
             transactionType: body.mainType,
-            direction: body.mainType,
+            direction: "credit",
             status: "success",
         });
 

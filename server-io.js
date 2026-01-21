@@ -590,11 +590,8 @@ const ioServer = (server) => {
 
                 await WalletHistory.create({
                     userId: userId,
-                    consultantId: consultantId,
                     shop_id: shopId,
                     amount: totalAmount,
-                    balanceBefore: balanceBefore,
-                    balanceAfter: balanceBefore - totalAmount,
                     transactionType: "usage",
                     referenceType: "chat",
                     direction: "debit",
@@ -603,11 +600,8 @@ const ioServer = (server) => {
                 });
                 await WalletHistory.create({
                     userId: consultantId,
-                    consultantId: userId,
                     shop_id: shopId,
                     amount: consultantShare,
-                    balanceBefore: consultantCost.walletBalance,
-                    balanceAfter: consultantCost.walletBalance + consultantShare,
                     transactionType: "usage",
                     referenceType: "chat",
                     direction: "credit",
