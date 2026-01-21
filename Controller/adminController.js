@@ -259,7 +259,7 @@ const getUserConsultantController = async (req, res) => {
             success: false,
             message: "Failed to get customers",
         });
-    }   
+    }
 };
 
 const getShopAllUserController = async (req, res) => {
@@ -333,6 +333,22 @@ const getShopAllConsultantController = async (req, res) => {
         });
     }
 }
+const updateUserConsultantController = async (req, res) => {
+    try {
+        const { adminId } = req.params;
+        const { userId,  } = req.body;
+        console.log("___________req.body___________", req.body);
+        if (!mongoose.Types.ObjectId.isValid(adminId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid admin ID",
+            });
+        }
+    } catch (error) {
+        console.error("Error in updateUserConsultantController:", error);
+    }
+}
+
 module.exports = {
     adminController,
     voucherController,
@@ -341,5 +357,6 @@ module.exports = {
     getTransactionController,
     getUserConsultantController,
     getShopAllUserController,
-    getShopAllConsultantController
+    getShopAllConsultantController,
+    updateUserConsultantController
 };
