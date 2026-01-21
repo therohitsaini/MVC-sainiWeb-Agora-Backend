@@ -350,6 +350,7 @@ const updateUserConsultantController = async (req, res) => {
         }
         const mType = body.mainType === "manual_credit" ? "credit" : "debit";
         const uAmount = +body.amount;
+        console.log("uAmount", uAmount);
         user.walletBalance = mType === "credit" ? user.walletBalance + uAmount : user.walletBalance - uAmount;
         await user.save();
         await WalletHistory.create({
