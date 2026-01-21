@@ -236,7 +236,7 @@ const getUserConsultantController = async (req, res) => {
         const customers = await WalletHistory.find({
             shop_id: adminId,
         })
-            .sort({ createdAt: -1 })
+            // .sort({ createdAt: -1 })
             .populate({
                 path: "userId",
                 select: "fullname email profileImage phone userType"
