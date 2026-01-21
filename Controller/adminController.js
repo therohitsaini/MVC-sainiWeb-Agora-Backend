@@ -221,7 +221,7 @@ const getUserConsultantController = async (req, res) => {
     try {
         const { adminId } = req.params;
         const page = Number(req.query.page) || 1;
-        const limit = Number(req.query.limit) || 14;
+        const limit = Number(req.query.limit) || 10;
         console.log("page", page);
         console.log("limit", limit);
         const skip = (page - 1) * limit;
