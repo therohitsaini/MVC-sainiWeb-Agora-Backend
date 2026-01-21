@@ -1,3 +1,5 @@
+const { default: axios } = require("axios");
+
 const getAppUninstallWebhooks = async (shop, accessToken) => {
     const query = `
       query {
