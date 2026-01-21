@@ -27,13 +27,7 @@ const client_id = process.env.SHOPIFY_CLIENT_ID
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET
 const SCOPES = "read_customers,write_customers,write_draft_orders,read_draft_orders,read_orders,write_orders,read_orders,write_orders";
 const APP_URL = process.env.APP_URL;
-// const SESSION_SECRET = process.env.SESSION_SECRET || "dgtetwtgwtdgsvdggsd";
-// const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff";
-// const roundingNumber = process.env.PASSWORD_SECRECT_ROUNDING
-const callbackUrlCreated = `${APP_URL}/api/webhooks/webhooks/orders-created`;
-const callbackUrlDeleted = `${APP_URL}/api/webhooks/webhooks/orders-deleted`;
-const topicCreated = "ORDERS_CREATED";
-const topicDeleted = "ORDERS_DELETED";
+
 
 /**
  * STEP 1: Shopify App Installation Function
@@ -188,11 +182,12 @@ const authCallback = async (req, res) => {
         if (!AdminUser) {
             return res.status(400).send("Admin user not found");
         }
-
+        /** Delete All App Uninstall Webhooks */
+        // await deleteAllAppUninstallWebhooks(shop, accessToken);
         /** Register Order Paid Webhook */
         await registerOrderPaidWebhook(shop, accessToken);
         await registerOrderDeletedWebhook(shop, accessToken);
-        await deleteAllAppUninstallWebhooks(shop, accessToken);
+
         await registerAppUninstallWebhook(shop, accessToken);
 
         const AdminiId = AdminUser._id;
