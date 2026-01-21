@@ -249,7 +249,8 @@ const getUserConsultantController = async (req, res) => {
             .skip(skip)
             .limit(limit)
             .lean();
-        const totalItems = await WalletHistory.countDocuments({ shop_id: adminId });
+        const filteredData = customers.filter(item => item.userId !== null);
+        const totalItems = filteredData.length;
         if (!customers || customers.length === 0) {
             return res.status(404).json({
                 success: false,
@@ -260,7 +261,7 @@ const getUserConsultantController = async (req, res) => {
         res.status(200).json({
             success: true,
             message: "Customers retrieved successfully ?",
-            data: customers,
+            data: filteredData,
             totalItems,
             page,
             limit,
