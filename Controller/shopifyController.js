@@ -192,7 +192,7 @@ const authCallback = async (req, res) => {
         /** Register Order Paid Webhook */
         await registerOrderPaidWebhook(shop, accessToken);
         await registerOrderDeletedWebhook(shop, accessToken);
-        await deleteAllAppUninstallWebhooks(shop, accessToken);
+        // await deleteAllAppUninstallWebhooks(shop, accessToken);
         await registerAppUninstallWebhook(shop, accessToken);
 
         const AdminiId = AdminUser._id;
