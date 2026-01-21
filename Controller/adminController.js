@@ -222,7 +222,10 @@ const getUserConsultantController = async (req, res) => {
         const { adminId } = req.params;
         const page = Number(req.query.page) || 3;
         const limit = Number(req.query.limit) || 14;
+        console.log("page", page);
+        console.log("limit", limit);
         const skip = (page - 1) * limit;
+        console.log("skip", skip);
         if (!mongoose.Types.ObjectId.isValid(adminId)) {
             return res.status(400).json({
                 success: false,
