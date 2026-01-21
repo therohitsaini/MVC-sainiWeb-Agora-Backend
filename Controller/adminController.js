@@ -249,8 +249,8 @@ const getUserConsultantController = async (req, res) => {
             .skip(skip)
             .limit(limit)
             .lean();
-        const filteredData = customers.filter(item => item.userId !== null);
-        const totalItems = filteredData.length;
+        const filteredData = customers.filter(item => item.userId !== null && item.userId.fullname.toLowerCase().includes(search.toLowerCase()));
+        const totalItems = await WalletHistory.countDocuments({ shop_id: adminId });
         if (!customers || customers.length === 0) {
             return res.status(404).json({
                 success: false,
