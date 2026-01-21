@@ -234,10 +234,7 @@ const getUserConsultantController = async (req, res) => {
                 path: "userId",
                 select: "fullname email profileImage phone userType"
             })
-            .populate({
-                path: "consultantId",
-                select: "fullname email profileImage phone userType"
-            }).limit(10)
+            .limit(10)
             .lean();
 
         if (!customers || customers.length === 0) {
