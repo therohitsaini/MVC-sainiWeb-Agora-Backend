@@ -241,7 +241,10 @@ const getUserConsultantController = async (req, res) => {
             .sort({ createdAt: -1 })
             .populate({
                 path: "userId",
-                select: "fullname email profileImage phone userType"
+                select: "fullname email profileImage phone userType",
+                match: search
+                    ? { fullname: { $regex: search, $options: "i" } }
+                    : {},
             })
             .skip(skip)
             .limit(limit)
