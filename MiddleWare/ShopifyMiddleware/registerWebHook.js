@@ -95,30 +95,96 @@ const registerOrderDeletedWebhook = async (shop, accessToken) => {
 }
 
 
+// const registerAppUninstallWebhook = async (shop, accessToken) => {
+//   try {
+//     const query = `
+//       mutation {
+//         webhookSubscriptionCreate(
+//           topic: APP_UNINSTALLED,
+//           webhookSubscription: {
+//             callbackUrl: "${process.env.APP_URL}/api/webhooks/app-uninstalled",
+//             format: JSON
+//           }
+//         ) {
+//           webhookSubscription {
+//             id
+//           }
+//           userErrors {
+//             message
+//           }
+//         }
+//       }
+//     `;
+
+//     const response = await axios.post(
+//       `https://${shop}/admin/api/2024-01/graphql.json`,
+//       { query },
+//       {
+//         headers: {
+//           "X-Shopify-Access-Token": accessToken,
+//           "Content-Type": "application/json",
+//         },
+//       }
+//     );
+//     console.log("response", response.data);
+
+//     if (response.data.errors) {
+//       console.log("Uninstall webhook creation error:", response.data.errors);
+//       throw new Error(response.data.errors[0].message);
+//     }
+
+//     console.log(
+//       "Uninstall webhook user errors:",
+//       response.data.data.webhookSubscriptionCreate.userErrors
+//     );
+
+//     console.log(
+//       "App Uninstall webhook created:",
+//       response.data.data.webhookSubscriptionCreate.webhookSubscription
+//     );
+
+//     return response.data;
+//   } catch (error) {
+//     console.log("Register uninstall webhook error:", error);
+//     throw error;
+//   }
+// };
 const registerAppUninstallWebhook = async (shop, accessToken) => {
   try {
     const query = `
-      mutation {
-        webhookSubscriptionCreate(
-          topic: APP_UNINSTALLED,
-          webhookSubscription: {
-            callbackUrl: "${process.env.APP_URL}/api/webhooks/app-uninstalled",
-            format: JSON
-          }
-        ) {
+      mutation webhookSubscriptionCreate(
+        $topic: WebhookSubscriptionTopic!, 
+        $webhookSubscription: WebhookSubscriptionInput!
+      ) {
+        webhookSubscriptionCreate(topic: $topic, webhookSubscription: $webhookSubscription) {
           webhookSubscription {
             id
+            topic
+            endpoint {
+              __typename
+              ... on WebhookHttpEndpoint {
+                callbackUrl
+              }
+            }
           }
           userErrors {
+            field
             message
           }
         }
       }
     `;
 
-    const response = await axios.post(
-      `https://${shop}/admin/api/2024-01/graphql.json`,
-      { query },
+    const variables = {
+      topic: "APP_UNINSTALLED",
+      webhookSubscription: {
+        callbackUrl: `${process.env.APP_URL}/api/webhooks/app-uninstalled`
+      },
+    };
+
+    const { data } = await axios.post(
+      `https://${shop}/admin/api/2024-10/graphql.json`,
+      { query, variables },
       {
         headers: {
           "X-Shopify-Access-Token": accessToken,
@@ -126,28 +192,25 @@ const registerAppUninstallWebhook = async (shop, accessToken) => {
         },
       }
     );
-    console.log("response", response.data);
 
-    if (response.data.errors) {
-      console.log("Uninstall webhook creation error:", response.data.errors);
-      throw new Error(response.data.errors[0].message);
+    const response = data.data.webhookSubscriptionCreate;
+
+    if (response.userErrors.length) {
+      console.error("❌ Webhook user errors:", response.userErrors);
+      return null;
     }
 
     console.log(
-      "Uninstall webhook user errors:",
-      response.data.data.webhookSubscriptionCreate.userErrors
+      "✅ Uninstall webhook created:",
+      response.webhookSubscription
     );
 
-    console.log(
-      "App Uninstall webhook created:",
-      response.data.data.webhookSubscriptionCreate.webhookSubscription
-    );
-
-    return response.data;
+    return response.webhookSubscription;
   } catch (error) {
-    console.log("Register uninstall webhook error:", error);
+    console.error("Webhook subscription error:", error.response?.data || error);
     throw error;
   }
 };
+
 
 module.exports = { registerOrderPaidWebhook, registerOrderDeletedWebhook, registerAppUninstallWebhook };
