@@ -336,7 +336,7 @@ const getShopAllConsultantController = async (req, res) => {
 const updateUserConsultantController = async (req, res) => {
     try {
         const { adminId } = req.params;
-        const { userId,  } = req.body;
+        const body = req.body;
         console.log("___________req.body___________", req.body);
         if (!mongoose.Types.ObjectId.isValid(adminId)) {
             return res.status(400).json({
@@ -344,6 +344,26 @@ const updateUserConsultantController = async (req, res) => {
                 message: "Invalid admin ID",
             });
         }
+        const user = await User.findById(body.userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+        user.walletBalance = body.amount;
+        await user.save();
+        await WalletHistory.create({
+            userId: body.userId,
+            shop_id: adminId,
+            amount: body.amount,
+            referenceType: "manual",
+            description: body.description,
+            transactionType: body.mainType,
+            direction: body.mainType,
+            status: "success",
+        });
+
     } catch (error) {
         console.error("Error in updateUserConsultantController:", error);
     }

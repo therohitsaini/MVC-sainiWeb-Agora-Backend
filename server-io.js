@@ -512,12 +512,8 @@ const ioServer = (server) => {
 
                 await WalletHistory.create({
                     userId: callerId,
-                    consultantId: receiverId,
                     shop_id: shopId,
                     amount: totalAmount,
-                    balanceBefore: balanceBefore,
-                    balanceAfter: balanceBefore - totalAmount,
-                    transactionType: "usage",
                     referenceType: callType,
                     direction: "debit",
                     description: `Call ended for ${totalSeconds} seconds`,

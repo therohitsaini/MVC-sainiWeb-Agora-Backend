@@ -5,11 +5,6 @@ const walletHistorySchema = new mongoose.Schema({
         ref: "ragisterUser",
         required: true
     },
-    consultantId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "ragisterUser",
-        required: true
-    },
 
     shop_id: {
         type: mongoose.Schema.Types.ObjectId,
@@ -18,16 +13,6 @@ const walletHistorySchema = new mongoose.Schema({
     },
 
     amount: {
-        type: Number,
-        required: true
-    },
-
-    balanceBefore: {
-        type: Number,
-        required: true
-    },
-
-    balanceAfter: {
         type: Number,
         required: true
     },
