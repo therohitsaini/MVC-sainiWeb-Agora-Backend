@@ -605,6 +605,19 @@ const ioServer = (server) => {
                     description: `Chat ended for ${totalSeconds} seconds`,
                     status: "success",
                 });
+                await WalletHistory.create({
+                    userId: consultantId,
+                    consultantId: userId,
+                    shop_id: shopId,
+                    amount: consultantShare,
+                    balanceBefore: consultantCost.walletBalance,
+                    balanceAfter: consultantCost.walletBalance + consultantShare,
+                    transactionType: "usage",
+                    referenceType: "chat",
+                    direction: "credit",
+                    description: `Chat ended for ${totalSeconds} seconds`,
+                    status: "success",
+                });
 
                 await session.commitTransaction();
 
