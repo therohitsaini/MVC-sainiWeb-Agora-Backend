@@ -220,6 +220,9 @@ const getTransactionController = async (req, res) => {
 const getUserConsultantController = async (req, res) => {
     try {
         const { adminId } = req.params;
+        const page = Number(req.query.page) || 3;
+        const limit = Number(req.query.limit) || 14;
+        const skip = (page - 1) * limit;
         if (!mongoose.Types.ObjectId.isValid(adminId)) {
             return res.status(400).json({
                 success: false,
@@ -235,9 +238,10 @@ const getUserConsultantController = async (req, res) => {
                 path: "userId",
                 select: "fullname email profileImage phone userType"
             })
-            .limit(10)
+            .skip(skip)
+            .limit(limit)
             .lean();
-
+        const totalItems = await WalletHistory.countDocuments({ shop_id: adminId });
         if (!customers || customers.length === 0) {
             return res.status(404).json({
                 success: false,
@@ -249,6 +253,9 @@ const getUserConsultantController = async (req, res) => {
             success: true,
             message: "Customers retrieved successfully ?",
             data: customers,
+            totalItems,
+            page,
+            limit,
         });
 
     } catch (error) {
