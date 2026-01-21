@@ -334,7 +334,6 @@ const updateUserConsultantController = async (req, res) => {
     try {
         const { adminId } = req.params;
         const body = req.body;
-        console.log("___________req.body___________", req.body);
         if (!mongoose.Types.ObjectId.isValid(adminId)) {
             return res.status(400).json({
                 success: false,

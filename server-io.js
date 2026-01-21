@@ -595,7 +595,7 @@ const ioServer = (server) => {
                     transactionType: "usage",
                     referenceType: "chat",
                     direction: "debit",
-                    description: `Chat ended for ${totalSeconds} seconds`,
+                    description: `Chat ended for ${totalSeconds / 60} minutes`,
                     status: "success",
                 });
                 await WalletHistory.create({
@@ -605,7 +605,7 @@ const ioServer = (server) => {
                     transactionType: "usage",
                     referenceType: "chat",
                     direction: "credit",
-                    description: `Chat ended for ${totalSeconds} seconds`,
+                    description: `Chat ended for ${totalSeconds / 60} minutes`,
                     status: "success",
                 });
 
