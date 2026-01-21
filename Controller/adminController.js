@@ -349,12 +349,13 @@ const updateUserConsultantController = async (req, res) => {
             });
         }
         const mType = body.mainType === "manual_credit" ? "credit" : "debit";
-        user.walletBalance = mType === "credit" ? user.walletBalance + body.amount : user.walletBalance - body.amount;
+        const uAmount = +body.amount;
+        user.walletBalance = mType === "credit" ? user.walletBalance + uAmount : user.walletBalance - uAmount;
         await user.save();
         await WalletHistory.create({
             userId: body.userId,
             shop_id: adminId,
-            amount: body.amount,
+            amount: uAmount,
             referenceType: "manual",
             description: body.description,
             transactionType: body.mainType,
