@@ -348,7 +348,8 @@ const updateUserConsultantController = async (req, res) => {
                 message: "User not found",
             });
         }
-        user.walletBalance = body.amount;
+        const mType = body.mainType === "manual_credit" ? "credit" : "debit";
+        user.walletBalance = mType === "credit" ? user.walletBalance + body.amount : user.walletBalance - body.amount;
         await user.save();
         await WalletHistory.create({
             userId: body.userId,
@@ -357,7 +358,7 @@ const updateUserConsultantController = async (req, res) => {
             referenceType: "manual",
             description: body.description,
             transactionType: body.mainType,
-            direction: "credit",
+            direction: mType,
             status: "success",
         });
         res.status(200).json({
