@@ -179,7 +179,7 @@ const authCallback = async (req, res) => {
         await registerOrderPaidWebhook(shop, accessToken);
         await registerOrderDeletedWebhook(shop, accessToken);
         await registerAppUninstallWebhook(shop, accessToken);
-        await registerGdprWebhook(shop, accessToken);
+      
 
 
         const AdminiId = AdminUser._id;

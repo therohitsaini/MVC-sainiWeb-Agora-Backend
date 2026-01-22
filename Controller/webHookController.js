@@ -56,21 +56,34 @@ const webhooksAppUninstalled = async (req, res) => {
     }
 }
 
-// madantory webhook to register
-const customerDataRequest = (req, res) => {
-    // Agar data store nahi karte → kuch nahi karna
-    return res.status(200).send('OK');
+const webhooksCustomerDataRequest = async (req, res) => {
+    console.log('📥 GDPR customer data request', req.body);
+
+    // TODO:
+    // - find customer data
+    // - email merchant if required
+
+    res.status(200).send('OK');
 };
 
-const customerRedact = (req, res) => {
-    // Customer data delete logic (optional)
-    return res.status(200).send('OK');
+const webhooksCustomerRedact = async (req, res) => {
+    console.log('🧹 GDPR customer redact', req.body);
+
+    // TODO:
+    // - delete customer data from DB
+
+    res.status(200).send('OK');
 };
 
-const shopRedact = (req, res) => {
-    // Shop data delete logic (optional)
-    return res.status(200).send('OK');
+const webhooksShopRedact = async (req, res) => {
+    console.log('🏪 GDPR shop redact', req.body);
+
+    // TODO:
+    // - delete all shop data
+
+    res.status(200).send('OK');
 };
 
 
-module.exports = { webhooksOrdersCreated, webhooksOrdersDeleted, webhooksAppUninstalled, customerDataRequest, customerRedact, shopRedact };
+
+module.exports = { webhooksOrdersCreated, webhooksOrdersDeleted, webhooksAppUninstalled, webhooksCustomerDataRequest, webhooksCustomerRedact, webhooksShopRedact };
