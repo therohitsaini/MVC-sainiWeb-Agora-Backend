@@ -135,60 +135,8 @@ const registerOrderDeletedWebhook = async (shop, accessToken) => {
 }
 
 
-// const registerAppUninstallWebhook = async (shop, accessToken) => {
-//   try {
-//     const query = `
-//       mutation {
-//         webhookSubscriptionCreate(
-//           topic: APP_UNINSTALLED,
-//           webhookSubscription: {
-//             callbackUrl: "${process.env.APP_URL}/api/webhooks/app-uninstalled",
-//             format: JSON
-//           }
-//         ) {
-//           webhookSubscription {
-//             id
-//           }
-//           userErrors {
-//             message
-//           }
-//         }
-//       }
-//     `;
 
-//     const response = await axios.post(
-//       `https://${shop}/admin/api/2024-01/graphql.json`,
-//       { query },
-//       {
-//         headers: {
-//           "X-Shopify-Access-Token": accessToken,
-//           "Content-Type": "application/json",
-//         },
-//       }
-//     );
-//     console.log("response", response.data);
 
-//     if (response.data.errors) {
-//       console.log("Uninstall webhook creation error:", response.data.errors);
-//       throw new Error(response.data.errors[0].message);
-//     }
-
-//     console.log(
-//       "Uninstall webhook user errors:",
-//       response.data.data.webhookSubscriptionCreate.userErrors
-//     );
-
-//     console.log(
-//       "App Uninstall webhook created:",
-//       response.data.data.webhookSubscriptionCreate.webhookSubscription
-//     );
-
-//     return response.data;
-//   } catch (error) {
-//     console.log("Register uninstall webhook error:", error);
-//     throw error;
-//   }
-// };
 const registerAppUninstallWebhook = async (shop, accessToken) => {
   try {
     const callbackUrl = `${process.env.APP_URL}/api/webhooks/app-uninstalled`;
@@ -251,13 +199,16 @@ const registerAppUninstallWebhook = async (shop, accessToken) => {
 
 const registerGdprWebhook = async (shop, accessToken, topic, callbackPath) => {
   const callbackUrl = `${process.env.APP_URL}${callbackPath}`;
-
+  console.log("callbackUrl", callbackUrl);
   const mutation = `
-    mutation webhookSubscriptionCreate($topic: WebhookSubscriptionTopic!, $callbackUrl: URL!) {
+    mutation webhookSubscriptionCreate(
+      $topic: WebhookSubscriptionTopic!
+      $callbackUrl: URL!
+    ) {
       webhookSubscriptionCreate(
-        topic: $topic,
+        topic: $topic
         webhookSubscription: {
-          callbackUrl: $callbackUrl,
+          callbackUrl: $callbackUrl
           format: JSON
         }
       ) {
@@ -271,10 +222,7 @@ const registerGdprWebhook = async (shop, accessToken, topic, callbackPath) => {
     `https://${shop}/admin/api/2024-01/graphql.json`,
     {
       query: mutation,
-      variables: {
-        topic,
-        callbackUrl
-      }
+      variables: { topic, callbackUrl }
     },
     {
       headers: {
@@ -284,13 +232,20 @@ const registerGdprWebhook = async (shop, accessToken, topic, callbackPath) => {
     }
   );
 
-  const errors = response.data.data.webhookSubscriptionCreate.userErrors;
-  console.log("errors", errors);
-  if (errors.length) {
-    throw new Error(errors[0].message);
+  const result = response.data?.data?.webhookSubscriptionCreate;
+
+  if (!result) {
+    console.error("❌ Invalid GraphQL response:", response.data);
+    throw new Error("Webhook creation failed");
   }
 
-  return response.data;
+  if (result.userErrors?.length) {
+    console.error("❌ Webhook user errors:", result.userErrors);
+    throw new Error(result.userErrors[0].message);
+  }
+
+  console.log(`✅ GDPR webhook registered: ${topic}`);
+  return result.webhookSubscription;
 };
 
 

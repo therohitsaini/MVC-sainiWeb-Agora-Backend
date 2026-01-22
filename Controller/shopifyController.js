@@ -184,9 +184,9 @@ const authCallback = async (req, res) => {
         await registerOrderPaidWebhook(shop, accessToken);
         await registerOrderDeletedWebhook(shop, accessToken);
         await registerAppUninstallWebhook(shop, accessToken);
-        // await registerGdprWebhook(shop, accessToken, "CUSTOMERS_DATA_REQUEST", "/api/webhooks/customers/data_request");
-        // await registerGdprWebhook(shop, accessToken, "CUSTOMERS_REDACT", "/api/webhooks/customers/redact");
-        // await registerGdprWebhook(shop, accessToken, "SHOP_REDACT", "/api/webhooks/shop/redact");
+        await registerGdprWebhook(shop, accessToken, "CUSTOMERS_DATA_REQUEST", "/api/webhooks/customers/data_request");
+        await registerGdprWebhook(shop, accessToken, "CUSTOMERS_REDACT", "/api/webhooks/customers/redact");
+        await registerGdprWebhook(shop, accessToken, "SHOP_REDACT", "/api/webhooks/shop/redact");
 
 
 
