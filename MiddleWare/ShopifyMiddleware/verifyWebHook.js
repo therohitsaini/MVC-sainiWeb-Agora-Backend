@@ -1,24 +1,32 @@
-    const crypto = require('crypto');
+const crypto = require('crypto');
 
-    const dotenv = require("dotenv");
-    dotenv.config();
-    function verifyWebhook(req, res, next) {
-        const hmacHeader = req.get('X-Shopify-Hmac-Sha256'); // or lowercase
-        const secret = process.env.SHOPIFY_API_SECRET;
-        console.log("hmacHeader", hmacHeader);
-        console.log("secret", secret);
+function verifyWebhook(req, res, next) {
+    const hmacHeader = req.get('X-Shopify-Hmac-Sha256');
+    const secret = process.env.SHOPIFY_API_SECRET;
 
-        // req.body here is still a Buffer, do NOT JSON.stringify
-        const hash = crypto
-            .createHmac('sha256', secret)
-            .update(req.body) // must be buffer or string
-            .digest('base64');
+    console.log('--- WEBHOOK DEBUG ---');
+    console.log('Has HMAC:', !!hmacHeader);
+    console.log('Has Secret:', !!secret);
+    console.log('Is Buffer:', Buffer.isBuffer(req.body));
+    console.log('Body length:', req.body?.length);
 
-        if (hash === hmacHeader) {
-            next();
-        } else {
-            res.status(401).send('Unauthorized');
-        }
+    if (!hmacHeader || !secret || !Buffer.isBuffer(req.body)) {
+        return res.status(401).send('Invalid webhook');
     }
 
-    module.exports = { verifyWebhook };
+    const generatedHash = crypto
+        .createHmac('sha256', secret)
+        .update(req.body)
+        .digest('base64');
+
+    console.log('Shopify HMAC:', hmacHeader);
+    console.log('Generated HMAC:', generatedHash);
+
+    if (generatedHash !== hmacHeader) {
+        return res.status(401).send('HMAC mismatch');
+    }
+
+    next(); // ✅ VERIFIED
+}
+
+module.exports = { verifyWebhook };

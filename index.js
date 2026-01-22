@@ -20,7 +20,7 @@ app.use(cors());
 
 app.use(
   '/api/webhooks',
-  express.raw({ type: '*/*' }) // Shopify webhook ke liye exact raw bytes chahiye
+  express.raw({ type: '*/*' })
 );
 
 app.use("/api/webhooks", webHookRoute);
