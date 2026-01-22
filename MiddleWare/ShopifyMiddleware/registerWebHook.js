@@ -285,6 +285,7 @@ const registerGdprWebhook = async (shop, accessToken, topic, callbackPath) => {
   );
 
   const errors = response.data.data.webhookSubscriptionCreate.userErrors;
+  console.log("errors", errors);
   if (errors.length) {
     throw new Error(errors[0].message);
   }
