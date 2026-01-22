@@ -18,24 +18,29 @@ const { webHookRoute } = require("./Routes/webHookRoute");
 
 app.use(cors());
 app.use("/api/webhooks", webHookRoute);
+
+app.use(
+  express.json({
+    verify: (req, res, buf) => {
+      if (req.path.startsWith('/api/webhooks')) {
+        req.rawBody = buf; // Shopify HMAC verification for GDPR / Webhook routes
+      }
+    },
+  })
+);
+
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/webhooks')) {
-    return next();
-  }
+  if (req.path.startsWith('/api/webhooks')) return next();
   express.json()(req, res, next);
 });
+
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/webhooks')) {
-    return next();
-  }
+  if (req.path.startsWith('/api/webhooks')) return next();
   express.urlencoded({ extended: true })(req, res, next);
 });
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// const reactBuildPath = path.join(__dirname, "..", "consultant-app", "build");
-// app.use("/static", express.static(path.join(reactBuildPath, "static")));
-// app.use("/consultant-app", express.static(reactBuildPath));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 const reactBuildPath = path.join(__dirname, "..", "consultant-app", "build");
 
 app.use("/static", express.static(path.join(reactBuildPath, "static")));
