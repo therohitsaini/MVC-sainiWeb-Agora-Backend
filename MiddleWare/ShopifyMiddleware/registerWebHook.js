@@ -193,10 +193,7 @@ const registerAppUninstallWebhook = async (shop, accessToken) => {
   try {
     const callbackUrl = `${process.env.APP_URL}/api/webhooks/app-uninstalled`;
 
-    // 1️⃣ Get existing webhooks
     const webhooks = await getExistingWebhooks(shop, accessToken);
-    console.log("webhooks", webhooks);
-    // 2️⃣ Check if already exists
     const alreadyRegistered = webhooks.some(({ node }) =>
       node.topic === "APP_UNINSTALLED" &&
       node.endpoint?.callbackUrl === callbackUrl
@@ -207,7 +204,6 @@ const registerAppUninstallWebhook = async (shop, accessToken) => {
       return { status: "already_registered" };
     }
 
-    // 3️⃣ Create webhook
     const mutation = `
       mutation {
         webhookSubscriptionCreate(
@@ -253,6 +249,48 @@ const registerAppUninstallWebhook = async (shop, accessToken) => {
   }
 };
 
+const registerGdprWebhook = async (shop, accessToken, topic, callbackPath) => {
+  const callbackUrl = `${process.env.APP_URL}${callbackPath}`;
+
+  const mutation = `
+    mutation webhookSubscriptionCreate($topic: WebhookSubscriptionTopic!, $callbackUrl: URL!) {
+      webhookSubscriptionCreate(
+        topic: $topic,
+        webhookSubscription: {
+          callbackUrl: $callbackUrl,
+          format: JSON
+        }
+      ) {
+        webhookSubscription { id }
+        userErrors { field message }
+      }
+    }
+  `;
+
+  const response = await axios.post(
+    `https://${shop}/admin/api/2024-01/graphql.json`,
+    {
+      query: mutation,
+      variables: {
+        topic,
+        callbackUrl
+      }
+    },
+    {
+      headers: {
+        "X-Shopify-Access-Token": accessToken,
+        "Content-Type": "application/json"
+      }
+    }
+  );
+
+  const errors = response.data.data.webhookSubscriptionCreate.userErrors;
+  if (errors.length) {
+    throw new Error(errors[0].message);
+  }
+
+  return response.data;
+};
 
 
-module.exports = { registerOrderPaidWebhook, registerOrderDeletedWebhook, registerAppUninstallWebhook };
+module.exports = { registerOrderPaidWebhook, registerOrderDeletedWebhook, registerAppUninstallWebhook, registerGdprWebhook };

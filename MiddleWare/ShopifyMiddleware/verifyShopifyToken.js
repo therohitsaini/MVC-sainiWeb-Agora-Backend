@@ -20,7 +20,7 @@ const verifyShopifyToken = (req, res, next) => {
         // values Shopify guarantees
         req.shop = payload.dest.replace("https://", "");
         req.shopifyUserId = payload.sub;
-        console.log(">>>>>>>>>>>>>>>> Verify Shopify Token");
+        console.log("✅ Verify Shopify Token");
         next();
     } catch (err) {
         return res.status(401).json({

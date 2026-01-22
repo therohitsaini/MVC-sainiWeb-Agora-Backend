@@ -1,16 +1,11 @@
 const crypto = require('crypto');
 const dotenv = require('dotenv');
-const JWT = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
-const querystring = require("querystring");
 dotenv.config();
 const { shopModel } = require('../Modal/shopify');
-const { User } = require('../Modal/userSchema');
 const { manageShopifyUser } = require('../MiddleWare/ShopifyMiddleware/handleShopifyUser');
-const { createAppMenu } = require('../MiddleWare/shopifySubMenu');
 const { renderShopifyPage } = require('../MiddleWare/ShopifyMiddleware/helperTheme');
-const { registerOrderPaidWebhook, registerOrderDeletedWebhook, registerAppUninstallWebhook, } = require('../MiddleWare/ShopifyMiddleware/registerWebHook');
-const { deleteAllAppUninstallWebhooks } = require('../MiddleWare/ShopifyMiddleware/deleteWebHook');
+const { registerOrderPaidWebhook, registerOrderDeletedWebhook, registerAppUninstallWebhook, registerGdprWebhook, } = require('../MiddleWare/ShopifyMiddleware/registerWebHook');
+
 let axios, wrapper, CookieJar;
 try {
     axios = require("axios");
@@ -189,6 +184,11 @@ const authCallback = async (req, res) => {
         await registerOrderPaidWebhook(shop, accessToken);
         await registerOrderDeletedWebhook(shop, accessToken);
         await registerAppUninstallWebhook(shop, accessToken);
+        await registerGdprWebhook(shop, accessToken, "CUSTOMERS_DATA_REQUEST", "/api/webhooks/customers/data_request");
+        await registerGdprWebhook(shop, accessToken, "CUSTOMERS_REDACT", "/api/webhooks/customers/redact");
+        await registerGdprWebhook(shop, accessToken, "SHOP_REDACT", "/api/webhooks/shop/redact");
+
+
 
         const AdminiId = AdminUser._id;
         let finalHost = host;

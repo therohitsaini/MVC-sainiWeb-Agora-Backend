@@ -40,7 +40,7 @@ const webhooksAppUninstalled = async (req, res) => {
         await shopModel.findOneAndUpdate(
             { shop: shop },
             {
-             
+
                 accessToken: null,
                 uninstalledAt: new Date(),
             }
@@ -56,5 +56,21 @@ const webhooksAppUninstalled = async (req, res) => {
     }
 }
 
+// madantory webhook to register
+const customerDataRequest = (req, res) => {
+    // Agar data store nahi karte → kuch nahi karna
+    return res.status(200).send('OK');
+};
 
-module.exports = { webhooksOrdersCreated, webhooksOrdersDeleted, webhooksAppUninstalled };
+const customerRedact = (req, res) => {
+    // Customer data delete logic (optional)
+    return res.status(200).send('OK');
+};
+
+const shopRedact = (req, res) => {
+    // Shop data delete logic (optional)
+    return res.status(200).send('OK');
+};
+
+
+module.exports = { webhooksOrdersCreated, webhooksOrdersDeleted, webhooksAppUninstalled, customerDataRequest, customerRedact, shopRedact };
