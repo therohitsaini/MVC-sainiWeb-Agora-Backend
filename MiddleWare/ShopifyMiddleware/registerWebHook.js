@@ -197,62 +197,64 @@ const registerAppUninstallWebhook = async (shop, accessToken) => {
   }
 };
 
-const registerGdprWebhook = async (shop, accessToken, topic, callbackPath) => {
-  const callbackUrl = `${process.env.APP_URL}${callbackPath}`;
+const registerGdprWebhook = async (shop, accessToken) => {
+  try {
+    const callbackUrl = `${process.env.APP_URL}/api/webhooks/customer-data-request}`;
 
-  const mutation = `
-    mutation webhookSubscriptionCreate(
-      $topic: WebhookSubscriptionTopic!
-      $callbackUrl: URL!
-    ) {
-      webhookSubscriptionCreate(
-        topic: $topic
-        webhookSubscription: {
-          callbackUrl: $callbackUrl
-          format: JSON
+    const webhooks = await getExistingWebhooks(shop, accessToken);
+    const alreadyRegistered = webhooks.some(({ node }) =>
+      node.topic === "CUSTOMERS_DATA_REQUEST" &&
+      node.endpoint?.callbackUrl === callbackUrl
+    );
+
+    if (alreadyRegistered) {
+      console.log("✅ CUSTOMERS_DATA_REQUEST webhook already registered");
+      return { status: "already_registered" };
+    }
+
+    const mutation = `
+      mutation {
+        webhookSubscriptionCreate(
+          topic: CUSTOMERS_DATA_REQUEST,
+          webhookSubscription: {
+            callbackUrl: "${callbackUrl}",
+            format: JSON
+          }
+        ) {
+          webhookSubscription {
+            id
+          }
+          userErrors {
+            field
+            message
+          }
         }
-      ) {
-        webhookSubscription { id }
-        userErrors { message }
       }
-    }
-  `;
+    `;
 
-  const response = await axios.post(
-    `https://${shop}/admin/api/2024-01/graphql.json`,
-    {
-      query: mutation,
-      variables: { topic, callbackUrl }
-    },
-    {
-      headers: {
-        "X-Shopify-Access-Token": accessToken,
-        "Content-Type": "application/json"
+    const response = await axios.post(
+      `https://${shop}/admin/api/2024-01/graphql.json`,
+      { query: mutation },
+      {
+        headers: {
+          "X-Shopify-Access-Token": accessToken,
+          "Content-Type": "application/json",
+        },
       }
+    );
+
+    const errors = response.data.data.webhookSubscriptionCreate.userErrors;
+    if (errors.length) {
+      throw new Error(errors[0].message);
     }
-  );
 
-  // 🔥 STEP 1: GraphQL-level errors
-  if (response.data.errors?.length) {
-    console.error("❌ GraphQL errors:", response.data.errors);
-    throw new Error(response.data.errors[0].message);
+    console.log("🎉 CUSTOMERS_DATA_REQUEST webhook created successfully");
+    return response.data;
+
+  } catch (error) {
+    console.error("❌ Register CUSTOMERS_DATA_REQUEST webhook error:", error.message);
+    throw error;
   }
-
-  // 🔥 STEP 2: Missing data guard
-  const result = response.data?.data?.webhookSubscriptionCreate;
-  if (!result) {
-    console.error("❌ Invalid GraphQL response:", response.data);
-    throw new Error("webhookSubscriptionCreate missing");
-  }
-
-  // 🔥 STEP 3: Shopify userErrors
-  if (result.userErrors?.length) {
-    console.error("❌ Webhook user errors:", result.userErrors);
-    throw new Error(result.userErrors[0].message);
-  }
-
-  console.log(`✅ Webhook registered: ${topic}`);
-  return result.webhookSubscription;
 };
 
 
