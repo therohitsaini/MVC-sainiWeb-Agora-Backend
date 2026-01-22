@@ -1,5 +1,6 @@
 const axios = require("axios");
 const dotenv = require("dotenv");
+const { Shopify } = require('@shopify/shopify-api');
 dotenv.config();
 
 
@@ -197,65 +198,63 @@ const registerAppUninstallWebhook = async (shop, accessToken) => {
   }
 };
 
+
 const registerGdprWebhook = async (shop, accessToken) => {
-  try {
-    const callbackUrl = `${process.env.APP_URL}/api/webhooks/customer-data-request}`;
+  const client = new Shopify.Clients.Graphql(shop, accessToken);
 
-    const webhooks = await getExistingWebhooks(shop, accessToken);
-    const alreadyRegistered = webhooks.some(({ node }) =>
-      node.topic === "CUSTOMERS_DATA_REQUEST" &&
-      node.endpoint?.callbackUrl === callbackUrl
-    );
+  const webhooks = [
+    {
+      topic: "CUSTOMERS_DATA_REQUEST",
+      callbackUrl: `${process.env.APP_URL}/api/webhooks/customer-data-request`,
+    },
+    {
+      topic: "CUSTOMERS_DATA_ERASURE",
+      callbackUrl: `${process.env.APP_URL}/api/webhooks/customer-redact`,
+    },
+    {
+      topic: "SHOP_REDACT",
+      callbackUrl: `${process.env.APP_URL}/api/webhooks/shop-redact`,
+    },
+  ];
 
-    if (alreadyRegistered) {
-      console.log("✅ CUSTOMERS_DATA_REQUEST webhook already registered");
-      return { status: "already_registered" };
-    }
-
-    const mutation = `
-      mutation {
-        webhookSubscriptionCreate(
-          topic: CUSTOMERS_DATA_REQUEST,
-          webhookSubscription: {
-            callbackUrl: "${callbackUrl}",
-            format: JSON
-          }
-        ) {
-          webhookSubscription {
-            id
-          }
-          userErrors {
-            field
-            message
-          }
+  const mutation = `
+    mutation webhookSubscriptionCreate($topic: WebhookSubscriptionTopic!, $webhookSubscription: WebhookSubscriptionInput!) {
+      webhookSubscriptionCreate(topic: $topic, webhookSubscription: $webhookSubscription) {
+        userErrors {
+          field
+          message
+        }
+        webhookSubscription {
+          id
         }
       }
-    `;
-
-    const response = await axios.post(
-      `https://${shop}/admin/api/2024-01/graphql.json`,
-      { query: mutation },
-      {
-        headers: {
-          "X-Shopify-Access-Token": accessToken,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    const errors = response.data.data.webhookSubscriptionCreate.userErrors;
-    if (errors.length) {
-      throw new Error(errors[0].message);
     }
+  `;
 
-    console.log("🎉 CUSTOMERS_DATA_REQUEST webhook created successfully");
-    return response.data;
+  for (const wh of webhooks) {
+    try {
+      const variables = {
+        topic: wh.topic,
+        webhookSubscription: {
+          callbackUrl: wh.callbackUrl,
+          format: "JSON",
+        },
+      };
 
-  } catch (error) {
-    console.error("❌ Register CUSTOMERS_DATA_REQUEST webhook error:", error.message);
-    throw error;
+      const response = await client.query({ data: { query: mutation, variables } });
+      const errors = response.body.data.webhookSubscriptionCreate.userErrors;
+
+      if (errors.length) {
+        console.error(`❌ Failed to create ${wh.topic} webhook:`, errors);
+      } else {
+        console.log(`✅ Registered ${wh.topic} webhook successfully`);
+      }
+    } catch (err) {
+      console.error(`❌ Error registering ${wh.topic} webhook:`, err.message);
+    }
   }
-};
+}
+
 
 
 
