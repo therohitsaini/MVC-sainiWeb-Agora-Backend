@@ -1,24 +1,38 @@
-# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
-
-client_id = "9670f701d5332dc0e886440fd2277221"
-name = "VC Node"
-application_url = "https://agora-ui-v2.netlify.app/dashboard/home"
+# App basic info
+client_id = "YOUR_CLIENT_ID_FROM_PARTNER_DASHBOARD"
+name = "vc-consultant app"
+handle = "label-node"
 embedded = true
 
-[webhooks]
-api_version = "2025-10"
+# App URL (Embedded UI)
+application_url = "https://fitness-modem-sudden-funeral.trycloudflare.com"
 
+# OAuth / Auth
+[auth]
+redirect_urls = [
+  "https://test-online-consultation.zend-apps.com/app/callback"
+]
+
+# Access scopes
 [access_scopes]
-# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = ""
-optional_scopes = [ ]
+scopes = "read_customers,write_customers,write_draft_orders,read_orders,write_orders"
+optional_scopes = []
 use_legacy_install_flow = false
 
-[auth]
-redirect_urls = [ "http://localhost:5001/app/callback" ]
-
+# App Proxy
 [app_proxy]
-url = "https://sainiweb-agora-backend.onrender.com/apps/agora"
-subpath = "agora"
 prefix = "apps"
+subpath = "consultant-theme"
+url = "https://test-online-consultation.zend-apps.com/app/consultant-theme"
 
+# Webhooks (VERY IMPORTANT FOR REVIEW)
+[webhooks]
+api_version = "2024-07"
+
+[[webhooks.subscriptions]]
+compliance_topics = [
+  "customers/data_request",
+  "customers/redact",
+  "shop/redact"
+]
+uri = "https://test-consultation-app.zend-apps.com/api/webhooks"
