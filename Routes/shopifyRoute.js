@@ -13,10 +13,9 @@ const { installShopifyApp,
     proxyShopifyCallAccepted
 } = require('../Controller/shopifyController');
 const { deleteConsultant } = require('../Controller/consultantController');
-// Original route (Shopify automatically hit karta hai - MUST KEEP THIS!)
-shopifyRoute.get('/install/:shop', installShopifyApp);
+const { verifyShopifyToken } = require('../MiddleWare/ShopifyMiddleware/verifyShopifyToken');
+shopifyRoute.get('/install/:shop', verifyShopifyToken, installShopifyApp);
 shopifyRoute.get('/callback', authCallback);
-// shopifyRoute.get('/login', shopifyLogin);
 shopifyRoute.get('/consultant-theme', proxyThemeAssetsController);
 shopifyRoute.get('/consultant-theme/login', proxyShopifyConsultantPage);
 shopifyRoute.get('/consultant-theme/consultant-dashboard', proxyShopifyConsultantLoginPage);
