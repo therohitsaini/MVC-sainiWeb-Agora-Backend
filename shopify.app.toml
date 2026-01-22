@@ -24,3 +24,8 @@ api_version = "2025-10"
 compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
 uri = "https://test-online-consultation.zend-apps.com/api/webhooks/webhooks"
  
+# App Proxy configuration
+[app_proxy]
+prefix = "apps"                # The Shopify prefix, usually 'apps'
+subpath = "consultant-theme"   # The subpath for your app proxy
+url = "https://test-online-consultation.zend-apps.com/app/consultant-theme"  # Your backend endpoint

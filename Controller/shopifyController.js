@@ -183,6 +183,7 @@ const authCallback = async (req, res) => {
 
 
         const AdminiId = AdminUser._id;
+        console.log('AdminiId___________________________>', AdminiId);
         let finalHost = host;
         if (!finalHost || !finalHost.startsWith('YWRtaW4')) {
             const shopDomain = shop.replace('.myshopify.com', '');
