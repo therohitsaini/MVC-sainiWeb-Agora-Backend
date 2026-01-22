@@ -17,7 +17,6 @@ try {
 
 
 const frontendUrl = process.env.FRONTEND_URL
-
 const client_id = process.env.SHOPIFY_CLIENT_ID
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET
 const SCOPES = "read_customers,write_customers,write_draft_orders,read_draft_orders,read_orders,write_orders,read_orders,write_orders";
@@ -95,10 +94,6 @@ const authCallback = async (req, res) => {
     try {
         console.log("🔁 Auth callback triggered");
         const { shop, hmac, code, host } = req.query;
-        console.log("shop", shop);
-        console.log("hmac", hmac);
-        console.log("code", code);
-        console.log("host___Update___", host);
         if (!shop || !hmac || !code) {
             console.log("❌ Missing required parameters");
             return res.status(400).send("Missing required parameters");
@@ -206,6 +201,7 @@ const authCallback = async (req, res) => {
             timestamp: Date.now().toString(), // Cache prevent
             session: require('crypto').randomBytes(16).toString('hex')
         }).toString();
+
         return res.redirect(redirectUrl);
     } catch (error) {
         console.error("❌ Auth callback error:", error.message || error);

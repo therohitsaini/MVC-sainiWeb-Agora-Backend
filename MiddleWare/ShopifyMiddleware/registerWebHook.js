@@ -1,6 +1,7 @@
 const axios = require("axios");
 const dotenv = require("dotenv");
 const { Shopify } = require('@shopify/shopify-api');
+const { shopifyConfig } = require("../../config/shopifyConfig");
 dotenv.config();
 
 
@@ -200,22 +201,13 @@ const registerAppUninstallWebhook = async (shop, accessToken) => {
 
 
 const registerGdprWebhook = async (shop, accessToken) => {
-  const client = new Shopify.Clients.Graphql(shop, accessToken);
+  const client = new shopifyConfig.clients.Graphql({
+    session: {
+      shop,
+      accessToken,
+    },
+  });
 
-  const webhooks = [
-    {
-      topic: "CUSTOMERS_DATA_REQUEST",
-      callbackUrl: `${process.env.APP_URL}/api/webhooks/customer-data-request`,
-    },
-    {
-      topic: "CUSTOMERS_DATA_ERASURE",
-      callbackUrl: `${process.env.APP_URL}/api/webhooks/customer-redact`,
-    },
-    {
-      topic: "SHOP_REDACT",
-      callbackUrl: `${process.env.APP_URL}/api/webhooks/shop-redact`,
-    },
-  ];
 
   const mutation = `
     mutation webhookSubscriptionCreate($topic: WebhookSubscriptionTopic!, $webhookSubscription: WebhookSubscriptionInput!) {
