@@ -18,11 +18,7 @@ const { webHookRoute } = require("./Routes/webHookRoute");
 
 app.use(cors());
 
-app.use(
-  '/api/webhooks',
-  express.raw({ type: '*/*' })
-);
-
+app.use('/api/webhooks', express.raw({ type: 'application/json' }));
 app.use("/api/webhooks", webHookRoute);
 
 

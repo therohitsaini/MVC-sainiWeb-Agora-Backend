@@ -9,9 +9,21 @@ const { verifyWebhook } = require('../MiddleWare/ShopifyMiddleware/verifyWebHook
 webHookRoute.post('/webhooks/orders-created', express.raw({ type: "application/json" }), verifyWebhook, webhooksOrdersCreated);
 webHookRoute.post('/webhooks/orders-deleted', express.raw({ type: "application/json" }), verifyWebhook, webhooksOrdersDeleted);
 webHookRoute.post('/app-uninstalled', express.raw({ type: "application/json" }), verifyWebhook, webhooksAppUninstalled);
-webHookRoute.post('/customers/data_request', verifyWebhook, webhooksCustomerDataRequest);
-webHookRoute.post('/customers/redact', verifyWebhook, webhooksCustomerRedact);
-webHookRoute.post('/shop/redact', verifyWebhook, webhooksShopRedact);
+webHookRoute.post('/webhooks', verifyWebhook, (req, res) => {
+    const topic = req.headers['x-shopify-topic'];
+    console.log('topic', topic);
+    switch (topic) {
+        case 'customers/data_request':
+            return webhooksCustomerDataRequest(req, res);
+        case 'customers/redact':
+            return webhooksCustomerRedact(req, res);
+        case 'shop/redact':
+            return webhooksShopRedact(req, res);
+        default:
+            console.log('Unhandled webhook topic:', topic);
+            return res.status(200).send('OK');
+    }
+});
 
 
 module.exports = { webHookRoute };

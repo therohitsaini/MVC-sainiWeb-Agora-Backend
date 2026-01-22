@@ -1,38 +1,26 @@
-# App basic info
-client_id = "YOUR_CLIENT_ID_FROM_PARTNER_DASHBOARD"
+# App Info
 name = "vc-consultant app"
-handle = "label-node"
+client_id = "1844b97873b270b025334fd34790185c"
+application_url = " https://fitness-modem-sudden-funeral.trycloudflare.com" # backend URL
 embedded = true
+handle = "label-node"
 
-# App URL (Embedded UI)
-application_url = "https://fitness-modem-sudden-funeral.trycloudflare.com"
-
-# OAuth / Auth
-[auth]
-redirect_urls = [
-  "https://test-online-consultation.zend-apps.com/app/callback"
-]
-
-# Access scopes
 [access_scopes]
 scopes = "read_customers,write_customers,write_draft_orders,read_orders,write_orders"
 optional_scopes = []
 use_legacy_install_flow = false
 
-# App Proxy
-[app_proxy]
-prefix = "apps"
-subpath = "consultant-theme"
-url = "https://test-online-consultation.zend-apps.com/app/consultant-theme"
+[auth]
+redirect_urls = [
+  "https://test-online-consultation.zend-apps.com/app/callback"
+]
 
-# Webhooks (VERY IMPORTANT FOR REVIEW)
 [webhooks]
-api_version = "2024-07"
+api_version = "2025-10"
+
+
 
 [[webhooks.subscriptions]]
-compliance_topics = [
-  "customers/data_request",
-  "customers/redact",
-  "shop/redact"
-]
-uri = "https://test-consultation-app.zend-apps.com/api/webhooks"
+compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+uri = "https://test-online-consultation.zend-apps.com/api/webhooks/webhooks"
+ 
