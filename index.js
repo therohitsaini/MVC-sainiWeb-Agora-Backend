@@ -17,17 +17,20 @@ const shopifyRoute = require("./Routes/shopifyRoute");
 const { webHookRoute } = require("./Routes/webHookRoute");
 
 app.use(cors());
-app.use("/api/webhooks", webHookRoute);
 
 app.use(
   express.json({
     verify: (req, res, buf) => {
       if (req.path.startsWith('/api/webhooks')) {
-        req.rawBody = buf; // Shopify HMAC verification for GDPR / Webhook routes
+        req.rawBody = buf;
       }
     },
   })
 );
+
+app.use("/api/webhooks", webHookRoute);
+
+
 
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/webhooks')) return next();
