@@ -19,13 +19,8 @@ const { webHookRoute } = require("./Routes/webHookRoute");
 app.use(cors());
 
 app.use(
-  express.json({
-    verify: (req, res, buf) => {
-      if (req.path.startsWith('/api/webhooks')) {
-        req.rawBody = buf;
-      }
-    },
-  })
+  '/api/webhooks',
+  express.raw({ type: '*/*' }) // Shopify webhook ke liye exact raw bytes chahiye
 );
 
 app.use("/api/webhooks", webHookRoute);
