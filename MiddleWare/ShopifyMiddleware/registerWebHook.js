@@ -201,49 +201,48 @@ const registerAppUninstallWebhook = async (shop, accessToken) => {
 
 
 const registerGdprWebhook = async (shop, accessToken) => {
-  const client = new shopifyConfig.clients.Graphql({
-    session: {
-      shop,
-      accessToken,
+  const webhooks = [
+    {
+      topic: 'CUSTOMERS_DATA_REQUEST',
+      url: `${process.env.APP_URL}/api/webhooks/customer-data-request`,
     },
+    {
+      topic: 'CUSTOMERS_DATA_ERASURE',
+      url: `${process.env.APP_URL}/api/webhooks/customer-redact`,
+    },
+    {
+      topic: 'SHOP_REDACT',
+      url: `${process.env.APP_URL}/api/webhooks/shop-redact`,
+    },
+  ];
+
+  const client = new shopifyConfig.clients.Graphql({
+    session: { shop, accessToken },
   });
 
-
   const mutation = `
-    mutation webhookSubscriptionCreate($topic: WebhookSubscriptionTopic!, $webhookSubscription: WebhookSubscriptionInput!) {
-      webhookSubscriptionCreate(topic: $topic, webhookSubscription: $webhookSubscription) {
-        userErrors {
-          field
-          message
-        }
-        webhookSubscription {
-          id
-        }
+    mutation webhookSubscriptionCreate(
+      $topic: WebhookSubscriptionTopic!
+      $webhookSubscription: WebhookSubscriptionInput!
+    ) {
+      webhookSubscriptionCreate(
+        topic: $topic
+        webhookSubscription: $webhookSubscription
+      ) {
+        userErrors { field message }
+        webhookSubscription { id }
       }
     }
   `;
 
   for (const wh of webhooks) {
-    try {
-      const variables = {
-        topic: wh.topic,
-        webhookSubscription: {
-          callbackUrl: wh.callbackUrl,
-          format: "JSON",
-        },
-      };
-
-      const response = await client.query({ data: { query: mutation, variables } });
-      const errors = response.body.data.webhookSubscriptionCreate.userErrors;
-
-      if (errors.length) {
-        console.error(`❌ Failed to create ${wh.topic} webhook:`, errors);
-      } else {
-        console.log(`✅ Registered ${wh.topic} webhook successfully`);
-      }
-    } catch (err) {
-      console.error(`❌ Error registering ${wh.topic} webhook:`, err.message);
-    }
+    await client.request(mutation, {
+      topic: wh.topic,
+      webhookSubscription: {
+        callbackUrl: wh.url,
+        format: 'JSON',
+      },
+    });
   }
 }
 
