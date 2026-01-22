@@ -198,54 +198,63 @@ const registerAppUninstallWebhook = async (shop, accessToken) => {
 };
 
 const registerGdprWebhook = async (shop, accessToken, topic, callbackPath) => {
-  const callbackUrl = `${process.env.APP_URL}${callbackPath}`;
-  console.log("callbackUrl", callbackUrl);
-  const mutation = `
-    mutation webhookSubscriptionCreate(
-      $topic: WebhookSubscriptionTopic!
-      $callbackUrl: URL!
-    ) {
-      webhookSubscriptionCreate(
-        topic: $topic
-        webhookSubscription: {
-          callbackUrl: $callbackUrl
-          format: JSON
+  try {
+    const callbackUrl = `${process.env.APP_URL}${callbackPath}`;
+
+    const webhooks = await getExistingWebhooks(shop, accessToken);
+    const alreadyRegistered = webhooks.some(({ node }) =>
+      node.topic === topic &&
+      node.endpoint?.callbackUrl === callbackUrl
+    );
+
+    if (alreadyRegistered) {
+      console.log(`✅ ${topic} webhook already registered`);
+      return { status: "already_registered" };
+    }
+
+    const mutation = `
+      mutation {
+        webhookSubscriptionCreate(
+          topic: ${topic},
+          webhookSubscription: {
+            callbackUrl: "${callbackUrl}",
+            format: JSON
+          }
+        ) {
+          webhookSubscription {
+            id
+          }
+          userErrors {
+            field
+            message
+          }
         }
-      ) {
-        webhookSubscription { id }
-        userErrors { field message }
       }
-    }
-  `;
+    `;
 
-  const response = await axios.post(
-    `https://${shop}/admin/api/2024-01/graphql.json`,
-    {
-      query: mutation,
-      variables: { topic, callbackUrl }
-    },
-    {
-      headers: {
-        "X-Shopify-Access-Token": accessToken,
-        "Content-Type": "application/json"
+    const response = await axios.post(
+      `https://${shop}/admin/api/2024-01/graphql.json`,
+      { query: mutation },
+      {
+        headers: {
+          "X-Shopify-Access-Token": accessToken,
+          "Content-Type": "application/json",
+        },
       }
+    );
+
+    const errors = response.data.data.webhookSubscriptionCreate.userErrors;
+    if (errors.length) {
+      throw new Error(errors[0].message);
     }
-  );
 
-  const result = response.data?.data?.webhookSubscriptionCreate;
+    console.log(`🎉 ${topic} webhook created successfully`);
+    return response.data;
 
-  if (!result) {
-    console.error("❌ Invalid GraphQL response:", response.data);
-    throw new Error("Webhook creation failed");
+  } catch (error) {
+    console.error(`❌ Register ${topic} webhook error:`, error.message);
+    throw error;
   }
-
-  if (result.userErrors?.length) {
-    console.error("❌ Webhook user errors:", result.userErrors);
-    throw new Error(result.userErrors[0].message);
-  }
-
-  console.log(`✅ GDPR webhook registered: ${topic}`);
-  return result.webhookSubscription;
 };
 
 

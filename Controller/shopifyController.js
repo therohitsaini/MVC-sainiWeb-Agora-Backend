@@ -188,8 +188,6 @@ const authCallback = async (req, res) => {
         await registerGdprWebhook(shop, accessToken, "CUSTOMERS_REDACT", "/api/webhooks/customers/redact");
         await registerGdprWebhook(shop, accessToken, "SHOP_REDACT", "/api/webhooks/shop/redact");
 
-
-
         const AdminiId = AdminUser._id;
         let finalHost = host;
         if (!finalHost || !finalHost.startsWith('YWRtaW4')) {
