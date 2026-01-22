@@ -202,52 +202,35 @@ const registerGdprWebhook = async (shop, accessToken) => {
   const webhooks = [
     {
       topic: 'CUSTOMERS_DATA_REQUEST',
-      callbackUrl: `${process.env.APP_URL}/api/webhooks/customer-data-request`,
+      address: `${process.env.APP_URL}/api/webhooks/customer-data-request`,
     },
     {
-      topic: 'CUSTOMERS_DATA_ERASURE',
-      callbackUrl: `${process.env.APP_URL}/api/webhooks/customer-redact`,
+      topic: 'CUSTOMERS_REDACT',
+      address: `${process.env.APP_URL}/api/webhooks/customer-redact`,
     },
     {
       topic: 'SHOP_REDACT',
-      callbackUrl: `${process.env.APP_URL}/api/webhooks/shop-redact`,
+      address: `${process.env.APP_URL}/api/webhooks/shop-redact`,
     },
   ];
 
-  const client = new shopify.clients.Graphql({
-    session: { shop, accessToken },
-  });
-
-  const mutation = `
-    mutation webhookSubscriptionCreate(
-      $topic: WebhookSubscriptionTopic!
-      $webhookSubscription: WebhookSubscriptionInput!
-    ) {
-      webhookSubscriptionCreate(
-        topic: $topic
-        webhookSubscription: $webhookSubscription
-      ) {
-        userErrors { field message }
-        webhookSubscription { id }
-      }
-    }
-  `;
-
   for (const wh of webhooks) {
-    const response = await client.request(mutation, {
-      topic: wh.topic,
-      webhookSubscription: {
-        callbackUrl: wh.callbackUrl,
-        format: 'JSON',
+    await axios.post(
+      `https://${shop}/admin/api/2024-01/webhooks.json`,
+      {
+        webhook: {
+          topic: wh.topic,
+          address: wh.address,
+          format: 'json',
+        },
       },
-    });
-
-    const errors = response.webhookSubscriptionCreate.userErrors;
-    if (errors.length) {
-      console.error(`❌ ${wh.topic} error`, errors);
-    } else {
-      console.log(`✅ ${wh.topic} registered`);
-    }
+      {
+        headers: {
+          'X-Shopify-Access-Token': accessToken,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
   }
 };
 
