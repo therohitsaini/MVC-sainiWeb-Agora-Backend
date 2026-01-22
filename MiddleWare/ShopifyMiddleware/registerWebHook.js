@@ -201,15 +201,15 @@ const registerAppUninstallWebhook = async (shop, accessToken) => {
 const registerGdprWebhook = async (shop, accessToken) => {
   const webhooks = [
     {
-      topic: 'CUSTOMERS_DATA_REQUEST',
+      topic: 'customers/data_request',
       address: `${process.env.APP_URL}/api/webhooks/customer-data-request`,
     },
     {
-      topic: 'CUSTOMERS_REDACT',
+      topic: 'customers/redact',
       address: `${process.env.APP_URL}/api/webhooks/customer-redact`,
     },
     {
-      topic: 'SHOP_REDACT',
+      topic: 'shop/redact',
       address: `${process.env.APP_URL}/api/webhooks/shop-redact`,
     },
   ];
