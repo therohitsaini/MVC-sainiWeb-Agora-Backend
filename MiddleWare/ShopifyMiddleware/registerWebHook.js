@@ -1,7 +1,6 @@
 const axios = require("axios");
 const dotenv = require("dotenv");
-const { Shopify } = require('@shopify/shopify-api');
-const { shopifyConfig } = require("../../config/shopifyConfig");
+const { shopify } = require("../../config/shopifyConfig");
 dotenv.config();
 
 
@@ -41,7 +40,6 @@ const getExistingWebhooks = async (shop, accessToken) => {
   return response.data.data.webhookSubscriptions.edges;
 };
 
-// check webhook is already registered midle ware function end
 
 
 const registerOrderPaidWebhook = async (shop, accessToken,) => {
@@ -204,19 +202,19 @@ const registerGdprWebhook = async (shop, accessToken) => {
   const webhooks = [
     {
       topic: 'CUSTOMERS_DATA_REQUEST',
-      url: `${process.env.APP_URL}/api/webhooks/customer-data-request`,
+      callbackUrl: `${process.env.APP_URL}/api/webhooks/customer-data-request`,
     },
     {
       topic: 'CUSTOMERS_DATA_ERASURE',
-      url: `${process.env.APP_URL}/api/webhooks/customer-redact`,
+      callbackUrl: `${process.env.APP_URL}/api/webhooks/customer-redact`,
     },
     {
       topic: 'SHOP_REDACT',
-      url: `${process.env.APP_URL}/api/webhooks/shop-redact`,
+      callbackUrl: `${process.env.APP_URL}/api/webhooks/shop-redact`,
     },
   ];
 
-  const client = new shopifyConfig.clients.Graphql({
+  const client = new shopify.clients.Graphql({
     session: { shop, accessToken },
   });
 
@@ -236,16 +234,22 @@ const registerGdprWebhook = async (shop, accessToken) => {
   `;
 
   for (const wh of webhooks) {
-    await client.request(mutation, {
+    const response = await client.request(mutation, {
       topic: wh.topic,
       webhookSubscription: {
-        callbackUrl: wh.url,
+        callbackUrl: wh.callbackUrl,
         format: 'JSON',
       },
     });
-  }
-}
 
+    const errors = response.webhookSubscriptionCreate.userErrors;
+    if (errors.length) {
+      console.error(`❌ ${wh.topic} error`, errors);
+    } else {
+      console.log(`✅ ${wh.topic} registered`);
+    }
+  }
+};
 
 
 
