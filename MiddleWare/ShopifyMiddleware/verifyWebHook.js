@@ -23,6 +23,7 @@ function verifyWebhook(req, res, next) {
     console.log('Generated HMAC:', generatedHash);
 
     if (generatedHash !== hmacHeader) {
+        console.log('❌ HMAC mismatch');
         return res.status(401).send('HMAC mismatch');
     }
 
