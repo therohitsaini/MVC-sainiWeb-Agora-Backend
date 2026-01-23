@@ -164,6 +164,7 @@ const authCallback = async (req, res) => {
                 shopId,
                 email: ownerEmail,
                 installedAt: new Date(),
+                appEnabled: false,
 
             }).save();
         }
@@ -179,7 +180,7 @@ const authCallback = async (req, res) => {
         await registerOrderPaidWebhook(shop, accessToken);
         await registerOrderDeletedWebhook(shop, accessToken);
         await registerAppUninstallWebhook(shop, accessToken);
-      
+
 
 
         const AdminiId = AdminUser._id;
@@ -199,7 +200,7 @@ const authCallback = async (req, res) => {
             embedded: '1',
             adminId: AdminiId.toString(),
             source: 'shopify_auth',
-            timestamp: Date.now().toString(), // Cache prevent
+            timestamp: Date.now().toString(),
             session: require('crypto').randomBytes(16).toString('hex')
         }).toString();
 
