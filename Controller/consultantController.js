@@ -3,6 +3,7 @@ const { Conversation } = require("../Modal/Histroy");
 const { User } = require("../Modal/userSchema");
 const { find } = require("../Modal/userSchema");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
@@ -198,30 +199,66 @@ const consultantController = async (req, res) => {
  * @returns 
  */
 
+
+
+
 const loginConsultant = async (request, response) => {
     try {
-        const body = request.body
+        const { email, password } = request.body;
 
-        let find_User = await User.findOne({ email: body.email })
+        console.log("email", email);
+        console.log("password", password);
+        const find_User = await User.findOne({ email });
         if (!find_User) {
-            return response.status(400).send({ massage: "Incrrect Details ...!" })
+            return response.status(400).send({
+                success: false,
+                message: "Incorrect email or password"
+            });
         }
-        if (find_User.consultantStatus === false) {
-            return response.status(403).send({ massage: "Your account is blocked. Please contact administrator." })
+        console.log("find_User", find_User.email);
+
+        // 2. Check block status
+        // if (find_User.consultantStatus === false) {
+        //     return response.status(403).send({
+        //         success: false,
+        //         message: "Your account is blocked. Please contact administrator."
+        //     });
+        // }
+
+        // 3. Compare password
+        const isMatch = await bcrypt.compare(password, find_User.password);
+        if (!isMatch) {
+            console.log("Password does not match");
+            return response.status(400).send({
+                success: false,
+                message: "Incorrect email or password"
+            });
         }
-        // console.log("body.password find_User.password", body.password, find_User.password);
 
-        // console.log("compairPassword", {success: true, message: "Sign in successfully ", userData: find_User});
-        // const Token = JWT.sign(find_User, JWT_SRCURITE_KEY, { expiresIn: '10h' })
-        // console.log("Token", Token);
+        // 4. Generate JWT
+        const token = jwt.sign(
+            { id: find_User._id, role: "consultant" },
+            "process.env.JWT_SECRET_KEY",
+            { expiresIn: "10h" }
+        );
 
-        return response.send({ massage: "Sign in successfully ", userData: find_User, })
+        // 5. Success response
+        return response.status(200).send({
+            success: true,
+            message: "Login successful",
+            token,
+            userData: find_User
+        });
 
     } catch (err) {
-        return response.status(400).send({ massage: "Server Error ...!", err })
-
+        return response.status(500).send({
+            success: false,
+            message: "Server error",
+            error: err.message
+        });
     }
-}
+};
+
 
 
 const getConsultant = async (req, res) => {
