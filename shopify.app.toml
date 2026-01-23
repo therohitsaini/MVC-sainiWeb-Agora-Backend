@@ -1,7 +1,7 @@
 # App Info
 name = "vc-consultant app"
 client_id = "1844b97873b270b025334fd34790185c"
-application_url = " https://fitness-modem-sudden-funeral.trycloudflare.com" # backend URL
+application_url = "https://relevant-call-theoretical-structured.trycloudflare.com" # backend URL
 embedded = true
 handle = "label-node"
 
