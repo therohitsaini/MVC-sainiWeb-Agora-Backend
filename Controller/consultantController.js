@@ -116,7 +116,15 @@ const consultantController = async (req, res) => {
                 message: "Invalid languages format. Expected JSON array."
             });
         }
+        if (!body.password || body.password.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: "Password must be at least 6 characters"
+            });
+        }
+        console.log("body.password", body.password);
         const hashPassword = await bcrypt.hash(body.password, 10);
+        console.log("hashPassword", hashPassword);
         const consultantDetails = new User({
             shop_id,
             fullname: body.fullName,
