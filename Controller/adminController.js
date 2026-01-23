@@ -435,6 +435,35 @@ const appEnableAndDisableController = async (req, res) => {
 };
 
 
+// get app status
+const getAppStatusController = async (req, res) => {
+    console.log("req.query", req.query);
+    try {
+        const shop = req.body.shop;
+        console.log("shop", shop);
+        if (!shop) {
+            return res.status(400).json({
+                success: false,
+                message: "Shop is required",
+            });
+        }
+        const admin = await shopModel.findOne({ shop: shop });
+        if (!admin) {
+            return res.status(404).json({
+                success: false,
+                message: "Admin not found",
+            });
+        }
+        return res.status(200).json({
+            success: true,
+            message: "App status retrieved successfully",
+            data: admin.appEnabled,
+        });
+    } catch (error) {
+        console.error("Error in getAppStatusController:", error);
+    }
+}
+
 module.exports = {
     adminController,
     voucherController,
@@ -445,5 +474,6 @@ module.exports = {
     getShopAllUserController,
     getShopAllConsultantController,
     updateUserConsultantController,
-    appEnableAndDisableController
+    appEnableAndDisableController,
+    getAppStatusController
 };
