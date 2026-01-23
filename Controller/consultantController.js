@@ -75,6 +75,18 @@ const consultantController = async (req, res) => {
         if (!fs.existsSync(uploadFolder)) {
             fs.mkdirSync(uploadFolder, { recursive: true });
         }
+        let imageURL = null;
+
+        if (file) {
+            const ext = path.extname(file.originalname); // .jpg / .png
+            const fileName = `consultant-${Date.now()}${ext}`;
+            const filePath = path.join(uploadFolder, fileName);
+
+            fs.writeFileSync(filePath, file.buffer);
+
+            imageURL = `/uploads/consultants/${fileName}`;
+        }
+
 
         let randomAgoraUid;
         let attempts = 0;
@@ -126,7 +138,7 @@ const consultantController = async (req, res) => {
             pincode: body.pincode,
             dateOfBirth: new Date(body.dateOfBirth),
             pan_cardNumber: body.pancardNumber,
-            // profileImage: imageURL,
+            profileImage: imageURL,
             isActive: true,
             agoraUid: randomAgoraUid,
             userType: "consultant",
@@ -214,7 +226,6 @@ const getConsultant = async (req, res) => {
                 .json({ success: false, message: "Invalid shop ID" });
         }
         let consultants = await User.find({ userType: "consultant", shop_id: shop_id }).select("-password");
-        console.log("consultants$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$", consultants);
         consultants = consultants.map(item => {
             return {
                 ...item._doc,
