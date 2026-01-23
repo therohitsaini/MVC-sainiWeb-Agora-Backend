@@ -75,17 +75,17 @@ const consultantController = async (req, res) => {
         if (!fs.existsSync(uploadFolder)) {
             fs.mkdirSync(uploadFolder, { recursive: true });
         }
-        let imageURL = null;
+        // let imageURL = null;
 
-        if (file) {
-            const ext = path.extname(file.originalname); // .jpg / .png
-            const fileName = `consultant-${Date.now()}${ext}`;
-            const filePath = path.join(uploadFolder, fileName);
+        // if (file) {
+        //     const ext = path.extname(file.originalname); // .jpg / .png
+        //     const fileName = `consultant-${Date.now()}${ext}`;
+        //     const filePath = path.join(uploadFolder, fileName);
 
-            fs.writeFileSync(filePath, file.buffer);
+        //     fs.writeFileSync(filePath, file.buffer);
 
-            imageURL = `/uploads/consultants/${fileName}`;
-        }
+        //     imageURL = `/uploads/consultants/${fileName}`;
+        // }
 
 
         let randomAgoraUid;
@@ -138,7 +138,7 @@ const consultantController = async (req, res) => {
             pincode: body.pincode,
             dateOfBirth: new Date(body.dateOfBirth),
             pan_cardNumber: body.pancardNumber,
-            profileImage: imageURL,
+            // profileImage: imageURL,
             isActive: true,
             agoraUid: randomAgoraUid,
             userType: "consultant",
