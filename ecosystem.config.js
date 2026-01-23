@@ -2,12 +2,15 @@ module.exports = {
     apps: [
         {
             name: "test-online-consultation",
-            script: "index.js",   // 👈 backend ka entry file
+            script: "index.js",   // ya app.js
             watch: true,
             ignore_watch: [
                 "node_modules",
                 "uploads",
-                "uploads/consultants"
+                "uploads/consultants",
+                ".git",
+                "logs",
+                "*.log"
             ],
             env: {
                 NODE_ENV: "production"
