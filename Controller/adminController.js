@@ -439,7 +439,7 @@ const appEnableAndDisableController = async (req, res) => {
 const getAppStatusController = async (req, res) => {
     console.log("req.query", req.query);
     try {
-        const shop = req.body.shop;
+        const { shop, adminIdLocal } = req.query;
         console.log("shop", shop);
         if (!shop) {
             return res.status(400).json({
