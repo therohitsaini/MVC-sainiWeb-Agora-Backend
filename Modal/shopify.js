@@ -14,6 +14,10 @@ const shop = new mongoose.Schema({
         type: mongoose.Schema.Types.Decimal128,
         default: mongoose.Types.Decimal128.fromString("0")
     },
+    appEnabled: {
+        type: Boolean,
+        default: false
+    },
     vouchers: [
         {
             voucherCode: String,

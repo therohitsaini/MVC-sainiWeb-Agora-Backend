@@ -390,6 +390,51 @@ const updateUserConsultantController = async (req, res) => {
     }
 }
 
+
+// app enable and disable
+const appEnableAndDisableController = async (req, res) => {
+    try {
+        const { adminId } = req.params;
+        const { appStatus } = req.body;
+
+        console.log("adminId:", adminId);
+        console.log("appStatus:", appStatus);
+
+        if (!mongoose.Types.ObjectId.isValid(adminId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid admin ID",
+            });
+        }
+
+        const admin = await shopModel.findById(adminId);
+        if (!admin) {
+            return res.status(404).json({
+                success: false,
+                message: "Admin not found",
+            });
+        }
+
+        admin.appEnabled = appStatus;
+        await admin.save();
+
+        return res.status(200).json({
+            success: true,
+            message: `App ${appStatus ? "enabled" : "disabled"} successfully`,
+            appEnabled: admin.appEnabled,
+        });
+
+    } catch (error) {
+        console.error("Error in appEnableAndDisableController:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to enable or disable app",
+        });
+    }
+};
+
+
 module.exports = {
     adminController,
     voucherController,
@@ -399,5 +444,6 @@ module.exports = {
     getUserConsultantController,
     getShopAllUserController,
     getShopAllConsultantController,
-    updateUserConsultantController
+    updateUserConsultantController,
+    appEnableAndDisableController
 };
