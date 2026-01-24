@@ -575,7 +575,7 @@ const ioServer = (server) => {
                 transaction.totalAmount = totalAmount;
                 transaction.status = "completed";
                 await transaction.save({ session });
-
+                console.log("totalAmount", totalAmount)
                 await User.findByIdAndUpdate(userId, { $inc: { walletBalance: -totalAmount } }, { session });
                 await User.findByIdAndUpdate(consultantId, { $inc: { walletBalance: consultantShare } }, { session });
                 await shopModel.findByIdAndUpdate(shopId, { $inc: { adminWalletBalance: shopShare } }, { session });
