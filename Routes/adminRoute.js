@@ -5,7 +5,7 @@ const { verifyShopifyToken } = require("../MiddleWare/ShopifyMiddleware/verifySh
 const adminRoute = express.Router();
 
 
-adminRoute.get("/admin/:adminId", verifyShopifyToken, adminController);
+adminRoute.get("/admin/:adminId", adminController);
 adminRoute.post("/admin/voucher/:adminId", voucherController);
 adminRoute.get("/get/vouchers/:adminId", getVouchersController);
 adminRoute.get("/activity/transactions/:adminId", verifyShopifyToken, getTransactionController);
