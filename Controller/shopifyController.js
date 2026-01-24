@@ -196,7 +196,6 @@ const authCallback = async (req, res) => {
 
         if (!AdminUser.isPaid || AdminUser.planStatus !== "ACTIVE") {
             console.log("❌ No active plan, redirecting to pricing");
-
             const pricingRedirectUrl = `${frontendUrl}/pricing?` + new URLSearchParams({
                 shop: shop,
                 host: finalHost,

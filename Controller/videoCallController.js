@@ -7,7 +7,9 @@ const { default: mongoose } = require("mongoose");
 const generateToken = async (req, res) => {
    try {
       const { channelName, uid } = req.body;
-
+      console.log("req.body", req.body)
+      console.log("channelName", channelName)
+      console.log("uid", uid)
       if (!channelName || uid === undefined) {
          return res.status(400).json({
             error: "channelName and uid are required"
