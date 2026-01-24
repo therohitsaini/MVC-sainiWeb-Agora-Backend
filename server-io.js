@@ -385,7 +385,7 @@ const ioServer = (server) => {
             });
             let userBalance = Number(user?.walletBalance);
             const consultantCost = await User.findById(consultantId);
-            const consultantChatCost = Number(consultantCost?.chatCost);
+            const consultantChatCost = Number(consultantCost?.chatPerMinute);
             const perSecondCost = consultantChatCost / 60;
             if (userBalance < perSecondCost) {
                 console.log("Insufficient balance to start chat");
