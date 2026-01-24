@@ -566,7 +566,7 @@ const ioServer = (server) => {
                 if (!user_) throw new Error("User not found");
                 const endTime = new Date();
                 const totalSeconds = Math.floor((endTime - new Date(transaction.startTime)) / 1000);
-                const perSecondCost = consultantCost.chatCost / 60;
+                const perSecondCost = consultantCost.chatPerMinute / 60;
                 console.log("perSecondCost", perSecondCost)
                 const totalAmount = Number((totalSeconds * perSecondCost).toFixed(2));
                 console.log("totalAmount", totalAmount)
