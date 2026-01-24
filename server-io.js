@@ -557,6 +557,7 @@ const ioServer = (server) => {
                 if (!transaction) throw new Error("Transaction not found");
 
                 const consultantCost = await User.findById(consultantId).session(session);
+                console.log("consultantCost", consultantCost)
                 if (!consultantCost) throw new Error("Consultant not found");
 
                 const shop = await shopModel.findById(shopId).session(session);
