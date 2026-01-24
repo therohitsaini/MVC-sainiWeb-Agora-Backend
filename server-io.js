@@ -566,7 +566,9 @@ const ioServer = (server) => {
                 const endTime = new Date();
                 const totalSeconds = Math.floor((endTime - new Date(transaction.startTime)) / 1000);
                 const perSecondCost = consultantCost.chatCost / 60;
+                console.log("perSecondCost", perSecondCost)
                 const totalAmount = Number((totalSeconds * perSecondCost).toFixed(2));
+                console.log("totalAmount", totalAmount)
                 const adminCommission = totalAmount * Number(shop.adminPersenTage) / 100;
                 const consultantShare = totalAmount - adminCommission;
                 const shopShare = adminCommission;
