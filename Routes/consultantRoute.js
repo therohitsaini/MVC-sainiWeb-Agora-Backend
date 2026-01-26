@@ -10,7 +10,8 @@ const { consultantController,
    getConsultantByShopIdAndConsultantId,
    loginConsultant,
    getChatListByShopIdAndConsultantId,
-   removeChatListAndConsultantIdFromChatList
+   removeChatListAndConsultantIdFromChatList,
+   updateConsultantData
 } = require("../Controller/consultantController")
 const consultantRoute = express.Router()
 const multer = require("multer");
@@ -18,10 +19,11 @@ const { verifyShopifyToken } = require("../MiddleWare/ShopifyMiddleware/verifySh
 const upload = multer({ storage: multer.memoryStorage() });
 
 
-consultantRoute.post("/add-consultant/:shop_id", upload.single("profileImage"),verifyShopifyToken, consultantController)
+consultantRoute.post("/add-consultant/:shop_id", upload.single("profileImage"), verifyShopifyToken, consultantController)
+consultantRoute.put("/update-consultant/:id", upload.single("profileImage"), verifyShopifyToken, updateConsultantData)
 consultantRoute.get("/api-find-consultant/:shop_id", getConsultant)
 consultantRoute.put("/api-consultant-update-status/:id", updateConsultantStatus)
-consultantRoute.get("/consultantid/:id", verifyShopifyToken, getConsultantById)
+consultantRoute.get("/consultantid/:id", getConsultantById)
 consultantRoute.get("/consultant-history/:id", getConsultantHistory)
 consultantRoute.get("/consultant-all-user/:id", getConsultantAllUser)
 consultantRoute.get("/consultant-all-user-history", getConsultantAllUserHistory)

@@ -192,6 +192,151 @@ const consultantController = async (req, res) => {
     }
 };
 
+const updateConsultantData = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const body = req.body;
+        const file = req.file;
+
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid consultant ID"
+            });
+        }
+
+        const requiredFields = [
+            'fullName', 'email', 'phoneNumber', 'profession',
+            'specialization', 'licenseIdNumber', 'yearOfExperience',
+            'languages', 'displayName', 'gender',
+            'houseNumber', 'streetArea', 'landmark', 'address',
+            'pincode', 'dateOfBirth', 'pancardNumber',
+            'voicePerMinute', 'videoPerMinute', 'chatPerMinute'
+        ];
+
+        const missingFields = requiredFields.filter(field => !body[field]);
+        if (missingFields.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required",
+                missingFields
+            });
+        }
+
+        const existingUser = await User.findById(id);
+        if (!existingUser) {
+            return res.status(404).json({
+                success: false,
+                message: "Consultant not found"
+            });
+        }
+
+        // ✅ Check email uniqueness (excluding current user)
+        const emailExists = await User.findOne({
+            email: body.email.toLowerCase().trim(),
+            _id: { $ne: id }
+        });
+        if (emailExists) {
+            return res.status(400).json({
+                success: false,
+                message: "Email already exists"
+            });
+        }
+
+        // ✅ Check license uniqueness
+        const licenseExists = await User.findOne({
+            licenseNo: body.licenseIdNumber,
+            _id: { $ne: id }
+        });
+        if (licenseExists) {
+            return res.status(400).json({
+                success: false,
+                message: "License number already exists"
+            });
+        }
+
+        // ✅ Parse languages
+        let languagesArray;
+        try {
+            languagesArray = JSON.parse(body.languages);
+        } catch (error) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid languages format. Expected JSON array."
+            });
+        }
+
+        // ✅ Handle image upload (optional)
+        let imageURL = existingUser.profileImage;
+        if (file) {
+            const uploadFolder = path.join("uploads", "consultants");
+            if (!fs.existsSync(uploadFolder)) {
+                fs.mkdirSync(uploadFolder, { recursive: true });
+            }
+
+            const ext = path.extname(file.originalname);
+            const fileName = `consultant-${Date.now()}${ext}`;
+            const filePath = path.join(uploadFolder, fileName);
+
+            fs.writeFileSync(filePath, file.buffer);
+            imageURL = `/uploads/consultants/${fileName}`;
+        }
+
+        // ✅ Handle password (optional)
+        let hashedPassword = existingUser.password;
+        if (body.password) {
+            if (body.password.length < 6) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Password must be at least 6 characters"
+                });
+            }
+            hashedPassword = await bcrypt.hash(body.password, 10);
+        }
+
+        const updatedData = {
+            fullname: body.fullName,
+            email: body.email.toLowerCase().trim(),
+            phone: body.phoneNumber,
+            password: hashedPassword,
+            profession: body.profession,
+            specialization: body.specialization,
+            licenseNo: body.licenseIdNumber,
+            experience: String(body.yearOfExperience),
+            language: languagesArray,
+            displayName: body.displayName,
+            gender: body.gender,
+            houseNumber: body.houseNumber,
+            streetArea: body.streetArea,
+            landmark: body.landmark,
+            address: body.address,
+            pincode: body.pincode,
+            dateOfBirth: new Date(body.dateOfBirth),
+            pan_cardNumber: body.pancardNumber,
+            profileImage: imageURL,
+            voicePerMinute: body.voicePerMinute,
+            videoPerMinute: body.videoPerMinute,
+            chatPerMinute: body.chatPerMinute,
+        };
+
+        await User.findByIdAndUpdate(id, updatedData, { new: true });
+
+        return res.status(200).json({
+            success: true,
+            message: "Consultant updated successfully"
+        });
+
+    } catch (error) {
+        console.error("Error in updateConsultantData:", error);
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Internal server error"
+        });
+    }
+};
+
+
+
 /**
  * login consultant
  * @param {login} req 
@@ -561,6 +706,7 @@ const removeChatListAndConsultantIdFromChatList = async (req, res) => {
 module.exports = {
     consultantController,
     getConsultant,
+    updateConsultantData,
     updateConsultantStatus,
     getConsultantById,
     getConsultantHistory,
