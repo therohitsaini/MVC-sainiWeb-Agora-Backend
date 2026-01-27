@@ -29,6 +29,7 @@ const checkedUserBlance = async (req, res) => {
     try {
         const { userId, consultantId } = req.params;
         const { callType = "voice" } = req.query;
+        console.log("callType", callType);
         const user = await User.findById(userId).select("-password");
         const consultant = await User.findById(consultantId).select(" voiceCallCost").lean();
         console.log("consultant", consultant)
