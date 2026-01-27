@@ -255,6 +255,8 @@ const ioServer = (server) => {
                 await transaction.save();
                 const callerSocketId = onlineUsers.get(callerId);
                 const receiverSocketId = onlineUsers.get(receiverId);
+                console.log("callerSocketId_______________________", callerSocketId)
+                console.log("receiverSocketId_______________________", receiverSocketId)
                 if (callerSocketId) {
                     io.to(callerSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType, transactionId: transaction._id });
                 }
