@@ -186,6 +186,7 @@ const getTransactionController = async (req, res) => {
         };
 
         const typeValue = typeMap[type] || "all";
+        console.log("typeValue", typeValue);
 
         const filter = { shop_id: adminId };
 
