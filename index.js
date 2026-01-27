@@ -16,7 +16,23 @@ const { razerPayRoute } = require("./Routes/razerPayRoute");
 const shopifyRoute = require("./Routes/shopifyRoute");
 const { webHookRoute } = require("./Routes/webHookRoute");
 
-app.use(cors());
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
+app.use(cors({
+  origin: "*",
+  credentials: true,
+}));
+
 
 app.use('/api/webhooks', express.raw({ type: 'application/json' }));
 app.use("/api/webhooks", webHookRoute);
