@@ -176,14 +176,23 @@ const getTransactionController = async (req, res) => {
         const page = Number(req.query.page) || 3;
         const limit = Number(req.query.limit) || 14;
         const skip = (page - 1) * limit;
-        const type = req.query.type || "";
+        const type = Number(req.query.type) || 0;
         console.log("type", type);
-        const typeValue = type === 0 ? 'all' : type === 1 ? 'chat' : type === 2 ? 'voice' : type === 3 ? 'video' : 'all';
+        const typeMap = {
+            0: "all",
+            1: "chat",
+            2: "voice",
+            3: "video"
+        };
+
+        const typeValue = typeMap[type] || "all";
+
         const filter = { shop_id: adminId };
-        if (typeValue && typeValue !== 'all') {
+
+        if (typeValue !== "all") {
             filter.type = typeValue;
         }
-     
+
         const transactions = await TransactionHistroy.find(filter)
             .populate('senderId', 'fullname email profileImage userType')
             .populate('receiverId', 'fullname email profileImage userType')
