@@ -251,6 +251,7 @@ const ioServer = (server) => {
                     type: callType,
                     duration: 0
                 });
+                console.log("transaction_______________________Created", transaction)
                 await transaction.save();
                 const callerSocketId = onlineUsers.get(callerId);
                 const receiverSocketId = onlineUsers.get(receiverId);
@@ -435,6 +436,7 @@ const ioServer = (server) => {
 
             try {
                 const transaction = await TransactionHistroy.findById(transactionId).session(session);
+
                 if (!transaction) throw new Error("Transaction not found");
 
                 const caller = await User.findById(callerId).session(session);
