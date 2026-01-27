@@ -16,7 +16,14 @@ const { razerPayRoute } = require("./Routes/razerPayRoute");
 const shopifyRoute = require("./Routes/shopifyRoute");
 const { webHookRoute } = require("./Routes/webHookRoute");
 
-app.use(cors());
+
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
+app.options("*", cors());
 
 app.use('/api/webhooks', express.raw({ type: 'application/json' }));
 app.use("/api/webhooks", webHookRoute);
@@ -73,6 +80,8 @@ const firebaseRouter = require("./Routes/firebaseRoutes");
 const { shopifyDraftOrderRoute } = require("./Routes/shopifyDraftOrderRoute");
 const { userRouter } = require("./Routes/userRoutes");
 const { adminRoute } = require("./Routes/adminRoute");
+
+
 
 app.use("/api/call", callRoutes);
 app.use("/api/auth", signinSignupRouter);
