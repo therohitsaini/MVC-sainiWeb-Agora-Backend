@@ -429,7 +429,7 @@ const ioServer = (server) => {
 
         socket.on("call-ended", async (data) => {
             const { transactionId, callerId, receiverId, shopId, callType } = data;
-
+            console.log("data_______________________", data, transactionId, callerId, receiverId, shopId, callType)
             const session = await mongoose.startSession();
             session.startTransaction();
 
