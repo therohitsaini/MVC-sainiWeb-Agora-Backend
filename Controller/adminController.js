@@ -159,7 +159,6 @@ const deleteAdminController = async (req, res) => {
 const getTransactionController = async (req, res) => {
     try {
         const { adminId } = req.params;
-
         if (!adminId) {
             return res.status(400).json({
                 success: false,
@@ -191,6 +190,11 @@ const getTransactionController = async (req, res) => {
             .skip(skip)
             .limit(limit)
             .lean();
+
+            
+        const lastTransaction = transactions[transactions.length - 1];
+        console.log("Last transaction:", lastTransaction);
+
 
         const totalItems = await TransactionHistroy.countDocuments(filter);
 
