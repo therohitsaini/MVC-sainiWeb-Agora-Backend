@@ -182,7 +182,8 @@ const getTransactionController = async (req, res) => {
         if (typeValue && typeValue !== 'all') {
             filter.type = typeValue;
         }
-
+        console.log("filter", filter);
+        console.log("skip", typeValue);
         const transactions = await TransactionHistroy.find(filter)
             .populate('senderId', 'fullname email profileImage userType')
             .populate('receiverId', 'fullname email profileImage userType')
