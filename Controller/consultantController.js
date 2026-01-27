@@ -701,6 +701,70 @@ const removeChatListAndConsultantIdFromChatList = async (req, res) => {
         return response.status(500).json({ message: 'Server error' });
     }
 }
+const getConsultantAllUsers = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid consultant ID",
+            });
+        }
+
+        const chats = await ChatList.find({
+            $or: [{ senderId: id }, { receiverId: id }],
+        })
+            .populate({
+                path: "senderId",
+                match: { userType: "customer" },
+                select: "fullname email phone userType profileImage isActive",
+            })
+            .populate({
+                path: "receiverId",
+                match: { userType: "customer" },
+                select: "fullname email phone userType profileImage isActive",
+            })
+            .sort({ createdAt: -1 }); // 🔥 latest chat first
+
+        const customers = chats
+            .map((chat) => {
+                const customer = chat.senderId || chat.receiverId;
+
+                if (!customer) return null;
+
+                return {
+                    chatListId: chat._id,
+                    createdAt: chat.createdAt,
+                    lastMessage: chat.lastMessage,
+                    isRequest: chat.isRequest,
+
+                    // customer data
+                    _id: customer._id,
+                    fullname: customer.fullname,
+                    email: customer.email,
+                    phone: customer.phone,
+                    userType: customer.userType,
+                    profileImage: customer.profileImage,
+                    isActive: customer.isActive,
+                };
+            })
+            .filter(Boolean);
+
+        return res.status(200).json({
+            success: true,
+            message: "Consultant users fetched successfully",
+            payload: customers,
+        });
+
+    } catch (error) {
+        console.error("getConsultantAllUsers error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+        });
+    }
+};
 
 
 module.exports = {
@@ -716,5 +780,6 @@ module.exports = {
     getConsultantByShopIdAndConsultantId,
     loginConsultant,
     getChatListByShopIdAndConsultantId,
-    removeChatListAndConsultantIdFromChatList
+    removeChatListAndConsultantIdFromChatList,
+    getConsultantAllUsers
 }
