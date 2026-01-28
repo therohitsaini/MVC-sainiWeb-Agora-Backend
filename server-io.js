@@ -354,6 +354,13 @@ const ioServer = (server) => {
         });
 
 
+        // confirm chat start emit 
+
+        socket.on("conFirmChatEmit", async (acceptDataIds) => {
+            console.log("conFirmChatEmit", acceptDataIds)
+        })
+
+
         socket.on("acceptUserChat", async (acceptData) => {
             const { userId, shopId, consultantId } = acceptData;
             if (!mongoose.Types.ObjectId.isValid(userId)) return;
