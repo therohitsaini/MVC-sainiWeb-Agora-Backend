@@ -704,6 +704,7 @@ const removeChatListAndConsultantIdFromChatList = async (req, res) => {
 const getConsultantAllUsers = async (req, res) => {
     try {
         const { id } = req.params;
+        console.log("Id__________", id)
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({
@@ -750,7 +751,7 @@ const getConsultantAllUsers = async (req, res) => {
                 };
             })
             .filter(Boolean);
-
+        console.log("-------------", customers)
         return res.status(200).json({
             success: true,
             message: "Consultant users fetched successfully",
