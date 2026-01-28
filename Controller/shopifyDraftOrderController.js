@@ -78,9 +78,9 @@ const createDraftOrder = async (req, res) => {
                         ],
                         note: "Consultation payment from app",
                         // Optional: add custom attributes for tracking in Shopify
-                        noteAttributes: [
-                            { key: "app_user_id", value: userId },
-                            { key: "customer_id", value: customerId }
+                        customAttributes: [
+                            { key: "app_user_id", value: String(userId) },
+                            { key: "customer_id", value: String(customerId) }
                         ]
                     }
                 }
