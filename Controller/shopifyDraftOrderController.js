@@ -115,7 +115,7 @@ const createDraftOrder = async (req, res) => {
 
         const draftOrder = result.draftOrder;
         const draftOrderId = draftOrder?.id.split("/").pop();
-
+        console.log("draftOrderId", draftOrderId)
         const transaction = await ReachargeTransactionHistroy.create({
             shop,
             userId,
