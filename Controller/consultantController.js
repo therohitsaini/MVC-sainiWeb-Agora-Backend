@@ -631,7 +631,7 @@ const getChatListByShopIdAndConsultantId = async (request, response) => {
         if (!mongoose.Types.ObjectId.isValid(shop_id)) {
             return response.status(400).json({ message: 'Invalid shop ID' });
         }
-        const chatList = await ChatList.find({ shop_id: shop_id, receiverId: consultant_id }).populate("senderId").populate("receiverId").populate("shop_id");
+        const chatList = await ChatList.find({ shop_id: shop_id, receiverId: consultant_id }).populate("senderId").populate("receiverId").populate("shop_id").sort({ createdAt: -1 });
         if (!chatList) {
             return response.status(400).json({ message: 'Chat list not found' });
         }
