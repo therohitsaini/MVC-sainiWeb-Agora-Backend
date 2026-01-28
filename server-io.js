@@ -360,7 +360,7 @@ const ioServer = (server) => {
             console.log("conFirmChatEmit", acceptDataIds)
             const { userId, shopId, consultantId } = acceptDataIds
             if (!userId || !shopId || !consultantId) return
-            
+
             io.to(userId).emit("acceptUser", {
                 userId: userId,
                 shopId: shopId,
@@ -371,6 +371,7 @@ const ioServer = (server) => {
                 shopId: shopId,
                 consultantId: consultantId
             });
+            console.log("Emit fire")
 
         })
 
