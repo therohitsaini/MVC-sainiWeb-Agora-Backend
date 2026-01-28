@@ -96,7 +96,7 @@ const paymentSucessController = async (req, res) => {
 
         const order = req.body;
         console.log("Order", order)
-        const appUserId = order.note_attributes.find(
+        const appUserId = order.customAttributes.find(
             attr => attr.name === 'app_user_id'
         )?.value;
         console.log("appUserId", appUserId)
