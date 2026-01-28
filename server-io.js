@@ -367,7 +367,8 @@ const ioServer = (server) => {
             io.to(userId).emit("acceptUser", {
                 userId,
                 shopId,
-                consultantId
+                consultantId,
+                userAccepted: "accept"
             });
 
             console.log("✅ acceptUser emitted to user:", userId);
