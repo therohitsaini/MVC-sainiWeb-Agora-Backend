@@ -1,4 +1,5 @@
 const { shopModel } = require("../Modal/shopify");
+const { User } = require("../Modal/userSchema");
 
 const webhooksOrdersCreated = async (req, res) => {
     try {
@@ -84,58 +85,161 @@ const webhooksShopRedact = async (req, res) => {
     res.status(200).send('OK');
 };
 
+// const paymentSucessController = async (req, res) => {
+//     try {
+
+//         const topic = req.headers["x-shopify-topic"];
+//         console.log("topic", topic)
+//         // ONLY payment success
+//         if (topic !== "orders/paid") {
+//             return res.sendStatus(200);
+//         }
+
+//         const order = req.body;
+//         console.log("Order", order)
+//         const appUserId = order.note_attributes.find(
+//             attr => attr.name === 'app_user_id'
+//         )?.value;
+//         console.log("appUserId", appUserId)
+
+//         // Draft order id
+//         // const draftOrderId = order.source_identifier;
+
+//         // if (!draftOrderId) return res.sendStatus(200);
+
+//         // // Find recharge record
+//         // const transaction = await ReachargeTransactionHistroy.findOne({
+//         //     draftOrderId,
+//         //     status: "PENDING"
+//         // });
+
+//         // if (!transaction) return res.sendStatus(200);
+
+//         // // Prevent double credit
+//         // if (transaction.status === "COMPLETED") return res.sendStatus(200);
+
+//         // // Update wallet
+//         // await User.findByIdAndUpdate(transaction.userId, {
+//         //     $inc: { walletBalance: transaction.amount }
+//         // });
+
+//         // // Mark transaction completed
+//         // transaction.status = "COMPLETED";
+//         // await transaction.save();
+
+//         // console.log("✅ Wallet recharged:", transaction.userId);
+
+//         // res.sendStatus(200);
+
+//     } catch (err) {
+//         console.log("Webhook error:", err);
+//         res.sendStatus(500);
+//     }
+// }
 const paymentSucessController = async (req, res) => {
     try {
+        // 1. Get order data from Shopify webhook
+        let orderData = req.body;
 
-        const topic = req.headers["x-shopify-topic"];
-        console.log("topic", topic)
-        // ONLY payment success
-        if (topic !== "orders/paid") {
-            return res.sendStatus(200);
+        // Convert buffer to object if needed
+        if (Buffer.isBuffer(orderData)) {
+            orderData = JSON.parse(orderData.toString());
         }
 
-        const order = req.body;
-        console.log("Order", order)
-        const appUserId = order.note_attributes.find(
-            attr => attr.name === 'app_user_id'
-        )?.value;
-        console.log("appUserId", appUserId)
+        // 2. Extract note_attributes
+        const noteAttrs = orderData.note_attributes;
 
-        // Draft order id
-        // const draftOrderId = order.source_identifier;
+        if (!noteAttrs || !Array.isArray(noteAttrs)) {
+            return res.status(400).send('No note attributes found');
+        }
 
-        // if (!draftOrderId) return res.sendStatus(200);
+        // 3. Find app_user_id and customer_id
+        const appUserIdAttr = noteAttrs.find(attr => attr.name === 'app_user_id');
+        const customerIdAttr = noteAttrs.find(attr => attr.name === 'customer_id');
 
-        // // Find recharge record
-        // const transaction = await ReachargeTransactionHistroy.findOne({
-        //     draftOrderId,
-        //     status: "PENDING"
-        // });
+        if (!appUserIdAttr || !customerIdAttr) {
+            return res.status(400).send('Required attributes missing');
+        }
 
-        // if (!transaction) return res.sendStatus(200);
+        const appUserId = appUserIdAttr.value; // MongoDB User ID
+        const shopifyCustomerId = customerIdAttr.value; // Shopify Customer ID
 
-        // // Prevent double credit
-        // if (transaction.status === "COMPLETED") return res.sendStatus(200);
+        // 4. Get order amount
+        const orderAmount = parseFloat(orderData.total_price) || 0;
 
-        // // Update wallet
-        // await User.findByIdAndUpdate(transaction.userId, {
-        //     $inc: { walletBalance: transaction.amount }
-        // });
+        console.log('💰 Payment Details:', {
+            userId: appUserId,
+            shopifyCustomerId: shopifyCustomerId,
+            orderId: orderData.id,
+            amount: orderAmount,
+            currency: orderData.currency
+        });
 
-        // // Mark transaction completed
-        // transaction.status = "COMPLETED";
-        // await transaction.save();
+        const user = await User.findById(appUserId);
 
-        // console.log("✅ Wallet recharged:", transaction.userId);
+        if (!user) {
+            console.error('❌ User not found:', appUserId);
+            return res.status(404).send('User not found');
+        }
 
-        // res.sendStatus(200);
+        // Current balance में amount add करें
+        const currentBalance = user.balance || 0;
+        const newBalance = currentBalance + orderAmount;
 
-    } catch (err) {
-        console.log("Webhook error:", err);
-        res.sendStatus(500);
+        // Update user balance
+        user.balance = newBalance;
+        await user.save();
+
+        console.log('✅ Balance updated:', {
+            userId: appUserId,
+            oldBalance: currentBalance,
+            addedAmount: orderAmount,
+            newBalance: newBalance
+        });
+
+        // // 6. ✅ Update transaction status (अगर आपके पास transaction table है)
+        // const transaction = await ReachargeTransactionHistroy.findOneAndUpdate(
+        //     {
+        //         userId: appUserId,
+        //         draftOrderId: orderData.id.toString(),
+        //         status: 'PENDING'
+        //     },
+        //     {
+        //         status: 'COMPLETED',
+        //         completedAt: new Date(),
+        //         shopifyOrderId: orderData.id,
+        //         orderData: orderData // Store full order data if needed
+        //     },
+        //     { new: true }
+        // );
+
+        // if (transaction) {
+        //     console.log('✅ Transaction updated:', transaction._id);
+        // }
+
+        // 7. ✅ Send notification to user (WebSocket या push notification)
+        // Example: Send socket notification
+     
+
+        // 8. ✅ Response send करें
+        res.status(200).json({
+            success: true,
+            message: 'Balance updated successfully',
+            userId: appUserId,
+            amountAdded: orderAmount,
+            newBalance: newBalance,
+            transactionId: transaction?._id
+        });
+
+    } catch (error) {
+        console.error('❌ Webhook processing error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+            error: error.message
+        });
     }
-}
-
+};
 
 
 module.exports = {
