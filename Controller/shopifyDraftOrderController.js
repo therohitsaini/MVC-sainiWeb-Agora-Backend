@@ -222,7 +222,7 @@ const createDraftOrder = async (req, res) => {
                         ],
                         note: "Consultation payment from app",
                         // ✅ CORRECTED: customAttributes -> noteAttributes
-                        noteAttributes: [
+                        customAttributes: [
                             { key: "app_user_id", value: String(userId || "9939494848384884") },
                             { key: "customer_id", value: String(customerId || '47374737477') }
                         ],
