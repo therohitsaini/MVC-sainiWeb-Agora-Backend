@@ -182,12 +182,10 @@ const paymentSucessController = async (req, res) => {
             return res.status(404).send('User not found');
         }
 
-        // Current balance में amount add करें
-        const currentBalance = user.balance || 0;
+        const currentBalance = user.walletBalance || 0;
         const newBalance = currentBalance + orderAmount;
 
-        // Update user balance
-        user.balance = newBalance;
+        user.walletBalance = newBalance;
         await user.save();
 
         console.log('✅ Balance updated:', {
@@ -219,7 +217,7 @@ const paymentSucessController = async (req, res) => {
 
         // 7. ✅ Send notification to user (WebSocket या push notification)
         // Example: Send socket notification
-     
+
 
         // 8. ✅ Response send करें
         res.status(200).json({
