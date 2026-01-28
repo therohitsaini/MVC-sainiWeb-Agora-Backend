@@ -84,6 +84,62 @@ const webhooksShopRedact = async (req, res) => {
     res.status(200).send('OK');
 };
 
+const paymentSucessController = async (req, res) => {
+    try {
+
+        const topic = req.headers["x-shopify-topic"];
+        console.log("topic", topic)
+        // ONLY payment success
+        if (topic !== "orders/paid") {
+            return res.sendStatus(200);
+        }
+
+        const order = req.body;
+        console.log("Order", order)
+
+        // Draft order id
+        // const draftOrderId = order.source_identifier;
+
+        // if (!draftOrderId) return res.sendStatus(200);
+
+        // // Find recharge record
+        // const transaction = await ReachargeTransactionHistroy.findOne({
+        //     draftOrderId,
+        //     status: "PENDING"
+        // });
+
+        // if (!transaction) return res.sendStatus(200);
+
+        // // Prevent double credit
+        // if (transaction.status === "COMPLETED") return res.sendStatus(200);
+
+        // // Update wallet
+        // await User.findByIdAndUpdate(transaction.userId, {
+        //     $inc: { walletBalance: transaction.amount }
+        // });
+
+        // // Mark transaction completed
+        // transaction.status = "COMPLETED";
+        // await transaction.save();
+
+        // console.log("✅ Wallet recharged:", transaction.userId);
+
+        // res.sendStatus(200);
+
+    } catch (err) {
+        console.log("Webhook error:", err);
+        res.sendStatus(500);
+    }
+}
 
 
-module.exports = { webhooksOrdersCreated, webhooksOrdersDeleted, webhooksAppUninstalled, webhooksCustomerDataRequest, webhooksCustomerRedact, webhooksShopRedact };
+
+module.exports = {
+    webhooksOrdersCreated,
+    webhooksOrdersDeleted,
+    webhooksAppUninstalled,
+    webhooksCustomerDataRequest,
+    webhooksCustomerRedact,
+    webhooksShopRedact,
+    paymentSucessController
+};
