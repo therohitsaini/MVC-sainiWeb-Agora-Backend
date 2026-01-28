@@ -64,7 +64,7 @@ const manageShopifyUser = async (shop, customerId) => {
                     isChatAccepted: "request",
                     createdAt: customer.createdAt,
                     numberOfOrders: customer.numberOfOrders,
-                    chatLock: false
+                    chatLock: true,
                 });
                 console.log("newUser    ", newUser);
                 await newUser.save();

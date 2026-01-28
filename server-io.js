@@ -613,7 +613,7 @@ const ioServer = (server) => {
                     $inc: { adminAmount: adminCommission, consultantAmount: consultantShare, amount: totalAmount }
                 }, { session });
 
-                await User.findByIdAndUpdate(userId, { $set: { isChatAccepted: "request", chatLock: false } }, { session });
+                await User.findByIdAndUpdate(userId, { $set: { isChatAccepted: "request", chatLock: true } }, { session });
 
                 await WalletHistory.create({
                     userId: userId,
