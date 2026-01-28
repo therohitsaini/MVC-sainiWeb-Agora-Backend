@@ -100,6 +100,8 @@ app.use("/api-employee", employRoute)
 
 /** Shopify Routes */
 app.use("/app", shopifyRoute);
+app.use("/apps", shopifyRoute);
+
 app.use("/local-consultant/public/app", shopifyRoute);
 app.use("/local-consultant/public/apps", shopifyRoute);
 
