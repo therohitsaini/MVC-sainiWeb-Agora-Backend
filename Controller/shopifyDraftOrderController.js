@@ -17,7 +17,7 @@ const createDraftOrder = async (req, res) => {
         const { shop, amount, title, userId } = req.body;
         console.log("createDraftOrder called with:", req.body);
 
-        if (!shop || !amount || !title || !userId) {
+        if (!amount || !title || !userId) {
             return res
                 .status(400)
                 .json({ success: false, message: "All fields are required" });
@@ -46,7 +46,7 @@ const createDraftOrder = async (req, res) => {
         const accessToken = shopAccessToken.accessToken;
         const transaction_ = await WalletHistory.create({
             userId,
-            shop_id: shop,
+            shop_id: "690c374f605cb8b946503ccb",
             amount: amount,
             currency: "INR",
             referenceType: "recharge",
