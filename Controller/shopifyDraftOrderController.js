@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const axios = require("axios");
 const { ReachargeTransactionHistroy } = require("../Modal/reachargeTransactionHistroy");
 const { User } = require("../Modal/userSchema");
+const { WalletHistory } = require("../Modal/walletHistory");
 
 /**
  * Create Shopify Draft Order (Latest GraphQL version)
@@ -42,6 +43,18 @@ const createDraftOrder = async (req, res) => {
         }
 
         const accessToken = shopAccessToken.accessToken;
+        const transaction_ = await WalletHistory.create({
+            userId,
+            shop_id: shop,
+            amount: amount,
+            currency: "INR",
+            referenceType: "recharge",
+            transactionType: "recharge",
+            direction: "credit",
+            status: "pending"
+        });
+        await transaction_.save();
+
 
         const response = await axios.post(
             `https://${shop}/admin/api/2024-01/graphql.json`,
@@ -80,7 +93,8 @@ const createDraftOrder = async (req, res) => {
                         // Optional: add custom attributes for tracking in Shopify
                         customAttributes: [
                             { key: "app_user_id", value: String(userId) },
-                            { key: "customer_id", value: String(customerId) }
+                            { key: "customer_id", value: String(customerId) },
+                            { key: "transaction_id", value: String(transaction_._id) }
                         ]
                     }
                 }
@@ -115,19 +129,13 @@ const createDraftOrder = async (req, res) => {
 
         const draftOrder = result.draftOrder;
         const draftOrderId = draftOrder?.id.split("/").pop();
-        console.log("draftOrderId", draftOrderId)
-        const transaction = await ReachargeTransactionHistroy.create({
-            shop,
-            userId,
-            amount,
-            customerId: customerId,
-            currency: "INR",
+
+        await WalletHistory.findByIdAndUpdate(transaction_._id, {
             draftOrderId: draftOrderId,
             invoiceUrl: draftOrder.invoiceUrl,
-            status: "PENDING",
-            purpose: "RECHARGE"
+
         });
-        await transaction.save();
+      
 
         return res.status(200).json({
             success: true,

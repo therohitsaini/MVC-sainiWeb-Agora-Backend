@@ -11,10 +11,25 @@ const walletHistorySchema = new mongoose.Schema({
         ref: "shopModel",
         required: true
     },
+    customerId: {
+        type: String,
+
+    },
 
     amount: {
         type: Number,
-        required: true
+        // required: true
+    },
+    currency: {
+        type: String,
+    },
+    draftOrderId: {
+        type: String,
+        
+    },
+    invoiceUrl: {
+        type: String,
+        
     },
 
     transactionType: {
@@ -62,7 +77,7 @@ const walletHistorySchema = new mongoose.Schema({
     status: {
         type: String,
         enum: ["success", "pending", "failed"],
-        default: "success"
+        default: ""
     }
 }, { timestamps: true });
 const WalletHistory = mongoose.model("WalletHistory", walletHistorySchema);

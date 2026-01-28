@@ -1,7 +1,7 @@
 # App Info
 name = "vc-consultant app"
 client_id = "1844b97873b270b025334fd34790185c"
-application_url = "https://knife-purchased-presentations-frederick.trycloudflare.com" # backend URL
+application_url = "https://test-consultation-app.zend-apps.com " # backend URL
 embedded = true
 handle = "label-node"
 

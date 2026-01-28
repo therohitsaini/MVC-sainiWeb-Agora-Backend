@@ -1,5 +1,6 @@
 const { shopModel } = require("../Modal/shopify");
 const { User } = require("../Modal/userSchema");
+const { WalletHistory } = require("../Modal/walletHistory");
 
 const webhooksOrdersCreated = async (req, res) => {
     try {
@@ -156,13 +157,16 @@ const paymentSucessController = async (req, res) => {
         // 3. Find app_user_id and customer_id
         const appUserIdAttr = noteAttrs.find(attr => attr.name === 'app_user_id');
         const customerIdAttr = noteAttrs.find(attr => attr.name === 'customer_id');
+        const customerIdAttrTransId = noteAttrs.find(attr => attr.name === 'transaction_id');
 
-        if (!appUserIdAttr || !customerIdAttr) {
+
+        if (!appUserIdAttr || !customerIdAttr || !customerIdAttrTransId) {
             return res.status(400).send('Required attributes missing');
         }
 
         const appUserId = appUserIdAttr.value; // MongoDB User ID
-        const shopifyCustomerId = customerIdAttr.value; // Shopify Customer ID
+        const shopifyCustomerId = customerIdAttr.value;
+        const transactionId = customerIdAttrTransId.value; // Shopify Customer ID
 
         // 4. Get order amount
         const orderAmount = parseFloat(orderData.total_price) || 0;
@@ -187,6 +191,14 @@ const paymentSucessController = async (req, res) => {
 
         user.walletBalance = newBalance;
         await user.save();
+        await WalletHistory.findByIdAndUpdate(transactionId, {
+            status: "success",
+            // completedAt: new Date(),
+            // shopifyOrderId: orderData.id,
+            // orderData: orderData // Store full order data if needed
+        },
+            { new: true }
+        );
 
         console.log('✅ Balance updated:', {
             userId: appUserId,
