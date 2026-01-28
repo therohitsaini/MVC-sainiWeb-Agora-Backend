@@ -138,11 +138,17 @@ const registerUserSchema = new mongoose.Schema(
             type: Number,
             // default: 0,
         },
+        chatLock: {
+            type: String,
+            default: false,
+
+        },
         isChatAccepted: {
             type: String,
             default: "request",
 
         },
+
         firebaseToken: {
             token: { type: String, default: null },
             updatedAt: { type: Date, default: null },
