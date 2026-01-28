@@ -356,24 +356,22 @@ const ioServer = (server) => {
 
         // confirm chat start emit 
 
-        socket.on("conFirmChatEmit", async (acceptDataIds) => {
-            console.log("conFirmChatEmit", acceptDataIds)
-            const { userId, shopId, consultantId } = acceptDataIds
-            if (!userId || !shopId || !consultantId) return
+        socket.on("conFirmChatEmit", (acceptDataIds) => {
+
+            console.log("conFirmChatEmit", acceptDataIds);
+
+            const { userId, shopId, consultantId } = acceptDataIds;
+
+            if (!userId || !shopId || !consultantId) return;
 
             io.to(userId).emit("acceptUser", {
-                userId: userId,
-                shopId: shopId,
-                consultantId: consultantId
+                userId,
+                shopId,
+                consultantId
             });
-            io.to(userId).emit("acceptUser", {
-                userId: userId,
-                shopId: shopId,
-                consultantId: consultantId
-            });
-            console.log("Emit fire")
 
-        })
+            console.log("✅ acceptUser emitted to user:", userId);
+        });
 
 
         socket.on("acceptUserChat", async (acceptData) => {
