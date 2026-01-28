@@ -383,6 +383,7 @@ const ioServer = (server) => {
             if (!user || user.isChatAccepted !== "request") return;
 
             user.isChatAccepted = "accepted";
+            user.chatLock = false
             await user.save();
 
             const transaction = await TransactionHistroy.create({
@@ -634,6 +635,7 @@ const ioServer = (server) => {
                     description: `Chat ended for ${Number((totalSeconds / 60).toFixed(2))} minutes`,
                     status: "success",
                 });
+                
 
                 await session.commitTransaction();
 
