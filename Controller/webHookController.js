@@ -228,7 +228,7 @@ const paymentSucessController = async (req, res) => {
             userId: appUserId,
             amountAdded: orderAmount,
             newBalance: newBalance,
-            transactionId: transaction?._id
+            // transactionId: transaction?._id
         });
 
     } catch (error) {
