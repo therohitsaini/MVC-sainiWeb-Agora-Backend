@@ -15,6 +15,7 @@ const { WalletHistory } = require("../Modal/walletHistory");
 const createDraftOrder = async (req, res) => {
     try {
         const { shop, amount, title, userId } = req.body;
+        console.log("createDraftOrder called with:", req.body);
 
         if (!shop || !amount || !title || !userId) {
             return res
@@ -135,7 +136,7 @@ const createDraftOrder = async (req, res) => {
             invoiceUrl: draftOrder.invoiceUrl,
 
         });
-      
+
 
         return res.status(200).json({
             success: true,
