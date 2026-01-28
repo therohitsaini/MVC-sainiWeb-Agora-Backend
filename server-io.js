@@ -358,6 +358,20 @@ const ioServer = (server) => {
 
         socket.on("conFirmChatEmit", async (acceptDataIds) => {
             console.log("conFirmChatEmit", acceptDataIds)
+            const { userId, shopId, consultantId } = acceptDataIds
+            if (!userId || !shopId || !consultantId) return
+            
+            io.to(userId).emit("acceptUser", {
+                userId: userId,
+                shopId: shopId,
+                consultantId: consultantId
+            });
+            io.to(userId).emit("acceptUser", {
+                userId: userId,
+                shopId: shopId,
+                consultantId: consultantId
+            });
+
         })
 
 
