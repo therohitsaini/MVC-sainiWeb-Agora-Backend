@@ -27,6 +27,11 @@ const shop = new mongoose.Schema({
             updatedAt: { type: Date, default: Date.now }
         }
     ],
+
+    planStatus: {
+        type: String,
+        default: ""
+    },
     installedAt: { type: Date, default: Date.now }
 });
 

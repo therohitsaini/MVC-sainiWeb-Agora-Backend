@@ -98,11 +98,6 @@ const authCallback = async (req, res) => {
             console.log("❌ Missing required parameters");
             return res.status(400).send("Missing required parameters");
         }
-
-        // --- STEP 2: HMAC validation ke liye message banayo
-        // HMAC security ke liye hota hai - verify karta hai ki request Shopify se hi aayi hai
-        // hmac aur signature ko exclude karo (ye validation ke liye use hoga)
-
         const params = { ...req.query };
         delete params.hmac;
         delete params.signature;

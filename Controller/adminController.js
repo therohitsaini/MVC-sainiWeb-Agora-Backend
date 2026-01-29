@@ -474,7 +474,31 @@ const getAppStatusController = async (req, res) => {
         console.error("Error in getAppStatusController:", error);
     }
 }
+const checkAppBillingController = async (req, res) => {
+    try {
+        const { adminId } = req.params
+        if (!mongoose.Types.ObjectId.isValid(adminId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid admin ID",
+            });
+        }
+        const shop = await shopModel.findById(adminId).select("-accessToken")
+        if (!shop) return
+        return res.status(200).json({
+            success: true,
+            message: "App status retrieved successfully",
+            data: shop,
+        });
 
+    } catch (error) {
+        console.error("Error in appEnableAndDisableController:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to enable or disable app",
+        });
+    }
+}
 module.exports = {
     adminController,
     voucherController,
@@ -486,5 +510,6 @@ module.exports = {
     getShopAllConsultantController,
     updateUserConsultantController,
     appEnableAndDisableController,
-    getAppStatusController
+    getAppStatusController,
+    checkAppBillingController
 };
