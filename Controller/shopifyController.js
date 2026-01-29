@@ -160,6 +160,7 @@ const authCallback = async (req, res) => {
                 email: ownerEmail,
                 installedAt: new Date(),
                 appEnabled: false,
+                planStatus:"new"
 
             }).save();
         }
