@@ -9,7 +9,7 @@ const { verifyWebhook } = require('../MiddleWare/ShopifyMiddleware/verifyWebHook
 webHookRoute.post('/webhooks/orders-created', express.raw({ type: "application/json" }), verifyWebhook, webhooksOrdersCreated);
 webHookRoute.post('/webhooks/orders-deleted', express.raw({ type: "application/json" }), verifyWebhook, webhooksOrdersDeleted);
 webHookRoute.post('/app-uninstalled', express.raw({ type: "application/json" }), verifyWebhook, webhooksAppUninstalled);
-webHookRoute.post("/shop/webhooks",paymentSucessController)
+webHookRoute.post("/shop/webhooks", express.raw({ type: "application/json" }), verifyWebhook, paymentSucessController)
 webHookRoute.post('/webhooks', verifyWebhook, (req, res) => {
     const topic = req.headers['x-shopify-topic'];
     console.log('topic', topic);
