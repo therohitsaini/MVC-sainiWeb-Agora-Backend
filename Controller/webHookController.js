@@ -130,11 +130,12 @@ const paymentSucessController = async (req, res) => {
         await user.save();
         await WalletHistory.findByIdAndUpdate(transactionId, { status: "success__", }, { new: true });
 
-        console.log('✅ Balance updated:', {
+        console.log('✅ Balance updated________________:', {
             userId: appUserId,
             oldBalance: currentBalance,
             addedAmount: orderAmount,
-            newBalance: newBalance
+            newBalance: newBalance ,
+            
         });
         console.log("orderAmount", orderAmount)
         console.log("currentBalance", currentBalance)
