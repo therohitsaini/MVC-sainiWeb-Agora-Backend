@@ -158,37 +158,33 @@ const paymentSucessController = async (req, res) => {
         const appUserIdAttr = noteAttrs.find(attr => attr.name === 'app_user_id');
         const customerIdAttr = noteAttrs.find(attr => attr.name === 'customer_id');
         const customerIdAttrTransId = noteAttrs.find(attr => attr.name === 'transaction_id');
+        const shopId = noteAttrs.find(attr => attr.name === 'shop_id');
 
 
-        if (!appUserIdAttr || !customerIdAttr || !customerIdAttrTransId) {
+        if (!appUserIdAttr || !customerIdAttr || !customerIdAttrTransId || !shopId) {
             return res.status(400).send('Required attributes missing');
         }
 
-        const appUserId = appUserIdAttr.value; // MongoDB User ID
+        const appUserId = appUserIdAttr.value;
         const shopifyCustomerId = customerIdAttr.value;
-        const transactionId = customerIdAttrTransId.value; // Shopify Customer ID
-
-        // 4. Get order amount
+        const transactionId = customerIdAttrTransId.value;
+        const shopId_ = shopId.value
         const orderAmount = parseFloat(orderData.total_price) || 0;
-
-        console.log('💰 Payment Details:', {
-            userId: appUserId,
-            shopifyCustomerId: shopifyCustomerId,
-            orderId: orderData.id,
-            amount: orderAmount,
-            currency: orderData.currency
-        });
-
         const user = await User.findById(appUserId);
 
         if (!user) {
             console.error('❌ User not found:', appUserId);
             return res.status(404).send('User not found');
         }
+        const findVoucherPlan = await shopModel.findById(shopId_)
 
         const currentBalance = user.walletBalance || 0;
         const newBalance = currentBalance + orderAmount;
-
+        console.log("orderAmount", orderAmount)
+        console.log("currentBalance", currentBalance)
+        console.log("newBalance", newBalance)
+        console.log("findVoucherPlan", findVoucherPlan.vouchers)
+        
         user.walletBalance = newBalance;
         await user.save();
         await WalletHistory.findByIdAndUpdate(transactionId, {

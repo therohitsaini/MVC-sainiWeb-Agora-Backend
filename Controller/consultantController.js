@@ -76,17 +76,17 @@ const consultantController = async (req, res) => {
         if (!fs.existsSync(uploadFolder)) {
             fs.mkdirSync(uploadFolder, { recursive: true });
         }
-        // let imageURL = null;
+        let imageURL = null;
 
-        // if (file) {
-        //     const ext = path.extname(file.originalname); // .jpg / .png
-        //     const fileName = `consultant-${Date.now()}${ext}`;
-        //     const filePath = path.join(uploadFolder, fileName);
+        if (file) {
+            const ext = path.extname(file.originalname); 
+            const fileName = `consultant-${Date.now()}${ext}`;
+            const filePath = path.join(uploadFolder, fileName);
 
-        //     fs.writeFileSync(filePath, file.buffer);
+            fs.writeFileSync(filePath, file.buffer);
 
-        //     imageURL = `/uploads/consultants/${fileName}`;
-        // }
+            imageURL = `uploads/consultants/${fileName}`;
+        }
 
 
         let randomAgoraUid;
@@ -147,7 +147,7 @@ const consultantController = async (req, res) => {
             pincode: body.pincode,
             dateOfBirth: new Date(body.dateOfBirth),
             pan_cardNumber: body.pancardNumber,
-            // profileImage: imageURL,
+            profileImage: imageURL,
             isActive: true,
             agoraUid: randomAgoraUid,
             userType: "consultant",
@@ -231,7 +231,6 @@ const updateConsultantData = async (req, res) => {
             });
         }
 
-        // ✅ Check email uniqueness (excluding current user)
         const emailExists = await User.findOne({
             email: body.email.toLowerCase().trim(),
             _id: { $ne: id }
@@ -243,7 +242,6 @@ const updateConsultantData = async (req, res) => {
             });
         }
 
-        // ✅ Check license uniqueness
         const licenseExists = await User.findOne({
             licenseNo: body.licenseIdNumber,
             _id: { $ne: id }
@@ -255,7 +253,6 @@ const updateConsultantData = async (req, res) => {
             });
         }
 
-        // ✅ Parse languages
         let languagesArray;
         try {
             languagesArray = JSON.parse(body.languages);
@@ -266,7 +263,6 @@ const updateConsultantData = async (req, res) => {
             });
         }
 
-        // ✅ Handle image upload (optional)
         let imageURL = existingUser.profileImage;
         if (file) {
             const uploadFolder = path.join("uploads", "consultants");
@@ -282,7 +278,6 @@ const updateConsultantData = async (req, res) => {
             imageURL = `uploads/consultants/${fileName}`;
         }
 
-        // ✅ Handle password (optional)
         let hashedPassword = existingUser.password;
         if (body.password) {
             if (body.password.length < 6) {
