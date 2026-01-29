@@ -177,8 +177,7 @@ const authCallback = async (req, res) => {
         // await deleteAllAppUninstallWebhooks(shop, accessToken);
         /** Register Order Paid Webhook */
 
-        await registerOrderPaidWebhook(shop, accessToken);
-        await registerOrderDeletedWebhook(shop, accessToken);
+       
         await registerAppUninstallWebhook(shop, accessToken);
 
 
