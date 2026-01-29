@@ -484,7 +484,7 @@ const checkAppBillingController = async (req, res) => {
             });
         }
         const shop = await shopModel.findById(adminId).select("-accessToken")
-        console.log("shop", shop)
+        console.log("shop___________", shop)
         if (!shop) return
         return res.status(200).json({
             success: true,
