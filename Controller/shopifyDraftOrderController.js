@@ -48,6 +48,7 @@ const createDraftOrder = async (req, res) => {
             userId,
             shop_id: shopAccessToken._id,
             currency: "INR",
+            amount: 0,
             referenceType: "recharge",
             transactionType: "recharge",
             direction: "credit",

@@ -20,9 +20,7 @@ api_version = "2025-10"
 
 [[webhooks.subscriptions]]
 topics = [
-
   "orders/create",
-  "orders/paid",
 ]
 uri = "https://test-online-consultation.zend-apps.com/api/webhooks/shop/webhooks"
  

@@ -122,22 +122,30 @@ const paymentSucessController = async (req, res) => {
             return res.status(404).send('User not found');
         }
         const findVoucherPlan = await shopModel.findById(shopId_)
+        const matchedVoucher = vouchers.find(
+            v => Number(v.totalCoin) === Number(orderAmount)
+        );
 
-        const currentBalance = user.walletBalance || 0;
-        const newBalance = currentBalance + orderAmount;
+        let bonus = 0;
 
+        if (matchedVoucher) {
+            bonus = Number(matchedVoucher.extraCoin || 0);
+        }
+        const totalCredit = Number(orderAmount) + bonus;
 
+        const currentBalance = Number(user.walletBalance || 0);
+        const newBalance = currentBalance + totalCredit;
 
-        user.walletBalance = newBalance;
+        user.walletBalance = newBalance
         await user.save();
-        await WalletHistory.findByIdAndUpdate(transactionId, { status: "success__", }, { new: true });
+        await WalletHistory.findByIdAndUpdate(transactionId, { status: "success__", amount: newBalance }, { new: true });
 
         console.log('✅ Balance updated________________:', {
             userId: appUserId,
             oldBalance: currentBalance,
             addedAmount: orderAmount,
-            newBalance: newBalance ,
-            
+            newBalance: newBalance,
+
         });
         console.log("orderAmount", orderAmount)
         console.log("currentBalance", currentBalance)
@@ -165,7 +173,7 @@ const paymentSucessController = async (req, res) => {
 
 
 module.exports = {
- 
+
     webhooksAppUninstalled,
     webhooksCustomerDataRequest,
     webhooksCustomerRedact,
