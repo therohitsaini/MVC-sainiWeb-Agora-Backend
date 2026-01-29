@@ -47,7 +47,6 @@ const createDraftOrder = async (req, res) => {
         const transaction_ = await WalletHistory.create({
             userId,
             shop_id: shopAccessToken._id,
-            amount: amount,
             currency: "INR",
             referenceType: "recharge",
             transactionType: "recharge",

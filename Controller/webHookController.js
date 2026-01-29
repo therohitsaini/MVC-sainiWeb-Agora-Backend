@@ -8,7 +8,6 @@ const webhooksOrdersCreated = async (req, res) => {
         const order = JSON.parse(req.body.toString('utf8'));
         console.log("✅ Order Created:", order.id);
         console.log("order", order);
-
         res.status(200).send("OK");
 
     } catch (error) {
@@ -129,7 +128,7 @@ const paymentSucessController = async (req, res) => {
 
         user.walletBalance = newBalance;
         await user.save();
-        await WalletHistory.findByIdAndUpdate(transactionId, { status: "success", }, { new: true });
+        await WalletHistory.findByIdAndUpdate(transactionId, { status: "success__", }, { new: true });
 
         console.log('✅ Balance updated:', {
             userId: appUserId,
