@@ -122,7 +122,7 @@ const paymentSucessController = async (req, res) => {
             return res.status(404).send('User not found');
         }
         const findVoucherPlan = await shopModel.findById(shopId_)
-        const matchedVoucher = vouchers.find(
+        const matchedVoucher = findVoucherPlan?.vouchers.find(
             v => Number(v.totalCoin) === Number(orderAmount)
         );
 
