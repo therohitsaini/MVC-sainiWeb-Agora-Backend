@@ -86,75 +86,19 @@ const webhooksShopRedact = async (req, res) => {
     res.status(200).send('OK');
 };
 
-// const paymentSucessController = async (req, res) => {
-//     try {
-
-//         const topic = req.headers["x-shopify-topic"];
-//         console.log("topic", topic)
-//         // ONLY payment success
-//         if (topic !== "orders/paid") {
-//             return res.sendStatus(200);
-//         }
-
-//         const order = req.body;
-//         console.log("Order", order)
-//         const appUserId = order.note_attributes.find(
-//             attr => attr.name === 'app_user_id'
-//         )?.value;
-//         console.log("appUserId", appUserId)
-
-//         // Draft order id
-//         // const draftOrderId = order.source_identifier;
-
-//         // if (!draftOrderId) return res.sendStatus(200);
-
-//         // // Find recharge record
-//         // const transaction = await ReachargeTransactionHistroy.findOne({
-//         //     draftOrderId,
-//         //     status: "PENDING"
-//         // });
-
-//         // if (!transaction) return res.sendStatus(200);
-
-//         // // Prevent double credit
-//         // if (transaction.status === "COMPLETED") return res.sendStatus(200);
-
-//         // // Update wallet
-//         // await User.findByIdAndUpdate(transaction.userId, {
-//         //     $inc: { walletBalance: transaction.amount }
-//         // });
-
-//         // // Mark transaction completed
-//         // transaction.status = "COMPLETED";
-//         // await transaction.save();
-
-//         // console.log("✅ Wallet recharged:", transaction.userId);
-
-//         // res.sendStatus(200);
-
-//     } catch (err) {
-//         console.log("Webhook error:", err);
-//         res.sendStatus(500);
-//     }
-// }
 const paymentSucessController = async (req, res) => {
     try {
-        // 1. Get order data from Shopify webhook
         let orderData = req.body;
 
-        // Convert buffer to object if needed
         if (Buffer.isBuffer(orderData)) {
             orderData = JSON.parse(orderData.toString());
         }
 
-        // 2. Extract note_attributes
         const noteAttrs = orderData.note_attributes;
 
         if (!noteAttrs || !Array.isArray(noteAttrs)) {
             return res.status(400).send('No note attributes found');
         }
-
-        // 3. Find app_user_id and customer_id
         const appUserIdAttr = noteAttrs.find(attr => attr.name === 'app_user_id');
         const customerIdAttr = noteAttrs.find(attr => attr.name === 'customer_id');
         const customerIdAttrTransId = noteAttrs.find(attr => attr.name === 'transaction_id');
@@ -180,21 +124,12 @@ const paymentSucessController = async (req, res) => {
 
         const currentBalance = user.walletBalance || 0;
         const newBalance = currentBalance + orderAmount;
-        console.log("orderAmount", orderAmount)
-        console.log("currentBalance", currentBalance)
-        console.log("newBalance", newBalance)
-        console.log("findVoucherPlan", findVoucherPlan.vouchers)
-        
+
+
+
         user.walletBalance = newBalance;
         await user.save();
-        await WalletHistory.findByIdAndUpdate(transactionId, {
-            status: "success",
-            // completedAt: new Date(),
-            // shopifyOrderId: orderData.id,
-            // orderData: orderData // Store full order data if needed
-        },
-            { new: true }
-        );
+        await WalletHistory.findByIdAndUpdate(transactionId, { status: "success", }, { new: true });
 
         console.log('✅ Balance updated:', {
             userId: appUserId,
@@ -202,32 +137,10 @@ const paymentSucessController = async (req, res) => {
             addedAmount: orderAmount,
             newBalance: newBalance
         });
-
-        // // 6. ✅ Update transaction status (अगर आपके पास transaction table है)
-        // const transaction = await ReachargeTransactionHistroy.findOneAndUpdate(
-        //     {
-        //         userId: appUserId,
-        //         draftOrderId: orderData.id.toString(),
-        //         status: 'PENDING'
-        //     },
-        //     {
-        //         status: 'COMPLETED',
-        //         completedAt: new Date(),
-        //         shopifyOrderId: orderData.id,
-        //         orderData: orderData // Store full order data if needed
-        //     },
-        //     { new: true }
-        // );
-
-        // if (transaction) {
-        //     console.log('✅ Transaction updated:', transaction._id);
-        // }
-
-        // 7. ✅ Send notification to user (WebSocket या push notification)
-        // Example: Send socket notification
-
-
-        // 8. ✅ Response send करें
+        console.log("orderAmount", orderAmount)
+        console.log("currentBalance", currentBalance)
+        console.log("newBalance", newBalance)
+        console.log("findVoucherPlan", findVoucherPlan.vouchers)
         res.status(200).json({
             success: true,
             message: 'Balance updated successfully',
