@@ -279,7 +279,7 @@ const updateConsultantData = async (req, res) => {
             const filePath = path.join(uploadFolder, fileName);
 
             fs.writeFileSync(filePath, file.buffer);
-            imageURL = `/uploads/consultants/${fileName}`;
+            imageURL = `uploads/consultants/${fileName}`;
         }
 
         // ✅ Handle password (optional)
