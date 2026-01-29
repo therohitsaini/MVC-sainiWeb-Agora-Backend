@@ -8,6 +8,8 @@ const webhooksOrdersCreated = async (req, res) => {
         const order = JSON.parse(req.body.toString('utf8'));
         console.log("✅ Order Created:???????????????", order.id);
         console.log("order", order);
+        console.log("🔥 OLD WEBHOOK HIT");
+
         res.status(200).send("OK");
 
     } catch (error) {
@@ -141,6 +143,8 @@ const paymentSucessController = async (req, res) => {
         console.log("currentBalance", currentBalance)
         console.log("newBalance", newBalance)
         console.log("findVoucherPlan", findVoucherPlan.vouchers)
+        console.log("🔥 TOML WEBHOOK HIT");
+
         res.status(200).json({
             success: true,
             message: 'Balance updated successfully',
