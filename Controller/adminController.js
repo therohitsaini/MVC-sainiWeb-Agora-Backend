@@ -448,7 +448,6 @@ const appEnableAndDisableController = async (req, res) => {
 
 // get app status
 const getAppStatusController = async (req, res) => {
-    console.log("req.query", req.query);
     try {
         const { shop, adminIdLocal } = req.query;
         console.log("shop", shop);
@@ -484,7 +483,6 @@ const checkAppBillingController = async (req, res) => {
             });
         }
         const shop = await shopModel.findById(adminId).select("-accessToken")
-        console.log("shop___________", shop)
         if (!shop) return
         return res.status(200).json({
             success: true,

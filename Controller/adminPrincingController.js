@@ -4,7 +4,14 @@ const pricingCallback = async (req, res) => {
     try {
         const { shop } = req.query;
 
-        if (!shop) return res.status(400).send("Missing shop");
+        if (!shop) return res.status(400).send("not found");
+
+        const match = shop?.match(/^([a-z0-9-]+)\.myshopify\.com$/);
+        if (!match) {
+            return res.status(400).send("Invalid shop domain");
+        }
+        const shopHandle = match[1];
+        console.log("shopHandle", shopHandle)
 
         const shop_ = await shopModel.findOne({ shop });
 
@@ -12,6 +19,8 @@ const pricingCallback = async (req, res) => {
 
         shop_.planStatus = "ACTIVE";
         await shop_.save();
+        const breack_domain = shop.shop[1]
+        console.log("breack_domain", breack_domain)
 
         return res.send(`
             <script>
