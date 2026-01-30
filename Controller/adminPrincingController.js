@@ -1,8 +1,20 @@
- const pricingCallback = async (req, res) => {
+const { shopModel } = require("../Modal/shopify");
+
+const pricingCallback = async (req, res) => {
     try {
         const { shop, host, plan_id } = req.query;
         console.log("shop host plan_id__________", shop, host, plan_id)
         console.log("req.query___________", req.query)
+
+        if (!shop) {
+            return res.status(400).send("not found ")
+        }
+        const shop_ = await shopModel.findOne({ shop })
+        if (!shop_) return
+        shop_.planStatus = "ACTIVE"
+        await shop_.save()
+        return res.redirect("https://admin.shopify.com/store/rohit-12345839/apps/label-node")
+
 
         // if (!shop) return res.status(400).send("Missing shop");
 
