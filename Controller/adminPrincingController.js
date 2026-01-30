@@ -2,58 +2,28 @@ const { shopModel } = require("../Modal/shopify");
 
 const pricingCallback = async (req, res) => {
     try {
-        const { shop, host, plan_id } = req.query;
-        console.log("shop host plan_id__________", shop, host, plan_id)
-        console.log("req.query___________", req.query)
+        const { shop } = req.query;
 
-        if (!shop) {
-            return res.status(400).send("not found ")
-        }
-        const shop_ = await shopModel.findOne({ shop })
-        if (!shop_) return
-        shop_.planStatus = "ACTIVE"
-        await shop_.save()
-        return res.redirect("https://admin.shopify.com/store/rohit-12345839/apps/label-node")
+        if (!shop) return res.status(400).send("Missing shop");
 
+        const shop_ = await shopModel.findOne({ shop });
 
-        // if (!shop) return res.status(400).send("Missing shop");
+        if (!shop_) return res.status(404).send("Shop not found");
 
-        // const shopDomain = shop.includes(".myshopify.com")
-        //     ? shop
-        //     : `${shop}.myshopify.com`;
+        shop_.planStatus = "ACTIVE";
+        await shop_.save();
 
-        // const shopHandle = shopDomain.replace(".myshopify.com", "");
-
-        // // 🔥 Find shop
-        // const shopRecord = await shopModel.findOne({ shop: shopDomain });
-
-        // if (!shopRecord) return res.status(404).send("Shop not found");
-
-        // // ✅ Update plan
-        // shopRecord.planId = plan_id;
-        // shopRecord.availableTokens = process.env[`Plan_${plan_id}_Tokens`];
-        // shopRecord.planStatus = "ACTIVE";
-
-        // await shopRecord.save();
-
-        // // Optional: fetch subscription later via webhook
-
-        // // Frontend redirect
-        // const redirectUrl =
-        //     `${process.env.FRONTEND_URL}/?` +
-        //     new URLSearchParams({
-        //         shop: shopDomain,
-        //         host,
-        //         adminId: shopRecord._id.toString(),
-        //         source: "billing_callback"
-        //     }).toString();
-
-        // return res.redirect(redirectUrl);
+        return res.send(`
+            <script>
+              window.top.location.href = "https://admin.shopify.com/store/rohit-12345839/apps/label-node";
+            </script>
+        `);
 
     } catch (err) {
-        console.error("Billing callback error:", err);
+        console.error(err);
         res.status(500).send("Billing callback failed");
     }
 };
+
 
 module.exports = { pricingCallback }
