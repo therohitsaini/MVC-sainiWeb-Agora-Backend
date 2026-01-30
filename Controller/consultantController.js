@@ -79,7 +79,7 @@ const consultantController = async (req, res) => {
         let imageURL = null;
 
         if (file) {
-            const ext = path.extname(file.originalname); 
+            const ext = path.extname(file.originalname);
             const fileName = `consultant-${Date.now()}${ext}`;
             const filePath = path.join(uploadFolder, fileName);
 
@@ -358,6 +358,7 @@ const loginConsultant = async (request, response) => {
 
         // 2. Check block status
         if (find_User.consultantStatus === false) {
+            console.log("Your account is blocked. Please contact administrator")
             return response.status(403).send({
                 success: false,
                 message: "Your account is blocked. Please contact administrator."
