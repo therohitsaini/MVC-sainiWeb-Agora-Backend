@@ -1,8 +1,8 @@
  const pricingCallback = async (req, res) => {
     try {
         const { shop, host, plan_id } = req.query;
-        console.log("shop host plan_id", shop, host, plan_id)
-        console.log("req.query", req.query)
+        console.log("shop host plan_id__________", shop, host, plan_id)
+        console.log("req.query___________", req.query)
 
         // if (!shop) return res.status(400).send("Missing shop");
 
