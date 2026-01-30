@@ -8,6 +8,7 @@ const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
 const { ChatList } = require("../Modal/chatListSchema");
+const validator = require("validator");
 
 
 
@@ -763,6 +764,54 @@ const getConsultantAllUsers = async (req, res) => {
 };
 
 
+const updateConsultantProfileStoreFront = async (req, res) => {
+    try {
+
+        const { consultantId, shopId, name, email, phone, gender } = req.body;
+
+        if (!consultantId || !mongoose.Types.ObjectId.isValid(consultantId) || !shopId || !mongoose.Types.ObjectId.isValid(shopId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid consultant ID or shop ID"
+            });
+        }
+        if (!email || !validator.isEmail(email)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid email address",
+            });
+        }
+        const existingConsultant = await User.findById(consultantId);
+        if (!existingConsultant) {
+            return res.status(404).json({
+                success: false,
+                message: "Consultant not found"
+            });
+        }
+        await User.findByIdAndUpdate(consultantId, {
+            fullname: name,
+            email: email,
+            phone: phone,
+            gender: gender,
+        }, { new: true });
+
+        return res.status(200).json({
+            success: true,
+            message: "Consultant profile updated successfully"
+        });
+
+
+
+    }
+    catch (error) {
+        console.error("Error in updateConsultantProfileStoreFront:", error);
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Internal server error"
+        });
+    }
+
+}
 module.exports = {
     consultantController,
     getConsultant,
@@ -777,5 +826,6 @@ module.exports = {
     loginConsultant,
     getChatListByShopIdAndConsultantId,
     removeChatListAndConsultantIdFromChatList,
-    getConsultantAllUsers
+    getConsultantAllUsers,
+    updateConsultantProfileStoreFront
 }
