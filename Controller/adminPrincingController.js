@@ -24,10 +24,11 @@ const pricingCallback = async (req, res) => {
         console.log("breack_domain", breack_domain)
 
         return res.send(`
-            <script>
-              window.top.location.href = https://admin.shopify.com/store/${shopHandle}/apps/label-node;
-            </script>
-        `);
+                <script>
+                window.top.location.href = "https://admin.shopify.com/store/${shopHandle}/apps/label-node";
+                </script>
+                `);
+
 
     } catch (err) {
         console.error(err);
