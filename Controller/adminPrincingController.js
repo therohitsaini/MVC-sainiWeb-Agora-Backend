@@ -1,4 +1,4 @@
-export const pricingCallback = async (req, res) => {
+ const pricingCallback = async (req, res) => {
     try {
         const { shop, host, plan_id } = req.query;
         console.log("shop host plan_id", shop, host, plan_id)

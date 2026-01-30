@@ -118,6 +118,7 @@ app.use("/api/draft-order", shopifyDraftOrderRoute);
 app.use("/api/users", userRouter);
 app.use("/api/admin", adminRoute);
 app.use("/api/princing", adminPrincingRoute)
+app.use("/pricing-callback", adminPrincingRoute)
 
 /** Web Hook Routes */
 
