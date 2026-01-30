@@ -25,7 +25,7 @@ const pricingCallback = async (req, res) => {
 
         return res.send(`
             <script>
-              window.top.location.href = "https://admin.shopify.com/store/rohit-12345839/apps/label-node";
+              window.top.location.href = https://admin.shopify.com/store/${shopHandle}/apps/label-node;
             </script>
         `);
 
