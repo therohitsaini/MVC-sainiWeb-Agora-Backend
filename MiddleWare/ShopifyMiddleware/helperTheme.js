@@ -105,7 +105,7 @@ async function renderShopifyPage(req, res, iframeUrl, chat = "", options = {}) {
       <!DOCTYPE html>
       <html>
         ${headHtml}
-        <body style="margin:0;padding:0;display:flex;flex-direction:column;min-height:50vh;">
+        <body style="margin:0;padding:0;display:flex;flex-direction:column;min-height:20vh;">
           <header style="flex-shrink:0;">
             ${headerHtml}
           </header>
@@ -114,7 +114,7 @@ async function renderShopifyPage(req, res, iframeUrl, chat = "", options = {}) {
               id="agora-iframe"
               src="${iframeUrl}" 
                allow="microphone; camera"
-              style="border:none;width:100%;min-height:50vh;display:block;"
+              style="border:none;width:100%;min-height:20vh;display:block;"
             ></iframe>
           </main>
           <footer style="flex-shrink:0;">
