@@ -355,15 +355,14 @@ const loginConsultant = async (request, response) => {
                 message: "Incorrect email or password"
             });
         }
-        console.log("find_User", find_User.email);
 
         // 2. Check block status
-        // if (find_User.consultantStatus === false) {
-        //     return response.status(403).send({
-        //         success: false,
-        //         message: "Your account is blocked. Please contact administrator."
-        //     });
-        // }
+        if (find_User.consultantStatus === false) {
+            return response.status(403).send({
+                success: false,
+                message: "Your account is blocked. Please contact administrator."
+            });
+        }
 
         // 3. Compare password
         const isMatch = await bcrypt.compare(password, find_User.password);
