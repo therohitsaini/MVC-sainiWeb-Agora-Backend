@@ -189,17 +189,17 @@ const authCallback = async (req, res) => {
             console.log("✅ Using Shopify provided host");
         }
 
-        if (!AdminUser.isPaid || AdminUser.planStatus !== "ACTIVE") {
-            console.log("❌ No active plan, redirecting to pricing");
-            const pricingRedirectUrl = `${frontendUrl}/pricing?` + new URLSearchParams({
-                shop: shop,
-                host: finalHost,
-                adminId: AdminUser._id.toString(),
-                source: 'shopify_auth'
-            }).toString();
+        // if (!AdminUser.isPaid || AdminUser.planStatus !== "ACTIVE") {
+        //     console.log("❌ No active plan, redirecting to pricing");
+        //     const pricingRedirectUrl = `${frontendUrl}/pricing?` + new URLSearchParams({
+        //         shop: shop,
+        //         host: finalHost,
+        //         adminId: AdminUser._id.toString(),
+        //         source: 'shopify_auth'
+        //     }).toString();
 
-            return res.redirect(pricingRedirectUrl);
-        }
+        //     return res.redirect(pricingRedirectUrl);
+        // }
 
         const redirectUrl = `${frontendUrl}/?` + new URLSearchParams({
             shop: shop,
