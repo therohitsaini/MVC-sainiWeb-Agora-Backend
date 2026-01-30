@@ -19,7 +19,7 @@ const pricingCallback = async (req, res) => {
 
         shop_.planStatus = "ACTIVE";
         await shop_.save();
-        const breack_domain = shop.shop[1]
+        const breack_domain = shop.shop
         console.log("breack_domain", breack_domain)
 
         return res.send(`
