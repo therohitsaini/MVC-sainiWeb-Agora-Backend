@@ -498,6 +498,47 @@ const checkAppBillingController = async (req, res) => {
         });
     }
 }
+
+
+const voucherHandlerController = async (req, res) => {
+    try {
+        const { shopId, voucherId } = req.params;
+
+        if (
+            !mongoose.Types.ObjectId.isValid(shopId) ||
+            !mongoose.Types.ObjectId.isValid(voucherId)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid ID",
+            });
+        }
+
+        const shop = await shopModel.findById(shopId);
+
+        if (!shop) {
+            return res.status(404).json({ success: false, message: "Shop not found" });
+        }
+
+        shop.vouchers = shop.vouchers.filter(
+            (v) => v._id.toString() !== voucherId
+        );
+
+        await shop.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Voucher deleted successfully",
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong",
+        });
+    }
+};
 module.exports = {
     adminController,
     voucherController,
@@ -510,5 +551,6 @@ module.exports = {
     updateUserConsultantController,
     appEnableAndDisableController,
     getAppStatusController,
-    checkAppBillingController
+    checkAppBillingController,
+    voucherHandlerController
 };
