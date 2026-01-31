@@ -1,5 +1,5 @@
 const express = require("express");
-const { adminController, voucherController, getVouchersController, getTransactionController, getUserConsultantController, getShopAllUserController, getShopAllConsultantController, updateUserConsultantController, appEnableAndDisableController, getAppStatusController, checkAppBillingController, voucherHandlerController } = require("../Controller/adminController");
+const { adminController, voucherController, getVouchersController, getTransactionController, getUserConsultantController, getShopAllUserController, getShopAllConsultantController, updateUserConsultantController, appEnableAndDisableController, getAppStatusController, checkAppBillingController, voucherHandlerController, updatesVoucherController } = require("../Controller/adminController");
 const { verifyShopifyToken } = require("../MiddleWare/ShopifyMiddleware/verifyShopifyToken");
 
 const adminRoute = express.Router();
@@ -16,5 +16,6 @@ adminRoute.post("/update-wallet/:adminId", updateUserConsultantController);
 adminRoute.post("/app-enable-and-disable/:adminId", verifyShopifyToken, appEnableAndDisableController);
 adminRoute.get("/app-status", getAppStatusController);
 adminRoute.get("/shop/billing-status/:adminId", checkAppBillingController)
-adminRoute.delete("/delete/voucher/:shopId/:voucherId", voucherHandlerController)
+adminRoute.delete("/delete/voucher/:shopId/:voucherId", verifyShopifyToken, voucherHandlerController)
+adminRoute.put("/admin/voucher-updates/:shopId/:voucherId", updatesVoucherController)
 module.exports = { adminRoute };    

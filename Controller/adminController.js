@@ -515,7 +515,6 @@ const voucherHandlerController = async (req, res) => {
         }
 
         const shop = await shopModel.findById(shopId);
-
         if (!shop) {
             return res.status(404).json({ success: false, message: "Shop not found" });
         }
@@ -539,6 +538,59 @@ const voucherHandlerController = async (req, res) => {
         });
     }
 };
+
+const updatesVoucherController = async (req, res) => {
+    try {
+        const { shopId, voucherId } = req.params;
+        const { totalCoin, extraCoin } = req.body;
+
+        if (
+            !mongoose.Types.ObjectId.isValid(shopId) ||
+            !mongoose.Types.ObjectId.isValid(voucherId)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid ID",
+            });
+        }
+
+        const shop = await shopModel.findById(shopId);
+
+        if (!shop) {
+            return res.status(404).json({
+                success: false,
+                message: "Shop not found",
+            });
+        }
+
+        const voucher = shop.vouchers.id(voucherId);
+
+        if (!voucher) {
+            return res.status(404).json({
+                success: false,
+                message: "Voucher not found",
+            });
+        }
+
+        if (totalCoin !== undefined) voucher.totalCoin = totalCoin;
+        if (extraCoin !== undefined) voucher.extraCoin = extraCoin;
+
+        await shop.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Voucher updated successfully",
+            voucher,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong",
+        });
+    }
+};
+
 module.exports = {
     adminController,
     voucherController,
@@ -552,5 +604,6 @@ module.exports = {
     appEnableAndDisableController,
     getAppStatusController,
     checkAppBillingController,
-    voucherHandlerController
+    voucherHandlerController,
+    updatesVoucherController
 };
