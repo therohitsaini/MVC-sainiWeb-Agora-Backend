@@ -733,8 +733,6 @@ const getConsultantAllUsers = async (req, res) => {
                     createdAt: chat.createdAt,
                     lastMessage: chat.lastMessage,
                     isRequest: chat.isRequest,
-
-                    // customer data
                     _id: customer._id,
                     fullname: customer.fullname,
                     email: customer.email,
@@ -766,7 +764,7 @@ const updateConsultantProfileStoreFront = async (req, res) => {
 
         const { consultantId, shopId, name, email, phone, gender } = req.body;
         console.log("___________", req.body)
-        console.loge("______Image", req.file)
+        // console.loge("______Image", req.file)
         if (!consultantId || !mongoose.Types.ObjectId.isValid(consultantId) || !shopId || !mongoose.Types.ObjectId.isValid(shopId)) {
             return res.status(400).json({
                 success: false,
