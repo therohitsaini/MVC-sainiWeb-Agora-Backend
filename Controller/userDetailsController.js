@@ -141,4 +141,11 @@ const getAppStatusController = async (req, res) => {
     }
 }
 
-module.exports = { getAllUsers, getUserById, getShopifyUserByCustomerId, getVouchersController,getAppStatusController };
+module.exports =
+{
+    getAllUsers,
+    getUserById,
+    getShopifyUserByCustomerId,
+    getVouchersController,
+    getAppStatusController
+};
