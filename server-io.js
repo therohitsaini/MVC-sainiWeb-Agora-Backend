@@ -464,9 +464,11 @@ const ioServer = (server) => {
                 if (!transaction) throw new Error("Transaction not found");
 
                 const caller = await User.findById(callerId).session(session);
+                console.log("callerFFFFFFFFFF", caller)
                 if (!caller) throw new Error("Caller not found");
 
                 const receiver = await User.findById(receiverId).session(session);
+                console.log("receiverOOOOOOOOOOO", receiver)
                 if (!receiver) throw new Error("Receiver not found");
 
                 const shop = await shopModel.findById(shopId).session(session);
