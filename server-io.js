@@ -223,94 +223,7 @@ const ioServer = (server) => {
             }
         });
 
-        //---------------- accept call logics ----------------
 
-        socket.on("call-accepted", async ({ callerId, receiverId, channelName, callType, shopId }) => {
-            try {
-                if (!callerId || !receiverId || !channelName || !callType) {
-                    console.log(" Missing required fields");
-                    return;
-                }
-
-                const callId = `${callerId}_${receiverId}_${channelName}`;
-                const call = activeCalls.get(callId);
-
-                if (!call) {
-                    console.log("❌ Call not found");
-                    return;
-                }
-
-                call.status = "accepted";
-                clearTimeout(call.timeout);
-                const transaction = await TransactionHistroy.create({
-                    senderId: callerId,
-                    receiverId: receiverId,
-                    shop_id: shopId,
-                    startTime: new Date(),
-                    status: "active",
-                    type: callType,
-                    duration: 0
-                });
-                console.log("transaction_______________________Created", transaction)
-                await transaction.save();
-                const callerSocketId = onlineUsers.get(callerId);
-                const receiverSocketId = onlineUsers.get(receiverId);
-                console.log("callerSocketId_______________________", callerSocketId)
-                console.log("receiverSocketId_______________________", receiverSocketId)
-                if (callerSocketId) {
-                    io.to(callerSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType, transactionId: transaction._id });
-                }
-                if (receiverSocketId) {
-                    io.to(receiverSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType, transactionId: transaction._id });
-                }
-                const callerInfo = await User.findById(callerId);
-                let userBalance = Number(callerInfo?.walletBalance);
-                const receiverInfo = await User.findById(receiverId);
-                const receiverCallCost = Number(receiverInfo?.[callType === "voice" ? "voiceCallCost" : "videoCallCost"]);
-                const perSecondCost = receiverCallCost / 60;
-                if (userBalance < perSecondCost) {
-                    console.log("Insufficient balance to start call");
-                    return;
-                }
-                const maxChatSeconds = Math.floor(userBalance / perSecondCost);
-                const minutes = Math.floor(maxChatSeconds / 60);
-                const seconds = maxChatSeconds % 60;
-
-                console.log(`User can call for ${minutes} minutes and ${seconds} seconds`);
-                let remainingBalance = userBalance;
-                let chatSeconds = 0;
-                const interval = setInterval(async () => {
-                    if (remainingBalance >= perSecondCost) {
-                        remainingBalance -= perSecondCost;
-                        chatSeconds++;
-                    } else {
-                        clearInterval(interval);
-                        transaction.duration = chatSeconds;
-                        transaction.status = "completed";
-                        transaction.endTime = new Date();
-                        await transaction.save();
-                        console.log("🔥 BACKEND: autoChatEnded EMIT", {
-                            transactionId: transaction._id,
-                            userId: callerId,
-                            receiverId: receiverId
-                        });
-
-                        io.to(callerId).emit("autoCallEnded-no-balance", {
-                            transactionId: transaction._id,
-                            reason: "no-balance"
-                        });
-
-                        io.to(receiverId).emit("autoCallEnded-no-balance", {
-                            transactionId: transaction._id,
-                            reason: "no-balance"
-                        });
-                    }
-                }, 1000);
-
-            } catch (error) {
-                console.error("Error in call-accepted:", error);
-            }
-        });
 
         //---------------- reject call logics ----------------
 
@@ -450,6 +363,95 @@ const ioServer = (server) => {
 
         });
 
+        //---------------- accept call logics ----------------
+
+        socket.on("call-accepted", async ({ callerId, receiverId, channelName, callType, shopId }) => {
+            try {
+                if (!callerId || !receiverId || !channelName || !callType) {
+                    console.log(" Missing required fields");
+                    return;
+                }
+
+                const callId = `${callerId}_${receiverId}_${channelName}`;
+                const call = activeCalls.get(callId);
+
+                if (!call) {
+                    console.log("❌ Call not found");
+                    return;
+                }
+
+                call.status = "accepted";
+                clearTimeout(call.timeout);
+                const transaction = await TransactionHistroy.create({
+                    senderId: callerId,
+                    receiverId: receiverId,
+                    shop_id: shopId,
+                    startTime: new Date(),
+                    status: "active",
+                    type: callType,
+                    duration: 0
+                });
+                console.log("transaction_______________________Created", transaction)
+                await transaction.save();
+                const callerSocketId = onlineUsers.get(callerId);
+                const receiverSocketId = onlineUsers.get(receiverId);
+                console.log("callerSocketId_______________________", callerSocketId)
+                console.log("receiverSocketId_______________________", receiverSocketId)
+                if (callerSocketId) {
+                    io.to(callerSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType, transactionId: transaction._id });
+                }
+                if (receiverSocketId) {
+                    io.to(receiverSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType, transactionId: transaction._id });
+                }
+                // const callerInfo = await User.findById(callerId);
+                // let userBalance = Number(callerInfo?.walletBalance);
+                // const receiverInfo = await User.findById(receiverId);
+                // const receiverCallCost = Number(receiverInfo?.[callType === "voice" ? "voiceCallCost" : "videoCallCost"]);
+                // const perSecondCost = receiverCallCost / 60;
+                // if (userBalance < perSecondCost) {
+                //     console.log("Insufficient balance to start call");
+                //     return;
+                // }
+                // const maxChatSeconds = Math.floor(userBalance / perSecondCost);
+                // const minutes = Math.floor(maxChatSeconds / 60);
+                // const seconds = maxChatSeconds % 60;
+
+                // console.log(`User can call for ${minutes} minutes and ${seconds} seconds`);
+                // let remainingBalance = userBalance;
+                // let chatSeconds = 0;
+                // const interval = setInterval(async () => {
+                //     if (remainingBalance >= perSecondCost) {
+                //         remainingBalance -= perSecondCost;
+                //         chatSeconds++;
+                //     } else {
+                //         clearInterval(interval);
+                //         transaction.duration = chatSeconds;
+                //         transaction.status = "completed";
+                //         transaction.endTime = new Date();
+                //         await transaction.save();
+                //         console.log("🔥 BACKEND: autoChatEnded EMIT", {
+                //             transactionId: transaction._id,
+                //             userId: callerId,
+                //             receiverId: receiverId
+                //         });
+
+                //         io.to(callerId).emit("autoCallEnded-no-balance", {
+                //             transactionId: transaction._id,
+                //             reason: "no-balance"
+                //         });
+
+                //         io.to(receiverId).emit("autoCallEnded-no-balance", {
+                //             transactionId: transaction._id,
+                //             reason: "no-balance"
+                //         });
+                //     }
+                // }, 1000);
+
+            } catch (error) {
+                console.error("Error in call-accepted:", error);
+            }
+        });
+
         //---------------- end call logics ----------------
 
         socket.on("call-ended", async (data) => {
@@ -460,25 +462,21 @@ const ioServer = (server) => {
 
             try {
                 const transaction = await TransactionHistroy.findById(transactionId).session(session);
-
+                console.log("transaction", transaction)
                 if (!transaction) throw new Error("Transaction not found");
 
                 const caller = await User.findById(callerId).session(session);
-                console.log("callerFFFFFFFFFF", caller)
                 if (!caller) throw new Error("Caller not found");
 
                 const receiver = await User.findById(receiverId).session(session);
-                console.log("receiverOOOOOOOOOOO", receiver)
                 if (!receiver) throw new Error("Receiver not found");
 
                 const shop = await shopModel.findById(shopId).session(session);
                 if (!shop) throw new Error("Shop not found");
-                const balanceBefore = caller.walletBalance;
                 const endTime = new Date();
                 const totalSeconds = Math.floor(
                     (endTime - new Date(transaction.startTime)) / 1000
                 );
-                console.log("totalSeconds", totalSeconds)
 
                 const callCostPerMinute =
                     callType === "voice"
@@ -555,7 +553,7 @@ const ioServer = (server) => {
                     amount: totalAmount,
                     referenceType: callType,
                     transactionType: "usage",
-                    direction: "debit",
+                    direction: "credit",
                     description: `Call ended for ${totalSeconds} seconds`,
                     status: "success",
                 });
