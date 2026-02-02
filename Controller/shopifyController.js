@@ -56,12 +56,12 @@ const installShopifyApp = async (req, res) => {
     const { shop } = req.params;
     if (!shop) return res.status(400).send("Missing shop param");
     const shopDoc = await shopModel.findOne({ shop: shop });
-    // if (!shopDoc) {
-    //     return res.status(200).send({
-    //         installed: false,
-    //         installUrl: installUrl,
-    //     });
-    // }
+    if (!shopDoc) {
+        return res.status(200).send({
+            installed: false,
+            installUrl: installUrl,
+        });
+    }
     if (shopDoc.accessToken) {
         return res.status(200).send({
             installed: true,
