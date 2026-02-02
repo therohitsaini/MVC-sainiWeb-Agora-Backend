@@ -13,7 +13,7 @@ const webhooksAppUninstalled = async (req, res) => {
         await shopModel.findOneAndUpdate(
             { shop: shop },
             {
-                shop: null,
+                // shop: null,
                 accessToken: null,
                 planStatus: "unistalled",
                 uninstalledAt: new Date(),
