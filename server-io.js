@@ -478,16 +478,17 @@ const ioServer = (server) => {
                 const totalSeconds = Math.floor(
                     (endTime - new Date(transaction.startTime)) / 1000
                 );
+                console.log("totalSeconds", totalSeconds)
 
                 const callCostPerMinute =
                     callType === "voice"
                         ? Number(receiver.voiceCallCost)
                         : Number(receiver.videoCallCost);
-
+                console.log("callCostPerMinute", callCostPerMinute)
                 const perSecondCost = callCostPerMinute / 60;
-
+                console.log("perSecondCost", perSecondCost)
                 const totalAmount = Number((totalSeconds * perSecondCost).toFixed(2));
-
+                console.log("totalAmount", totalAmount)
                 const adminCommission =
                     (totalAmount * Number(shop.adminPersenTage)) / 100;
 
