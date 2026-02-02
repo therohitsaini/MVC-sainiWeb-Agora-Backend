@@ -116,8 +116,14 @@ const getVouchersController = async (req, res) => {
 // get app status
 const getAppStatusController = async (req, res) => {
     try {
-        const { shop, adminIdLocal } = req.query;
+        const { shop, adminIdLocal } = req.query; 
         console.log("shop", shop);
+        // if (!mongoose.Types.ObjectId.isValid(shop)) {
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: "Invalid admin ID"
+        //     });
+        // }
         if (!shop) {
             return res.status(400).json({
                 success: false,
