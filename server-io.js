@@ -482,8 +482,8 @@ const ioServer = (server) => {
 
                 const callCostPerMinute =
                     callType === "voice"
-                        ? Number(receiver.voiceCallCost)
-                        : Number(receiver.videoCallCost);
+                        ? Number(receiver.voicePerMinute)
+                        : Number(receiver.videoPerMinute);
                 console.log("callCostPerMinute", callCostPerMinute)
                 const perSecondCost = callCostPerMinute / 60;
                 console.log("perSecondCost", perSecondCost)
