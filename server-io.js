@@ -544,6 +544,17 @@ const ioServer = (server) => {
                     shop_id: shopId,
                     amount: totalAmount,
                     referenceType: callType,
+                    transactionType: "usage",
+                    direction: "debit",
+                    description: `Call ended for ${totalSeconds} seconds`,
+                    status: "success",
+                });
+                await WalletHistory.create({
+                    userId: receiverId,
+                    shop_id: shopId,
+                    amount: totalAmount,
+                    referenceType: callType,
+                    transactionType: "usage",
                     direction: "debit",
                     description: `Call ended for ${totalSeconds} seconds`,
                     status: "success",

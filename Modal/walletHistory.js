@@ -48,7 +48,7 @@ const walletHistorySchema = new mongoose.Schema({
 
     referenceType: {
         type: String,
-        enum: ["call", "chat", "video", "recharge", "manual", "withdraw"],
+        enum: ["voice", "chat", "video", "recharge", "manual", "withdraw"],
         default: null
     },
 
