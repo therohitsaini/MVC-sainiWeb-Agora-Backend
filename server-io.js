@@ -459,7 +459,7 @@ const ioServer = (server) => {
             console.log("data_______________________", transactionId, callerId, receiverId, shopId, callType)
             const session = await mongoose.startSession();
             session.startTransaction();
-
+            if (!transactionId || !shopId) return console.log("skip___")
             try {
                 const transaction = await TransactionHistroy.findById(transactionId).session(session);
                 console.log("transaction", transaction)
