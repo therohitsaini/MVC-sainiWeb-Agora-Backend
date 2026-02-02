@@ -10,7 +10,7 @@ userDetailsRouter.get("/token", tokenVerify);
 userDetailsRouter.get("/user-details",  getAllUsers);
 userDetailsRouter.get("/:id", authenticateToken, getUserById);
 userDetailsRouter.get("/shopify-user/:customerId", getShopifyUserByCustomerId);
-userDetailsRouter.get("/app-status", getAppStatusController);
+userDetailsRouter.get("/app-status-verify-app-status", getAppStatusController);
 
 
 module.exports = { userDetailsRouter };
