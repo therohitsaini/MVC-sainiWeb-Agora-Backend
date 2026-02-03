@@ -8,6 +8,7 @@ const { TransactionHistroy } = require("./Modal/transactionHistroy");
 const { shopModel } = require("./Modal/shopify");
 const { missCalled } = require("./Modal/miscallasHistroy");
 const { WalletHistory } = require("./Modal/walletHistory");
+const { CallSession } = require("./Modal/callSessions");
 
 const ioServer = (server) => {
     const io = new Server(server, {
@@ -393,6 +394,15 @@ const ioServer = (server) => {
                 });
                 console.log("transaction_______________________Created", transaction)
                 await transaction.save();
+                await CallSession.create({
+                    sessionId: channelName,
+                    receiverId: receiverId,
+                    callerId: callerId,
+                    transtionId: transaction._id,
+                    callType: callType,
+                    startTime: new Date(),
+                    status: "ongoing"
+                });
                 const callerSocketId = onlineUsers.get(callerId);
                 const receiverSocketId = onlineUsers.get(receiverId);
                 console.log("callerSocketId_______________________", callerSocketId)
@@ -455,12 +465,16 @@ const ioServer = (server) => {
         //---------------- end call logics ----------------
 
         socket.on("call-ended", async (data) => {
-            const { transactionId, callerId, receiverId, shopId, callType } = data;
+            const { transactionId, callerId, receiverId, shopId, callType, channelName } = data;
             console.log("data_______________________", transactionId, callerId, receiverId, shopId, callType)
             const session = await mongoose.startSession();
             session.startTransaction();
             if (!transactionId || !shopId) return console.log("skip___")
             try {
+                const deleteSession = await CallSession.findOneAndDelete(
+                    { sessionId: channelName },
+                );
+                console.log("deleteSession_______________________", deleteSession)
                 const transaction = await TransactionHistroy.findById(transactionId).session(session);
                 console.log("transaction", transaction)
                 if (!transaction) throw new Error("Transaction not found");
@@ -593,6 +607,11 @@ const ioServer = (server) => {
             try {
                 const transaction = await TransactionHistroy.findById(transactionId).session(session);
                 if (!transaction) throw new Error("Transaction not found");
+                if (transaction.status === "completed") {
+                    console.log("Chat already completed");
+                    await session.abortTransaction();
+                    return;
+                }
 
                 const consultantCost = await User.findById(consultantId).session(session);
                 console.log("consultantCost", consultantCost)

@@ -2,6 +2,7 @@ const { default: mongoose } = require("mongoose");
 const { shopModel } = require("../Modal/shopify");
 const { User } = require("../Modal/userSchema");
 const { WalletHistory } = require("../Modal/walletHistory");
+const { CallSession } = require("../Modal/callSessions");
 
 const getAllUsers = async (req, res) => {
     try {
@@ -184,6 +185,30 @@ const getUserWalletHistroy = async (req, res) => {
     }
 };
 
+const getcallSessionsController = async (req, res) => {
+    try {
+        const { channelName } = req.body;
+        const callSession = await CallSession.findOne({ sessionId: channelName });
+        if (!callSession) {
+            return res.status(404).json({
+                success: false,
+                message: "Call session not found"
+            });
+        }
+        return res.status(200).json({
+            success: true,
+            data: callSession
+        });
+    } catch (error) {
+        console.error("Error fetching call session:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch call session",
+            error: error.message
+        });
+    }
+}
+
 module.exports =
 {
     getAllUsers,
@@ -191,5 +216,6 @@ module.exports =
     getShopifyUserByCustomerId,
     getVouchersController,
     getAppStatusController,
-    getUserWalletHistroy
+    getUserWalletHistroy,
+    getcallSessionsController
 };
