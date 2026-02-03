@@ -1,6 +1,7 @@
 const { default: mongoose } = require("mongoose");
 const { shopModel } = require("../Modal/shopify");
 const { User } = require("../Modal/userSchema");
+const { WalletHistory } = require("../Modal/walletHistory");
 
 const getAllUsers = async (req, res) => {
     try {
@@ -116,7 +117,7 @@ const getVouchersController = async (req, res) => {
 // get app status
 const getAppStatusController = async (req, res) => {
     try {
-        const { shop, adminIdLocal } = req.query; 
+        const { shop, adminIdLocal } = req.query;
         console.log("shop", shop);
         // if (!mongoose.Types.ObjectId.isValid(shop)) {
         //     return res.status(400).json({
@@ -147,11 +148,48 @@ const getAppStatusController = async (req, res) => {
     }
 }
 
+const getUserWalletHistroy = async (req, res) => {
+    try {
+        const { userId, shopId } = req.params;
+
+        if (
+            !mongoose.Types.ObjectId.isValid(userId) ||
+            !mongoose.Types.ObjectId.isValid(shopId)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid ID"
+            });
+        }
+
+        const wallet = await WalletHistory.find({
+            userId,
+            shop_id: shopId
+        })
+            .populate("userId", "fullname email") // only user info
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return res.status(200).json({
+            success: true,
+            data: wallet
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
 module.exports =
 {
     getAllUsers,
     getUserById,
     getShopifyUserByCustomerId,
     getVouchersController,
-    getAppStatusController
+    getAppStatusController,
+    getUserWalletHistroy
 };
