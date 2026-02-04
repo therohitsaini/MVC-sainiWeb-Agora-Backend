@@ -187,7 +187,7 @@ const getUserWalletHistroy = async (req, res) => {
 
 const getcallSessionsController = async (req, res) => {
     try {
-        const { channelName } = req.body;
+        const { channelName } = req.query;
         console.log("channel__", req.body, channelName)
         const callSession = await CallSession.findOne({ sessionId: channelName });
         if (!callSession) {
