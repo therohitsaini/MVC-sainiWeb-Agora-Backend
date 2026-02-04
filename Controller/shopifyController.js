@@ -173,13 +173,8 @@ const authCallback = async (req, res) => {
         // await deleteAllAppUninstallWebhooks(shop, accessToken);
         /** Register Order Paid Webhook */
 
-       
         await registerAppUninstallWebhook(shop, accessToken);
-
-
-
         const AdminiId = AdminUser._id;
-        console.log('AdminiId___________________________>', AdminiId.toString());
         let finalHost = host;
         if (!finalHost || !finalHost.startsWith('YWRtaW4')) {
             const shopDomain = shop.replace('.myshopify.com', '');
