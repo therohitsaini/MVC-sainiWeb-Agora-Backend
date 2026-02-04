@@ -475,7 +475,7 @@ const ioServer = (server) => {
                     { sessionId: channelName },
                 );
                 console.log("deleteSession_______________________", deleteSession)
-                const transaction = await TransactionHistroy.findById(transactionId).session(session);
+                 const transaction = await TransactionHistroy.findById(transactionId).session(session);
                 console.log("transaction", transaction)
                 if (!transaction) throw new Error("Transaction not found");
 

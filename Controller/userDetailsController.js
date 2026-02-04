@@ -3,6 +3,7 @@ const { shopModel } = require("../Modal/shopify");
 const { User } = require("../Modal/userSchema");
 const { WalletHistory } = require("../Modal/walletHistory");
 const { CallSession } = require("../Modal/callSessions");
+const { TransactionHistroy } = require("../Modal/transactionHistroy");
 
 const getAllUsers = async (req, res) => {
     try {
@@ -210,6 +211,40 @@ const getcallSessionsController = async (req, res) => {
     }
 }
 
+const getUserConversationController = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log("ddd", id)
+        if (!mongoose.Types.ObjectId.isValid(id)) return console.log("Id is not valid")
+        const conversations = await TransactionHistroy.find({
+            $or: [
+                { senderId: id },
+                { receiverId: id }
+            ]
+        })
+            .populate("senderId", "fullname email")
+            .populate("receiverId", "fullname email")
+            .sort({ createdAt: -1 });
+
+        const final = conversations.map(c => {
+            const consultant =
+                c.senderId._id.toString() === id
+                    ? c.receiverId
+                    : c.senderId;
+
+            return {
+                ...c.toObject(),
+                consultant
+            };
+        });
+
+        res.json({ success: true, data: final });
+
+    } catch (error) {
+        return res.status(500).send({ success: false, message: "Somthing went wrong " })
+    }
+}
+
 module.exports =
 {
     getAllUsers,
@@ -218,5 +253,6 @@ module.exports =
     getVouchersController,
     getAppStatusController,
     getUserWalletHistroy,
-    getcallSessionsController
+    getcallSessionsController,
+    getUserConversationController
 };
