@@ -9,9 +9,6 @@ const { User } = require("../../Modal/userSchema");
 const axios = require("axios");
 
 
-
-
-
 const manageShopifyUser = async (shop, customerId) => {
     try {
         const shopDoc = await shopModel.findOne({ shop: shop });
