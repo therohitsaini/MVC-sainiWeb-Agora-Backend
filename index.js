@@ -3,7 +3,6 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const http = require("http");
 const bodyParser = require("body-parser");
-const { Server } = require("socket.io");
 const { connectDB } = require("./Utils/db");
 dotenv.config();
 connectDB();
