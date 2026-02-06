@@ -10,6 +10,7 @@ const path = require("path");
 const { ChatList } = require("../Modal/chatListSchema");
 const validator = require("validator");
 const { TransactionHistroy } = require("../Modal/transactionHistroy");
+const { WalletHistory } = require("../Modal/walletHistory");
 
 
 
@@ -843,6 +844,41 @@ const getUserConversationControllerConsultant = async (req, res) => {
         return res.status(500).send({ success: false, message: "Somthing went wrong " })
     }
 }
+const getConsultantWalletHistroy = async (req, res) => {
+    try {
+        const { userId, shopId } = req.params;
+
+        if (
+            !mongoose.Types.ObjectId.isValid(userId) ||
+            !mongoose.Types.ObjectId.isValid(shopId)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid ID"
+            });
+        }
+
+        const wallet = await WalletHistory.find({
+            userId,
+            shop_id: shopId
+        })
+            .populate("userId", "fullname email")
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return res.status(200).json({
+            success: true,
+            data: wallet
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
 
 module.exports = {
     consultantController,
@@ -860,5 +896,6 @@ module.exports = {
     removeChatListAndConsultantIdFromChatList,
     getConsultantAllUsers,
     updateConsultantProfileStoreFront,
-    getUserConversationControllerConsultant
+    getUserConversationControllerConsultant,
+    getConsultantWalletHistroy
 }

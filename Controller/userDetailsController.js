@@ -168,7 +168,7 @@ const getUserWalletHistroy = async (req, res) => {
             userId,
             shop_id: shopId
         })
-            .populate("userId", "fullname email") // only user info
+            .populate("userId", "fullname email") 
             .sort({ createdAt: -1 })
             .lean();
 

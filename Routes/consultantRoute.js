@@ -14,7 +14,8 @@ const { consultantController,
    updateConsultantData,
    getConsultantAllUsers,
    updateConsultantProfileStoreFront,
-   getUserConversationControllerConsultant
+   getUserConversationControllerConsultant,
+   getConsultantWalletHistroy
 } = require("../Controller/consultantController")
 const consultantRoute = express.Router()
 const multer = require("multer");
@@ -37,7 +38,8 @@ consultantRoute.get("/get/chat-list/:shop_id/:consultant_id", getChatListByShopI
 consultantRoute.delete("/remove/user/chat-list/:id/:senderId", removeChatListAndConsultantIdFromChatList);
 consultantRoute.get("/get/consultant/:id", getConsultantAllUsers);
 consultantRoute.put("/update-profile", upload.single("profileImage"), updateConsultantProfileStoreFront);
-consultantRoute.get("/find-user-chat-logs/:id",getUserConversationControllerConsultant)
+consultantRoute.get("/find-user-chat-logs/:id", getUserConversationControllerConsultant)
+consultantRoute.get("/find-coonsultant/wallet/history/:userId/:shopId", getConsultantWalletHistroy)
 
 module.exports = { consultantRoute }
 
