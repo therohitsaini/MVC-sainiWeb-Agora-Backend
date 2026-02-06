@@ -9,6 +9,7 @@ const fs = require("fs");
 const path = require("path");
 const { ChatList } = require("../Modal/chatListSchema");
 const validator = require("validator");
+const { TransactionHistroy } = require("../Modal/transactionHistroy");
 
 
 
@@ -721,7 +722,7 @@ const getConsultantAllUsers = async (req, res) => {
                 match: { userType: "customer" },
                 select: "fullname email phone userType profileImage isActive",
             })
-            .sort({ createdAt: -1 }); 
+            .sort({ createdAt: -1 });
         const customers = chats
             .map((chat) => {
                 const customer = chat.senderId || chat.receiverId;
@@ -808,6 +809,41 @@ const updateConsultantProfileStoreFront = async (req, res) => {
     }
 
 }
+
+const getUserConversationControllerConsultant = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log("ddd_____", id)
+        if (!mongoose.Types.ObjectId.isValid(id)) return console.log("Id is not valid")
+        const conversations = await TransactionHistroy.find({
+            $or: [
+                { senderId: id },
+                { receiverId: id }
+            ]
+        })
+            .populate("senderId", "fullname email")
+            .populate("receiverId", "fullname email")
+            .sort({ createdAt: -1 });
+
+        const final = conversations.map(c => {
+            const user =
+                c.senderId._id.toString() === id
+                    ? c.receiverId
+                    : c.senderId;
+
+            return {
+                ...c.toObject(),
+                user
+            };
+        });
+
+        res.json({ success: true, data: final });
+
+    } catch (error) {
+        return res.status(500).send({ success: false, message: "Somthing went wrong " })
+    }
+}
+
 module.exports = {
     consultantController,
     getConsultant,
@@ -823,5 +859,6 @@ module.exports = {
     getChatListByShopIdAndConsultantId,
     removeChatListAndConsultantIdFromChatList,
     getConsultantAllUsers,
-    updateConsultantProfileStoreFront
+    updateConsultantProfileStoreFront,
+    getUserConversationControllerConsultant
 }
