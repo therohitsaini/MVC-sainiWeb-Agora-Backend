@@ -884,36 +884,47 @@ const getConsultantWalletHistroy = async (req, res) => {
 
 const WithdrawalRequestController = async (req, res) => {
     try {
-        const { consultantId, shopId } = req.params
-        const { amount, note } = req.body
-        console.log(req.params, req.query, amount, note)
-        if (!mongoose.Types.ObjectId.isValid(consultantId)
-            ||
-            !mongoose.Types.ObjectId.isValid(shopId)) {
-            return res.status(400).send({ message: "Id is invailid" })
-        }
+        const { consultantId, shopId } = req.params;
+        const { amount, note } = req.body;
 
-        const reqSave = new WithdrawalRequestSchema({
+        if (
+            !mongoose.Types.ObjectId.isValid(consultantId) ||
+            !mongoose.Types.ObjectId.isValid(shopId)
+        ) {
+            return res.status(400).send({ message: "Invalid Id" });
+        }
+        const consultant = await User.findById(consultantId);
+        if (!consultant) {
+            return res.status(404).send({ message: "Consultant not found" });
+        }
+        if (consultant.walletBalance < amount) {
+            return res.status(400).send({ message: "Insufficient balance" });
+        }
+        consultant.walletBalance -= amount;
+        await consultant.save();
+        const reqSave = await WithdrawalRequestSchema.create({
             consultantId,
             shopId,
             note,
-            status: "pending",
-            amount
-        })
-        await reqSave.save()
-        return res.status(201).send(
-            {
-                success: true,
-                message: "Withdrawal request submitted",
-                data: reqSave
-            })
+            amount,
+            status: "pending"
+        });
 
-
+        return res.status(201).send({
+            success: true,
+            message: "Withdrawal request submitted",
+            data: reqSave
+        });
 
     } catch (error) {
-        return res.status(500).send({ succes: false, message: "Something went wrong ?" })
+        console.log(error);
+        return res.status(500).send({
+            success: false,
+            message: "Server error"
+        });
     }
-}
+};
+
 
 
 module.exports = {
