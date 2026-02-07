@@ -41,7 +41,7 @@ consultantRoute.get("/get/consultant/:id", getConsultantAllUsers);
 consultantRoute.put("/update-profile", upload.single("profileImage"), updateConsultantProfileStoreFront);
 consultantRoute.get("/find-user-chat-logs/:id", getUserConversationControllerConsultant)
 consultantRoute.get("/find-coonsultant/wallet/history/:userId/:shopId", getConsultantWalletHistroy)
-consultantRoute.post("/submit/withdrawal/reques/:consultantId/:shopId", WithdrawalRequestController)
+consultantRoute.post("/submit/withdrawal/request/:consultantId/:shopId", WithdrawalRequestController)
 
 
 module.exports = { consultantRoute }

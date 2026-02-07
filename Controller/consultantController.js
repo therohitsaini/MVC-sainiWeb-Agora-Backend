@@ -884,7 +884,8 @@ const getConsultantWalletHistroy = async (req, res) => {
 const WithdrawalRequestController = async (req, res) => {
     try {
         const { consultantId, shopId } = req.params
-        const { } = req.query
+        const { amount, note } = req.body
+        console.log(req.params, req.query, amount, note)
         if (!mongoose.Types.ObjectId.isValid(consultantId)
             ||
             !mongoose.Types.ObjectId.isValid(shopId)) {
@@ -895,7 +896,8 @@ const WithdrawalRequestController = async (req, res) => {
             consultantId,
             shopId,
             note,
-            status
+            status,
+            amount
         })
         await reqSave.save()
         return res.status(201).send(
