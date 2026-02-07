@@ -902,6 +902,7 @@ const WithdrawalRequestController = async (req, res) => {
         }
         console.log("consultant", consultant)
         consultant.walletBalance -= amount;
+        console.log("consultant balance after cut  ", consultant)
         await consultant.save();
         const reqSave = await WithdrawalRequestSchema.create({
             consultantId,
