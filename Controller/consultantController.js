@@ -11,6 +11,7 @@ const { ChatList } = require("../Modal/chatListSchema");
 const validator = require("validator");
 const { TransactionHistroy } = require("../Modal/transactionHistroy");
 const { WalletHistory } = require("../Modal/walletHistory");
+const { WithdrawalRequestSchema } = require("../Modal/withdrawalSchema");
 
 
 
@@ -892,11 +893,11 @@ const WithdrawalRequestController = async (req, res) => {
             return res.status(400).send({ message: "Id is invailid" })
         }
 
-        const reqSave = new WithdrawalRequest({
+        const reqSave = new WithdrawalRequestSchema({
             consultantId,
             shopId,
             note,
-            status,
+            status: "pending",
             amount
         })
         await reqSave.save()

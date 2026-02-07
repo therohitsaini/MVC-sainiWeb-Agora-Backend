@@ -551,7 +551,7 @@ const ioServer = (server) => {
                     { session }
                 );
 
-                await WalletHistory.create({
+                 await WalletHistory.create({
                     userId: callerId,
                     shop_id: shopId,
                     amount: totalAmount,
@@ -564,7 +564,7 @@ const ioServer = (server) => {
                 await WalletHistory.create({
                     userId: receiverId,
                     shop_id: shopId,
-                    amount: totalAmount,
+                    amount: receiverShare,
                     referenceType: callType,
                     transactionType: "usage",
                     direction: "credit",

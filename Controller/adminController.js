@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const { TransactionHistroy } = require("../Modal/transactionHistroy");
 const { User } = require("../Modal/userSchema");
 const { WalletHistory } = require("../Modal/walletHistory");
+const { WithdrawalRequestSchema } = require("../Modal/withdrawalSchema");
 
 const adminController = async (req, res) => {
     try {
@@ -373,8 +374,6 @@ const appEnableAndDisableController = async (req, res) => {
         const { adminId } = req.params;
         const { appStatus } = req.body;
 
-        console.log("adminId:", adminId);
-        console.log("appStatus:", appStatus);
 
         if (!mongoose.Types.ObjectId.isValid(adminId)) {
             return res.status(400).json({
@@ -530,6 +529,36 @@ const updatesVoucherController = async (req, res) => {
     }
 };
 
+const getWithdrawalRequest = async (req, res) => {
+    try {
+        const { adminId } = req.params
+        console.log("adminId", adminId)
+        if (!mongoose.Types.ObjectId.isValid(adminId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid admin ID",
+            });
+        }
+        const widthrawal = await WithdrawalRequestSchema.find({
+            shopId: adminId
+        }).populate("consultantId", "fullname email")
+            .sort({ createdAt: -1 });
+
+        if (!widthrawal) return
+        return res.status(200).json({
+            success: true,
+            message: "App status retrieved successfully",
+            data: widthrawal,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong",
+        })
+    }
+}
+
 module.exports = {
     adminController,
     voucherController,
@@ -542,5 +571,6 @@ module.exports = {
     appEnableAndDisableController,
     checkAppBillingController,
     voucherHandlerController,
-    updatesVoucherController
+    updatesVoucherController,
+    getWithdrawalRequest
 };

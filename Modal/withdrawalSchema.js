@@ -1,7 +1,9 @@
+const mongoose = require("mongoose");
+
 const WithdrawalSchema = new mongoose.Schema({
     consultantId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Consultant",
+        ref: "ragisterUser",
         required: true
     },
 
@@ -31,6 +33,6 @@ const WithdrawalSchema = new mongoose.Schema({
 
     paidAt: Date
 });
-const WithdrawalRequest = mongoose.model("WithdrawalRequest", WithdrawalSchema);
+const WithdrawalRequestSchema = mongoose.model("WithdrawalRequest", WithdrawalSchema);
 
-module.exports = { WithdrawalRequest }
+module.exports = { WithdrawalRequestSchema }
