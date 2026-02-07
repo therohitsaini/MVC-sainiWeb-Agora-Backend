@@ -900,6 +900,7 @@ const WithdrawalRequestController = async (req, res) => {
         if (consultant.walletBalance < amount) {
             return res.status(400).send({ message: "Insufficient balance" });
         }
+        console.log("consultant", consultant)
         consultant.walletBalance -= amount;
         await consultant.save();
         const reqSave = await WithdrawalRequestSchema.create({
