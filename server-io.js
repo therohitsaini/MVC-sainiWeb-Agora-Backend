@@ -9,6 +9,7 @@ const { shopModel } = require("./Modal/shopify");
 const { missCalled } = require("./Modal/miscallasHistroy");
 const { WalletHistory } = require("./Modal/walletHistory");
 const { CallSession } = require("./Modal/callSessions");
+const { formatTime } = require("./Helper/helper");
 
 const ioServer = (server) => {
     const io = new Server(server, {
@@ -475,7 +476,7 @@ const ioServer = (server) => {
                     { sessionId: channelName },
                 );
                 console.log("deleteSession_______________________", deleteSession)
-                 const transaction = await TransactionHistroy.findById(transactionId).session(session);
+                const transaction = await TransactionHistroy.findById(transactionId).session(session);
                 console.log("transaction", transaction)
                 if (!transaction) throw new Error("Transaction not found");
 
@@ -551,14 +552,14 @@ const ioServer = (server) => {
                     { session }
                 );
 
-                 await WalletHistory.create({
+                await WalletHistory.create({
                     userId: callerId,
                     shop_id: shopId,
                     amount: totalAmount,
                     referenceType: callType,
                     transactionType: "usage",
                     direction: "debit",
-                    description: `Call ended for ${totalSeconds} seconds`,
+                    description: `Call ended for ${formatTime(totalSeconds)} seconds`,
                     status: "success",
                 });
                 await WalletHistory.create({
@@ -568,7 +569,7 @@ const ioServer = (server) => {
                     referenceType: callType,
                     transactionType: "usage",
                     direction: "credit",
-                    description: `Call ended for ${totalSeconds} seconds`,
+                    description: `Call ended for ${formatTime(totalSeconds)} seconds`,
                     status: "success",
                 });
 
