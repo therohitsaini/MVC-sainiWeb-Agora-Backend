@@ -593,8 +593,8 @@ const updateConsultantWidthrawalRequest = async (req, res) => {
             referenceType: "credit",
             description: body.description,
             transactionType: body.mainType,
-            direction: mainType,
-            status: mainType ? "success" : "",
+            direction: body.mainType,
+            status: "success",
         });
         res.status(200).json({
             success: true,
