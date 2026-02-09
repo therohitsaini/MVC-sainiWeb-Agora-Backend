@@ -42,7 +42,8 @@ const walletHistorySchema = new mongoose.Schema({
             "manual_debit",
             "withdraw",
             "refund",
-            "credit"
+            "credit",
+            "paid"
         ],
         required: true
     },
