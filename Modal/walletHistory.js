@@ -25,11 +25,11 @@ const walletHistorySchema = new mongoose.Schema({
     },
     draftOrderId: {
         type: String,
-        
+
     },
     invoiceUrl: {
         type: String,
-        
+
     },
 
     transactionType: {
@@ -41,7 +41,8 @@ const walletHistorySchema = new mongoose.Schema({
             "manual_credit",
             "manual_debit",
             "withdraw",
-            "refund"
+            "refund",
+            "credit"
         ],
         required: true
     },

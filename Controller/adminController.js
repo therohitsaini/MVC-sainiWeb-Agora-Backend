@@ -590,7 +590,7 @@ const updateConsultantWidthrawalRequest = async (req, res) => {
             userId: body.userId,
             shop_id: adminId,
             amount: body.amount,
-            referenceType: "credit",
+            referenceType: "withdraw",
             description: body.description,
             transactionType: body.mainType,
             direction: body.mainType,
