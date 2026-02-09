@@ -18,7 +18,7 @@ const WithdrawalSchema = new mongoose.Schema({
 
     status: {
         type: String,
-        enum: ["pending", "paid", "decline"],
+        enum: ["pending", "paid", "declined"],
         default: "pending"
     },
     transactionNumber: {
