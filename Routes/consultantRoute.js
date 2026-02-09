@@ -16,7 +16,8 @@ const { consultantController,
    updateConsultantProfileStoreFront,
    getUserConversationControllerConsultant,
    getConsultantWalletHistroy,
-   WithdrawalRequestController
+   WithdrawalRequestController,
+   getWithdrawalRequest
 } = require("../Controller/consultantController")
 const consultantRoute = express.Router()
 const multer = require("multer");
@@ -42,6 +43,7 @@ consultantRoute.put("/update-profile", upload.single("profileImage"), updateCons
 consultantRoute.get("/find-user-chat-logs/:id", getUserConversationControllerConsultant)
 consultantRoute.get("/find-coonsultant/wallet/history/:userId/:shopId", getConsultantWalletHistroy)
 consultantRoute.post("/submit/withdrawal/request/:consultantId/:shopId", WithdrawalRequestController)
+consultantRoute.get("/find/consultant/withdrawal/request/:consultantId",getWithdrawalRequest)
 
 
 module.exports = { consultantRoute }

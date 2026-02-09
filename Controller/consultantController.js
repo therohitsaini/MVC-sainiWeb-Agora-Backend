@@ -926,6 +926,36 @@ const WithdrawalRequestController = async (req, res) => {
         });
     }
 };
+const getWithdrawalRequest = async (req, res) => {
+    try {
+        const { consultantId } = req.params
+        console.log("adminId", consultantId)
+        if (!mongoose.Types.ObjectId.isValid(consultantId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid admin ID",
+            });
+        }
+        const widthrawal = await WithdrawalRequestSchema.find({
+            consultantId: consultantId
+        }).populate("consultantId", "fullname email")
+            .sort({ createdAt: -1 }).limit(10);
+
+        if (!widthrawal) return
+        return res.status(200).json({
+            success: true,
+            message: "App status retrieved successfully",
+            data: widthrawal,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong",
+        })
+    }
+}
+
 
 
 
@@ -947,5 +977,6 @@ module.exports = {
     updateConsultantProfileStoreFront,
     getUserConversationControllerConsultant,
     getConsultantWalletHistroy,
-    WithdrawalRequestController
+    WithdrawalRequestController,
+    getWithdrawalRequest
 }
