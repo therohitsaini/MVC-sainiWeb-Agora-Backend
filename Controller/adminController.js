@@ -608,7 +608,7 @@ const updateConsultantWidthrawalRequest = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: "User wallet updated successfully",
+            message: "Paymet successfully",
             data: user,
 
         });
@@ -617,6 +617,62 @@ const updateConsultantWidthrawalRequest = async (req, res) => {
         console.error("Error in updateUserConsultantController:", error);
     }
 }
+
+
+const declineWithdrawalRequest = async (req, res) => {
+    try {
+        const { transactionId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(transactionId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid transaction ID",
+            });
+        }
+
+        const withdrawal = await WithdrawalRequestSchema.findById(transactionId);
+        if (!withdrawal) {
+            return res.status(404).json({
+                success: false,
+                message: "Withdrawal request not found",
+            });
+        }
+
+        if (withdrawal.status !== "pending") {
+            return res.status(400).json({
+                success: false,
+                message: "Withdrawal already processed",
+            });
+        }
+
+        const user = await User.findById(withdrawal.consultantId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "Consultant not found",
+            });
+        }
+
+        user.walletBalance += withdrawal.amount;
+        await user.save();
+
+        withdrawal.status = "declined";
+        await withdrawal.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Withdrawal request declined and amount refunded",
+        });
+
+    } catch (error) {
+        console.error("Decline withdrawal error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+        });
+    }
+};
+
 
 module.exports = {
     adminController,
@@ -632,5 +688,6 @@ module.exports = {
     voucherHandlerController,
     updatesVoucherController,
     getWithdrawalRequest,
-    updateConsultantWidthrawalRequest
+    updateConsultantWidthrawalRequest,
+    declineWithdrawalRequest
 };
