@@ -542,7 +542,7 @@ const getWithdrawalRequest = async (req, res) => {
         const widthrawal = await WithdrawalRequestSchema.find({
             shopId: adminId
         }).populate("consultantId", "fullname email")
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 }).limit(10);
 
         if (!widthrawal) return
         return res.status(200).json({
