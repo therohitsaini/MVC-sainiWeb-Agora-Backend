@@ -60,7 +60,7 @@ const walletHistorySchema = new mongoose.Schema({
 
     direction: {
         type: String,
-        enum: ["credit", "debit"],
+        enum: ["credit", "debit", "paid"],
         required: true
     },
 
