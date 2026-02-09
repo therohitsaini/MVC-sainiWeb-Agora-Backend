@@ -596,10 +596,13 @@ const updateConsultantWidthrawalRequest = async (req, res) => {
             direction: body.mainType === "paid" ? "credit" : "",
             status: "success",
         });
+        const totalItems = await WithdrawalRequestSchema.countDocuments({ shopId: adminId });
+
         res.status(200).json({
             success: true,
             message: "User wallet updated successfully",
             data: user,
+            totalItems
         });
 
     } catch (error) {
