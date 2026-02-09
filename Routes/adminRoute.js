@@ -2,7 +2,7 @@ const express = require("express");
 const { adminController, voucherController, getTransactionController, getUserConsultantController, getShopAllUserController, getShopAllConsultantController, updateUserConsultantController, appEnableAndDisableController, checkAppBillingController, voucherHandlerController, updatesVoucherController, getWithdrawalRequest, updateConsultantWidthrawalRequest } = require("../Controller/adminController");
 const { verifyShopifyToken } = require("../MiddleWare/ShopifyMiddleware/verifyShopifyToken");
 
-const adminRoute = express.Router();
+const   adminRoute = express.Router();
 
 
 adminRoute.get("/admin/:adminId", adminController);
