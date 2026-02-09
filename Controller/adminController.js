@@ -545,10 +545,13 @@ const getWithdrawalRequest = async (req, res) => {
             .sort({ createdAt: -1 }).limit(10);
 
         if (!widthrawal) return
+        const totalItems = await WithdrawalRequestSchema.countDocuments({ shopId: adminId });
+
         return res.status(200).json({
             success: true,
             message: "App status retrieved successfully",
             data: widthrawal,
+            totalItems
         });
     } catch (error) {
         console.error(error);
@@ -596,13 +599,12 @@ const updateConsultantWidthrawalRequest = async (req, res) => {
             direction: body.mainType === "paid" ? "credit" : "",
             status: "success",
         });
-        const totalItems = await WithdrawalRequestSchema.countDocuments({ shopId: adminId });
 
         res.status(200).json({
             success: true,
             message: "User wallet updated successfully",
             data: user,
-            totalItems
+
         });
 
     } catch (error) {
