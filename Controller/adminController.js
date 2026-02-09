@@ -559,6 +559,49 @@ const getWithdrawalRequest = async (req, res) => {
     }
 }
 
+
+const updateConsultantWidthrawalRequest = async (req, res) => {
+    try {
+        const { adminId } = req.params;
+        const body = req.body;
+        console.log("body", req.body)
+        // if (!mongoose.Types.ObjectId.isValid(adminId)) {
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: "Invalid admin ID",
+        //     });
+        // }
+        // const user = await User.findById(body.userId);
+        // if (!user) {
+        //     return res.status(404).json({
+        //         success: false,
+        //         message: "User not found",
+        //     });
+        // }
+
+
+
+        // await WalletHistory.create({
+        //     userId: body.userId,
+        //     shop_id: adminId,
+        //     amount: body.amount,
+        //     referenceType: "credit",
+        //     description: body.description,
+        //     transactionType: body.mainType,
+        //     direction: mainType,
+        //     status: mainType ? "success" : "",
+        // });
+        // res.status(200).json({
+        //     success: true,
+        //     message: "User wallet updated successfully",
+        //     data: user,
+        // });
+
+    } catch (error) {
+        console.error("Error in updateUserConsultantController:", error);
+    }
+}
+
 module.exports = {
     adminController,
     voucherController,
@@ -572,5 +615,6 @@ module.exports = {
     checkAppBillingController,
     voucherHandlerController,
     updatesVoucherController,
-    getWithdrawalRequest
+    getWithdrawalRequest,
+    updateConsultantWidthrawalRequest
 };

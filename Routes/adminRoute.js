@@ -1,5 +1,5 @@
 const express = require("express");
-const { adminController, voucherController, getTransactionController, getUserConsultantController, getShopAllUserController, getShopAllConsultantController, updateUserConsultantController, appEnableAndDisableController, checkAppBillingController, voucherHandlerController, updatesVoucherController, getWithdrawalRequest } = require("../Controller/adminController");
+const { adminController, voucherController, getTransactionController, getUserConsultantController, getShopAllUserController, getShopAllConsultantController, updateUserConsultantController, appEnableAndDisableController, checkAppBillingController, voucherHandlerController, updatesVoucherController, getWithdrawalRequest, updateConsultantWidthrawalRequest } = require("../Controller/adminController");
 const { verifyShopifyToken } = require("../MiddleWare/ShopifyMiddleware/verifyShopifyToken");
 
 const adminRoute = express.Router();
@@ -17,4 +17,5 @@ adminRoute.get("/shop/billing-status/:adminId", verifyShopifyToken, checkAppBill
 adminRoute.delete("/delete/voucher/:shopId/:voucherId", verifyShopifyToken, voucherHandlerController)
 adminRoute.put("/admin/voucher-updates/:shopId/:voucherId", verifyShopifyToken, updatesVoucherController)
 adminRoute.get("/withdrawal-requests/:adminId", getWithdrawalRequest)
+adminRoute.put("/update/widthrwal/req/:adminId", updateConsultantWidthrawalRequest)
 module.exports = { adminRoute };    
