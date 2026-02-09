@@ -592,8 +592,8 @@ const updateConsultantWidthrawalRequest = async (req, res) => {
             amount: body.amount,
             referenceType: "withdraw",
             description: body.description,
-            transactionType: body.mainType,
-            direction: body.mainType,
+            transactionType: "withdraw",
+            direction: body.mainType === "paid" ? "credit" : "",
             status: "success",
         });
         res.status(200).json({
