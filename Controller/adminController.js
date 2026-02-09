@@ -533,6 +533,9 @@ const getWithdrawalRequest = async (req, res) => {
     try {
         const { adminId } = req.params
         console.log("adminId", adminId)
+        const page = Number(req.query.page) || 3;
+        const limit = Number(req.query.limit) || 14;
+        const skip = (page - 1) * limit;
         if (!mongoose.Types.ObjectId.isValid(adminId)) {
             return res.status(400).json({
                 success: false,
@@ -542,7 +545,10 @@ const getWithdrawalRequest = async (req, res) => {
         const widthrawal = await WithdrawalRequestSchema.find({
             shopId: adminId
         }).populate("consultantId", "fullname email")
-            .sort({ createdAt: -1 }).limit(10);
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();;
 
         if (!widthrawal) return
         const totalItems = await WithdrawalRequestSchema.countDocuments({ shopId: adminId });
