@@ -673,6 +673,57 @@ const declineWithdrawalRequest = async (req, res) => {
     }
 };
 
+const updateAdminPercentage = async (req, res) => {
+    try {
+        const { adminId } = req.params;
+        const { adminPercentage } = req.body;
+        console.log("__________", adminId, adminPercentage)
+
+        if (!mongoose.Types.ObjectId.isValid(adminId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid admin ID",
+            });
+        }
+
+        if (adminPercentage === undefined || adminPercentage < 0 || adminPercentage > 100) {
+            return res.status(400).json({
+                success: false,
+                message: "Admin percentage must be between 0 and 100",
+            });
+        }
+
+        const updatedShop = await shopModel.findByIdAndUpdate(
+            adminId,
+            {
+                adminPersenTage: adminPercentage
+            },
+            { new: true }
+        );
+
+        if (!updatedShop) {
+            return res.status(404).json({
+                success: false,
+                message: "Admin / Shop not found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Admin percentage updated successfully",
+            data: updatedShop,
+        });
+
+    } catch (error) {
+        console.error("Update admin percentage error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+        });
+    }
+};
+
+
 
 module.exports = {
     adminController,
@@ -689,5 +740,6 @@ module.exports = {
     updatesVoucherController,
     getWithdrawalRequest,
     updateConsultantWidthrawalRequest,
-    declineWithdrawalRequest
+    declineWithdrawalRequest,
+    updateAdminPercentage
 };
