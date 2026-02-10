@@ -122,15 +122,85 @@ const deleteAdminController = async (req, res) => {
     }
 }
 
+// const getTransactionController = async (req, res) => {
+
+//     try {
+//         const { adminId } = req.params;
+//         if (!adminId) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Admin ID is required',
+//             });
+//         }
+
+//         if (!mongoose.Types.ObjectId.isValid(adminId)) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Invalid admin ID',
+//             });
+//         }
+
+//         const page = Number(req.query.page) || 3;
+//         const limit = Number(req.query.limit) || 14;
+//         const serach = req.query.searchQuery
+//         const skip = (page - 1) * limit;
+//         const type = Number(req.query.type) || 0;
+//         console.log("type", type);
+//         const typeMap = {
+//             0: "all",
+//             1: "chat",
+//             2: "voice",
+//             3: "video"
+//         };
+//         console.log("serach", serach)
+//         const typeValue = typeMap[type] || "all";
+//         console.log("typeValue", typeValue);
+
+//         const filter = { shop_id: adminId };
+
+//         if (typeValue !== "all") {
+//             filter.type = typeValue;
+//         }
+
+//         const transactions = await TransactionHistroy.find(filter)
+//             .populate('senderId', 'fullname email profileImage userType')
+//             .populate('receiverId', 'fullname email profileImage userType')
+//             .sort({ createdAt: -1 })
+//             .skip(skip)
+//             .limit(limit)
+//             .lean();
+
+
+//         const totalItems = await TransactionHistroy.countDocuments(filter);
+
+//         if (transactions.length === 0) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'No transactions found',
+//             });
+//         }
+
+//         res.status(200).json({
+//             success: true,
+//             message: 'Transactions retrieved successfully',
+//             data: transactions,
+//             totalItems,
+//             page,
+//             limit,
+//         });
+//     } catch (error) {
+//         console.error('Error in getTransactionController:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Internal server error',
+//         });
+//     }
+// };
+
+
 const getTransactionController = async (req, res) => {
     try {
         const { adminId } = req.params;
-        if (!adminId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Admin ID is required',
-            });
-        }
 
         if (!mongoose.Types.ObjectId.isValid(adminId)) {
             return res.status(400).json({
@@ -139,26 +209,40 @@ const getTransactionController = async (req, res) => {
             });
         }
 
-        const page = Number(req.query.page) || 3;
-        const limit = Number(req.query.limit) || 14;
-        const serach = req.query.searchQuery
-        const skip = (page - 1) * limit;
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 10;
+        const search = req.query.searchQuery?.trim();
         const type = Number(req.query.type) || 0;
-        console.log("type", type);
+        const skip = (page - 1) * limit;
+
         const typeMap = {
             0: "all",
             1: "chat",
             2: "voice",
-            3: "video"
+            3: "video",
         };
-        console.log("serach", serach)
+
         const typeValue = typeMap[type] || "all";
-        console.log("typeValue", typeValue);
 
         const filter = { shop_id: adminId };
 
+        // 🔹 Type filter
         if (typeValue !== "all") {
             filter.type = typeValue;
+        }
+
+        // 🔹 SEARCH LOGIC
+        if (search) {
+            const users = await User.find({
+                fullname: { $regex: search, $options: "i" }
+            }).select("_id");
+
+            const userIds = users.map(u => u._id);
+
+            filter.$or = [
+                { senderId: { $in: userIds } },
+                { receiverId: { $in: userIds } },
+            ];
         }
 
         const transactions = await TransactionHistroy.find(filter)
@@ -169,15 +253,7 @@ const getTransactionController = async (req, res) => {
             .limit(limit)
             .lean();
 
-
         const totalItems = await TransactionHistroy.countDocuments(filter);
-
-        if (transactions.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'No transactions found',
-            });
-        }
 
         res.status(200).json({
             success: true,
@@ -187,6 +263,7 @@ const getTransactionController = async (req, res) => {
             page,
             limit,
         });
+
     } catch (error) {
         console.error('Error in getTransactionController:', error);
         res.status(500).json({
@@ -195,6 +272,8 @@ const getTransactionController = async (req, res) => {
         });
     }
 };
+
+
 const getUserConsultantController = async (req, res) => {
     try {
         const { adminId } = req.params;
