@@ -33,7 +33,6 @@ const ioServer = (server) => {
             onlineUsers.set(uid, socket.id);
 
             console.log("🟢 ONLINE USERS:", [...onlineUsers.entries()]);
-
             await User.findByIdAndUpdate(uid, { isActive: true });
         });
 
@@ -106,16 +105,12 @@ const ioServer = (server) => {
                     .lean();
 
                 const messageWithSender = {
-                    ...savedChat.toObject(), // ✅ now works
+                    ...savedChat.toObject(), 
                     senderName: senderInfo?.fullname || "User",
                     avatar: senderInfo?.profileImage || null
                 };
 
                 io.emit("receiveMessage", messageWithSender);
-
-
-
-                // io.emit("receiveMessage", savedChat[0]);
 
                 const receiver = await User.findById(receiverId);
                 if (receiver?.firebaseToken?.token && !receiver?.isActive) {
@@ -293,7 +288,7 @@ const ioServer = (server) => {
         socket.on("acceptUserChat", async (acceptData) => {
             const { userId, shopId, consultantId } = acceptData;
             if (!mongoose.Types.ObjectId.isValid(userId)) return;
-
+            
             const user = await User.findById(userId);
             if (!user || user.isChatAccepted !== "request") return;
 
