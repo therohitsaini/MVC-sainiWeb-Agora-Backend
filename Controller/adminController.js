@@ -644,6 +644,12 @@ const declineWithdrawalRequest = async (req, res) => {
                 message: "Withdrawal already processed",
             });
         }
+        if (withdrawal.status == "paid" || withdrawal.status == "declined") {
+            return res.status(400).json({
+                success: false,
+                message: "Alredy Updated ? ",
+            });
+        }
 
         const user = await User.findById(withdrawal.consultantId);
         if (!user) {

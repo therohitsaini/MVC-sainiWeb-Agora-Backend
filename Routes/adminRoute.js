@@ -19,6 +19,6 @@ adminRoute.put("/admin/voucher-updates/:shopId/:voucherId", verifyShopifyToken, 
 adminRoute.get("/withdrawal-requests/:adminId", verifyShopifyToken, getWithdrawalRequest)
 adminRoute.put("/update/widthrwal/req/:adminId", verifyShopifyToken, updateConsultantWidthrawalRequest)
 adminRoute.put("/declin/widthrwal/req/:transactionId", verifyShopifyToken, declineWithdrawalRequest)
-adminRoute.put("/admin/update-percentage/:adminId", updateAdminPercentage)
+adminRoute.put("/admin/update-percentage/:adminId", verifyShopifyToken, updateAdminPercentage)
 
 module.exports = { adminRoute };    
