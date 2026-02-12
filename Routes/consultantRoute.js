@@ -17,7 +17,8 @@ const { consultantController,
    getUserConversationControllerConsultant,
    getConsultantWalletHistroy,
    WithdrawalRequestController,
-   getWithdrawalRequest
+   getWithdrawalRequest,
+   getMonthlyRevenueController
 } = require("../Controller/consultantController")
 const consultantRoute = express.Router()
 const multer = require("multer");
@@ -44,6 +45,8 @@ consultantRoute.get("/find-user-chat-logs/:id", getUserConversationControllerCon
 consultantRoute.get("/find-coonsultant/wallet/history/:userId/:shopId", getConsultantWalletHistroy)
 consultantRoute.post("/submit/withdrawal/request/:consultantId/:shopId", WithdrawalRequestController)
 consultantRoute.get("/find/consultant/withdrawal/request/:consultantId",getWithdrawalRequest)
+consultantRoute.get("/find/monthly-revenue/:shop_id/:consultantId",getMonthlyRevenueController)
+
 
 
 module.exports = { consultantRoute }

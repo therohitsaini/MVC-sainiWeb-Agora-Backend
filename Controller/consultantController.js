@@ -956,6 +956,85 @@ const getWithdrawalRequest = async (req, res) => {
     }
 }
 
+//----------------------- get monthly revenu -----------------------------------------
+
+const getMonthlyRevenueController = async (req, res) => {
+    try {
+        const { shop_id, consultantId } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(shop_id)) {
+            return res.status(400).json({ message: "Invalid shop ID" });
+        }
+        if (!mongoose.Types.ObjectId.isValid(consultantId)) {
+            return res.status(400).json({ message: "Invalid consultant ID" });
+        }
+
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        const lastMonthDate = new Date(currentYear, currentMonth - 1, 1);
+        const lastMonth = lastMonthDate.getMonth();
+        const lastMonthYear = lastMonthDate.getFullYear();
+
+        const transactions = await TransactionHistroy.find({
+            shop_id,
+            status: "completed",
+            $or: [
+                { senderId: consultantId },
+                { receiverId: consultantId }
+            ]
+        }).lean();
+
+        let currentMonthRevenue = 0;
+        let lastMonthRevenue = 0;
+        let totalIncome = 0;
+
+        transactions.forEach(tx => {
+            const txDate = new Date(tx.createdAt);
+            const amount = Number(tx.consultantAmount) || 0; // ✅ IMPORTANT
+
+            // total income (all time)
+            totalIncome += amount;
+
+            // current month
+            if (
+                txDate.getMonth() === currentMonth &&
+                txDate.getFullYear() === currentYear
+            ) {
+                currentMonthRevenue += amount;
+            }
+
+            // last month
+            if (
+                txDate.getMonth() === lastMonth &&
+                txDate.getFullYear() === lastMonthYear
+            ) {
+                lastMonthRevenue += amount;
+            }
+        });
+
+        const percentageChange =
+            lastMonthRevenue === 0
+                ? 0
+                : ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100;
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                currentMonthRevenue: Number(currentMonthRevenue.toFixed(2)),
+                lastMonthRevenue: Number(lastMonthRevenue.toFixed(2)),
+                totalIncome: Number(totalIncome.toFixed(2)),
+                percentageChange: Number(percentageChange.toFixed(2))
+            }
+        });
+
+    } catch (error) {
+        console.error("Monthly revenue error:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
+
 
 
 
@@ -978,5 +1057,6 @@ module.exports = {
     getUserConversationControllerConsultant,
     getConsultantWalletHistroy,
     WithdrawalRequestController,
-    getWithdrawalRequest
+    getWithdrawalRequest,
+    getMonthlyRevenueController
 }

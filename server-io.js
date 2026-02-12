@@ -105,7 +105,7 @@ const ioServer = (server) => {
                     .lean();
 
                 const messageWithSender = {
-                    ...savedChat.toObject(), 
+                    ...savedChat.toObject(),
                     senderName: senderInfo?.fullname || "User",
                     avatar: senderInfo?.profileImage || null
                 };
@@ -288,7 +288,7 @@ const ioServer = (server) => {
         socket.on("acceptUserChat", async (acceptData) => {
             const { userId, shopId, consultantId } = acceptData;
             if (!mongoose.Types.ObjectId.isValid(userId)) return;
-            
+
             const user = await User.findById(userId);
             if (!user || user.isChatAccepted !== "request") return;
 
@@ -397,6 +397,7 @@ const ioServer = (server) => {
                     transtionId: transaction._id,
                     callType: callType,
                     startTime: new Date(),
+                    shopId: shopId,
                     status: "ongoing"
                 });
                 const callerSocketId = onlineUsers.get(callerId);

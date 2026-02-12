@@ -19,6 +19,9 @@ const callSessionsSchema = new mongoose.Schema(
             enum: ["voice", "video"],
             default: "voice",
         },
+        shopId: {
+            type: String
+        },
         startTime: { type: Date, required: true },
         endTime: { type: Date },
         status: {
