@@ -6,7 +6,7 @@ async function sendFCM(token, title, body, avatar) {
         data: {
             title: title,
             body: body,
-            avatar: avatar || "",   // optional
+            avatar: avatar || "",   
         },
         android: {
             priority: "high",

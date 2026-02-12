@@ -119,7 +119,7 @@ const ioServer = (server) => {
                         receiver.firebaseToken.token,
                         "New Message",
                         text,
-                        "https://i.pinimg.com/736x/95/2a/ae/952aaea466ae9fb09f02889d33967cf6.jpg"
+                        "https://www.svgrepo.com/show/335455/profile-default.svg"
                     );
                 }
 
