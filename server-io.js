@@ -109,9 +109,7 @@ const ioServer = (server) => {
                     senderName: senderInfo?.fullname || "User",
                     avatar: senderInfo?.profileImage || null
                 };
-
                 io.emit("receiveMessage", messageWithSender);
-
                 const receiver = await User.findById(receiverId);
                 if (receiver?.firebaseToken?.token && !receiver?.isActive) {
                     console.log("receiver.firebaseToken.token", receiver.firebaseToken.token);
@@ -463,7 +461,7 @@ const ioServer = (server) => {
 
         socket.on("call-ended", async (data) => {
             const { transactionId, callerId, receiverId, shopId, callType, channelName } = data;
-            console.log("data_______________________", transactionId, callerId, receiverId, shopId, callType)
+            console.log("data_______________________", "transactionId", transactionId, "callerId", callerId, "receiverId", receiverId, "shopId", shopId, "callType", callType)
             const session = await mongoose.startSession();
             session.startTransaction();
             if (!transactionId || !shopId) return console.log("skip___")
@@ -473,7 +471,6 @@ const ioServer = (server) => {
                 );
                 console.log("deleteSession_______________________", deleteSession)
                 const transaction = await TransactionHistroy.findById(transactionId).session(session);
-                console.log("transaction", transaction)
                 if (!transaction) throw new Error("Transaction not found");
 
                 const caller = await User.findById(callerId).session(session);
@@ -493,11 +490,8 @@ const ioServer = (server) => {
                     callType === "voice"
                         ? Number(receiver.voicePerMinute)
                         : Number(receiver.videoPerMinute);
-                console.log("callCostPerMinute", callCostPerMinute)
                 const perSecondCost = callCostPerMinute / 60;
-                console.log("perSecondCost", perSecondCost)
                 const totalAmount = Number((totalSeconds * perSecondCost).toFixed(2));
-                console.log("totalAmount", totalAmount)
                 const adminCommission =
                     (totalAmount * Number(shop.adminPersenTage)) / 100;
 
@@ -530,7 +524,7 @@ const ioServer = (server) => {
                     { session }
                 );
 
-                await TransactionHistroy.findByIdAndUpdate(
+                const con = await TransactionHistroy.findByIdAndUpdate(
                     transactionId,
                     {
                         $inc: {
@@ -541,7 +535,7 @@ const ioServer = (server) => {
                     },
                     { session }
                 );
-
+                console.log("con_____________T", con)
                 await User.findByIdAndUpdate(
                     callerId,
                     { $set: { isCallAccepted: false } },
