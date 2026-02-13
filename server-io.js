@@ -472,7 +472,7 @@ const ioServer = (server) => {
 
         socket.on("call-ended", async (data) => {
             const { transactionId, callerId, receiverId, shopId, callType, channelName, dtn_ } = data;
-            console.log("data_______________________", "transactionId", transactionId, "callerId", callerId, "receiverId", receiverId, "shopId", shopId, "callType", callType, "dtn_", dtn_)
+            console.log("data_______________________✅", "transactionId", transactionId, "callerId", callerId, "receiverId", receiverId, "shopId", shopId, "callType", callType, "dtn_", dtn_)
             const session = await mongoose.startSession();
             session.startTransaction();
             if (!transactionId || !shopId) return console.log("skip___")
