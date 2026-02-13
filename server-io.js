@@ -473,6 +473,8 @@ const ioServer = (server) => {
         socket.on("call-ended", async (data) => {
             const { transactionId, callerId, receiverId, shopId, callType, channelName, dtn_ } = data;
             console.log("data_______________________✅", "transactionId", transactionId, "callerId", callerId, "receiverId", receiverId, "shopId", shopId, "callType", callType, "dtn_", dtn_, "channelName", channelName)
+            const tsId = await CallSession.find({ sessionId: channelName })
+            if (!tsId) throw new Error("session id not found");
             const session = await mongoose.startSession();
             session.startTransaction();
             if (!transactionId || !shopId) return console.log("skip___")
@@ -480,8 +482,9 @@ const ioServer = (server) => {
                 const deleteSession = await CallSession.findOneAndDelete(
                     { sessionId: channelName },
                 );
+                let trnaID = tsId.transtionId || transactionId
                 console.log("deleteSession_______________________", deleteSession)
-                const transaction = await TransactionHistroy.findById(transactionId).session(session);
+                const transaction = await TransactionHistroy.findById(trnaID).session(session);
                 if (!transaction) throw new Error("Transaction not found");
 
                 const caller = await User.findById(callerId).session(session);
@@ -536,7 +539,7 @@ const ioServer = (server) => {
                 );
 
                 const con = await TransactionHistroy.findByIdAndUpdate(
-                    transactionId,
+                    trnaID,
                     {
                         $inc: {
                             adminAmount: adminCommission,
@@ -577,20 +580,20 @@ const ioServer = (server) => {
                 await session.commitTransaction();
 
                 io.to(callerId).emit("callEnded", {
-                    transactionId,
+                    trnaID,
                     totalSeconds,
                     totalAmount,
                     reason: "ended"
                 });
 
                 io.to(receiverId).emit("callEnded", {
-                    transactionId,
+                    trnaID,
                     totalSeconds,
                     totalAmount,
                     reason: "ended"
                 });
 
-                console.log("✅ Call ended successfully:", transactionId);
+                console.log("✅ Call ended successfully:", trnaID);
 
             } catch (error) {
                 console.error("❌ Call transaction error:", error);
