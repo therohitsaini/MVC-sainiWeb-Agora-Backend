@@ -483,6 +483,7 @@ const ioServer = (server) => {
                     { sessionId: channelName },
                 );
                 let trnaID = tsId.transtionId || transactionId
+                console.log("trnaID_____________________✅",trnaID)
                 console.log("deleteSession_______________________", deleteSession)
                 const transaction = await TransactionHistroy.findById(trnaID).session(session);
                 if (!transaction) throw new Error("Transaction not found");
