@@ -388,16 +388,27 @@ const ioServer = (server) => {
                 });
                 console.log("transaction_______________________Created", transaction)
                 await transaction.save();
-                await CallSession.create({
-                    sessionId: channelName,
-                    receiverId: receiverId,
-                    callerId: callerId,
-                    transtionId: transaction._id,
-                    callType: callType,
-                    startTime: new Date(),
-                    shopId: shopId,
-                    status: "ongoing"
-                });
+                await CallSession.findOneAndUpdate(
+                    {
+                        sessionId: channelName,
+                        callerId: callerId,
+                        receiverId: receiverId
+                    },
+                    {
+                        $set: {
+                            transtionId: transaction._id,
+                            callType: callType,
+                            shopId: shopId,
+                            status: "ongoing",
+                            startTime: new Date()
+                        }
+                    },
+                    {
+                        upsert: true,      // ❗ agar record nahi hai → CREATE
+                        new: true          // updated/new document return kare
+                    }
+                );
+
                 const callerSocketId = onlineUsers.get(callerId);
                 const receiverSocketId = onlineUsers.get(receiverId);
                 console.log("callerSocketId_______________________", callerSocketId)
