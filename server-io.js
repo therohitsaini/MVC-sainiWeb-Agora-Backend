@@ -128,7 +128,7 @@ const ioServer = (server) => {
 
         // ------------- call user --------------//
 
-        socket.on("call-user", async ({ callerId, receiverId, channelName, callType }) => {
+        socket.on("call-user", async ({ callerId, receiverId, channelName, callType ,shop}) => {
             try {
                 if (!callerId || !receiverId || !channelName || !callType) {
                     console.log("❌ Missing required fields");
@@ -162,7 +162,8 @@ const ioServer = (server) => {
                         callerId,
                         callerName: user_?.fullname || "Unknown",
                         callType,
-                        channelName
+                        channelName,
+                        shop
                     });
                 }
                 const call = {
