@@ -388,29 +388,43 @@ const ioServer = (server) => {
                 });
                 console.log("transaction_______________________Created", transaction)
                 await transaction.save();
-                await CallSession.findOneAndUpdate(
-                    {
-                        sessionId: channelName
-                    },
-                    {
-                        $set: {
-                            transtionId: transaction._id,
-                            callType: callType,
-                            shopId: shopId,
-                            status: "ongoing",
-                            startTime: new Date()
-                        },
-                        $setOnInsert: {
+                const existingSession = await CallSession.findOne({
+                    sessionId: channelName,
+                    callerId: callerId,
+                    receiverId: receiverId
+                });
+
+                if (existingSession) {
+                    await CallSession.findOneAndUpdate(
+                        {
+                            sessionId: channelName,
                             callerId: callerId,
-                            receiverId: receiverId,
-                            sessionId: channelName
-                        }
-                    },
-                    {
-                        upsert: true,
-                        new: true
-                    }
-                );
+                            receiverId: receiverId
+                        },
+                        {
+                            $set: {
+                                transtionId: transaction._id,
+                                callType: callType,
+                                shopId: shopId,
+                                status: "ongoing",
+                                startTime: new Date()
+                            }
+                        },
+                        { new: true }
+                    );
+
+                } else {
+                    await CallSession.create({
+                        sessionId: channelName,
+                        callerId: callerId,
+                        receiverId: receiverId,
+                        transtionId: transaction._id,
+                        callType: callType,
+                        shopId: shopId,
+                        status: "ongoing",
+                        startTime: new Date()
+                    });
+                }
 
 
                 const callerSocketId = onlineUsers.get(callerId);
