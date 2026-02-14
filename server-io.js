@@ -488,6 +488,29 @@ const ioServer = (server) => {
 
         socket.on("user-is-on", ({ callerId, receiverId, channelName, callType, }) => {
             console.log("callerId, receiverId, channelName, callType        =>", callerId, receiverId, channelName, callType)
+            const callerSocketId = onlineUsers.get(callerId);
+            const receiverSocketId = onlineUsers.get(receiverId);
+
+            console.log("callerSocketId =>", callerSocketId);
+            console.log("receiverSocketId =>", receiverSocketId);
+
+            if (callerSocketId) {
+                io.to(callerSocketId).emit("both-user-join", {
+                    time: true,
+                    channelName,
+                    callType
+                });
+            }
+
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit("both-user-join", {
+                    time: true,
+                    channelName,
+                    callType
+                });
+            }
+
+
         })
 
         //---------------- end call logics ----------------
