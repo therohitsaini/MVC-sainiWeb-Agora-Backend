@@ -128,7 +128,7 @@ const ioServer = (server) => {
 
         // ------------- call user --------------//
 
-        socket.on("call-user", async ({ callerId, receiverId, channelName, callType ,shop}) => {
+        socket.on("call-user", async ({ callerId, receiverId, channelName, callType, shop }) => {
             try {
                 if (!callerId || !receiverId || !channelName || !callType) {
                     console.log("❌ Missing required fields");
@@ -550,7 +550,7 @@ const ioServer = (server) => {
                 const endTime = new Date();
                 const totalSeconds = Math.floor(
                     (endTime - new Date(transaction.startTime)) / 1000
-                );
+                ) - 2;
 
                 const callCostPerMinute =
                     callType === "voice"
