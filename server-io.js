@@ -487,7 +487,7 @@ const ioServer = (server) => {
         });
 
         socket.on("user-is-on", ({ callerId, receiverId, channelName, callType, }) => {
-            console.log("callerId, receiverId, channelName, callType", callerId, receiverId, channelName, callType)
+            console.log("callerId, receiverId, channelName, callType        =>", callerId, receiverId, channelName, callType)
         })
 
         //---------------- end call logics ----------------
