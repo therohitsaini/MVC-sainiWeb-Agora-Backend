@@ -473,7 +473,7 @@ const ioServer = (server) => {
         socket.on("call-ended", async (data) => {
             const { transactionId, callerId, receiverId, shopId, callType, channelName, dtn_ } = data;
             console.log("data_______________________✅", "transactionId", transactionId, "callerId", callerId, "receiverId", receiverId, "shopId", shopId, "callType", callType, "dtn_", dtn_, "channelName", channelName)
-            const tsId = await CallSession.find({ sessionId: channelName })
+            const tsId = await CallSession.findOne({ sessionId: channelName });
             if (!tsId) throw new Error("session id not found");
             const session = await mongoose.startSession();
             session.startTransaction();
