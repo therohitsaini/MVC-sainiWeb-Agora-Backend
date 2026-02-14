@@ -479,9 +479,9 @@ const ioServer = (server) => {
             session.startTransaction();
             if (!transactionId || !shopId) return console.log("skip___")
             try {
-                const deleteSession = await CallSession.findOneAndDelete(
-                    { sessionId: channelName },
-                );
+                // const deleteSession = await CallSession.findOneAndDelete(
+                //     { sessionId: channelName },
+                // );
                 let trnaID = tsId.transtionId || transactionId
                 console.log("trnaID_____________________✅",trnaID)
                 console.log("deleteSession_______________________", deleteSession)
