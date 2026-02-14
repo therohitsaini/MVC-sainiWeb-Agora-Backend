@@ -390,9 +390,7 @@ const ioServer = (server) => {
                 await transaction.save();
                 await CallSession.findOneAndUpdate(
                     {
-                        sessionId: channelName,
-                        callerId: callerId,
-                        receiverId: receiverId
+                        sessionId: channelName
                     },
                     {
                         $set: {
@@ -401,13 +399,19 @@ const ioServer = (server) => {
                             shopId: shopId,
                             status: "ongoing",
                             startTime: new Date()
+                        },
+                        $setOnInsert: {
+                            callerId: callerId,
+                            receiverId: receiverId,
+                            sessionId: channelName
                         }
                     },
                     {
-                        upsert: true,      // ❗ agar record nahi hai → CREATE
-                        new: true          // updated/new document return kare
+                        upsert: true,
+                        new: true
                     }
                 );
+
 
                 const callerSocketId = onlineUsers.get(callerId);
                 const receiverSocketId = onlineUsers.get(receiverId);
