@@ -440,53 +440,53 @@ const ioServer = (server) => {
                 }
                 // ================= BILLING LOGIC (CHAT STYLE) =================
 
-                // 1️⃣ caller balance
-                const caller = await User.findById(callerId);
-                const userBalance = Number(caller?.walletBalance || 0);
+                // // 1️⃣ caller balance
+                // const caller = await User.findById(callerId);
+                // const userBalance = Number(caller?.walletBalance || 0);
 
-                // 2️⃣ receiver cost
-                const receiver = await User.findById(receiverId);
-                const perMinuteCost =
-                    callType === "voice"
-                        ? Number(receiver?.voiceCallCost)
-                        : Number(receiver?.videoCallCost);
+                // // 2️⃣ receiver cost
+                // const receiver = await User.findById(receiverId);
+                // const perMinuteCost =
+                //     callType === "voice"
+                //         ? Number(receiver?.voiceCallCost)
+                //         : Number(receiver?.videoCallCost);
 
-                if (!perMinuteCost || perMinuteCost <= 0) {
-                    console.log("❌ Invalid call cost");
-                    return;
-                }
+                // if (!perMinuteCost || perMinuteCost <= 0) {
+                //     console.log("❌ Invalid call cost");
+                //     return;
+                // }
 
-                const perSecondCost = perMinuteCost / 60;
+                // const perSecondCost = perMinuteCost / 60;
 
-                // 2️⃣ max seconds
-                const maxSeconds = Math.floor(userBalance / perSecondCost);
-                console.log("User can talk for", maxSeconds, "seconds");
+                // // 2️⃣ max seconds
+                // const maxSeconds = Math.floor(userBalance / perSecondCost);
+                // console.log("User can talk for", maxSeconds, "seconds");
 
-                // 3️⃣ timer
-                let elapsedSeconds = 0;
+                // // 3️⃣ timer
+                // let elapsedSeconds = 0;
 
-                const interval = setInterval(async () => {
-                    elapsedSeconds++;
+                // const interval = setInterval(async () => {
+                //     elapsedSeconds++;
 
-                    if (elapsedSeconds >= maxSeconds) {
-                        clearInterval(interval);
+                //     if (elapsedSeconds >= maxSeconds) {
+                //         clearInterval(interval);
 
-                        await User.findByIdAndUpdate(callerId, {
-                            walletBalance: userBalance - (elapsedSeconds * perSecondCost)
-                        });
+                //         await User.findByIdAndUpdate(callerId, {
+                //             walletBalance: userBalance - (elapsedSeconds * perSecondCost)
+                //         });
 
-                        transaction.duration = elapsedSeconds;
-                        transaction.status = "completed";
-                        transaction.endTime = new Date();
-                        await transaction.save();
+                //         transaction.duration = elapsedSeconds;
+                //         transaction.status = "completed";
+                //         transaction.endTime = new Date();
+                //         await transaction.save();
 
-                        io.to(callerId).emit("autoCallEnded-no-balance");
-                        io.to(receiverId).emit("autoCallEnded-no-balance");
-                    }
-                }, 1000);
+                //         io.to(callerId).emit("autoCallEnded-no-balance");
+                //         io.to(receiverId).emit("autoCallEnded-no-balance");
+                //     }
+                // }, 1000);
 
-                // ✅ store interval for later cleanup
-                activeCalls.set(callId, { billingInterval: interval });
+                // // ✅ store interval for later cleanup
+                // activeCalls.set(callId, { billingInterval: interval });
 
             } catch (error) {
                 console.error("Error in call-accepted:", error);
