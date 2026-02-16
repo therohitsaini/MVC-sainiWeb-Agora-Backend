@@ -519,6 +519,36 @@ const ioServer = (server) => {
                 });
             }
 
+            // if (channelName) {
+            //     const callSession = await CallSession.findOne({
+            //         sessionId: channelName
+            //     });
+
+            //     if (!callSession || !callSession.transtionId) {
+            //         console.log("❌ CallSession or transactionId not found");
+            //         return;
+            //     }
+
+            //     const transaction = await TransactionHistroy.findById(
+            //         callSession.transtionId
+            //     );
+
+            //     if (!transaction) {
+            //         console.log("❌ Transaction not found");
+            //         return;
+            //     }
+
+            //     transaction.startTime = new Date();
+            //     await transaction.save();
+
+            //     console.log("✅ Transaction startTime updated");
+            // }
+
+
+        })
+
+        socket.on("user-connected-time-updated", async ({ callerId, receiverId, channelName, callType, }) => {
+        
             if (channelName) {
                 const callSession = await CallSession.findOne({
                     sessionId: channelName
@@ -543,7 +573,6 @@ const ioServer = (server) => {
 
                 console.log("✅ Transaction startTime updated");
             }
-
 
         })
 
