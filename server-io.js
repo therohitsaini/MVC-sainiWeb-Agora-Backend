@@ -389,133 +389,60 @@ const ioServer = (server) => {
                 });
                 console.log("transaction_______________________Created", transaction)
                 await transaction.save();
-                // const existingSession = await CallSession.findOne({
-                //     sessionId: channelName,
-                //     callerId: callerId,
-                //     receiverId: receiverId
-                // });
-
-                // if (existingSession) {
-                //     await CallSession.findOneAndUpdate(
-                //         {
-                //             sessionId: channelName,
-                //             callerId: callerId,
-                //             receiverId: receiverId
-                //         },
-                //         {
-                //             $set: {
-                //                 transtionId: transaction._id,
-                //                 callType: callType,
-                //                 shopId: shopId,
-                //                 status: "ongoing",
-                //                 startTime: new Date()
-                //             }
-                //         },
-                //         { new: true }
-                //     );
-
-                // } else {
-                //     await CallSession.create({
-                //         sessionId: channelName,
-                //         callerId: callerId,
-                //         receiverId: receiverId,
-                //         transtionId: transaction._id,
-                //         callType: callType,
-                //         shopId: shopId,
-                //         status: "ongoing",
-                //         startTime: new Date()
-                //     });
-                // }
-                const callUniqueId = `${channelName}_${Date.now()}`;
-                await CallSession.create({
+                const existingSession = await CallSession.findOne({
                     sessionId: channelName,
-                    callUniqueId,        // ⭐ IMPORTANT
-                    callerId,
-                    receiverId,
-                    transtionId: transaction._id,
-                    status: "pending"
+                    callerId: callerId,
+                    receiverId: receiverId
                 });
+
+                if (existingSession) {
+                    await CallSession.findOneAndUpdate(
+                        {
+                            sessionId: channelName,
+                            callerId: callerId,
+                            receiverId: receiverId
+                        },
+                        {
+                            $set: {
+                                transtionId: transaction._id,
+                                callType: callType,
+                                shopId: shopId,
+                                status: "ongoing",
+                                startTime: new Date()
+                            }
+                        },
+                        { new: true }
+                    );
+
+                } else {
+                    await CallSession.create({
+                        sessionId: channelName,
+                        callerId: callerId,
+                        receiverId: receiverId,
+                        transtionId: transaction._id,
+                        callType: callType,
+                        shopId: shopId,
+                        status: "ongoing",
+                        startTime: new Date()
+                    });
+                }
+
 
                 const callerSocketId = onlineUsers.get(callerId);
                 const receiverSocketId = onlineUsers.get(receiverId);
-                console.log("callerSocketId_______________________", callerSocketId)
-                console.log("receiverSocketId_______________________", receiverSocketId)
+
                 if (callerSocketId) {
-                    io.to(callerSocketId).emit("call-accepted-started",
-                        {
-                            callerId, receiverId,
-                            channelName, callType,
-                            transactionId: transaction._id,
-                            callUniqueId
-                        });
+                    io.to(callerSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType, transactionId: transaction._id });
                 }
                 if (receiverSocketId) {
-                    io.to(receiverSocketId).emit("call-accepted-started",
-                        {
-                            callerId,
-                            receiverId,
-                            channelName,
-                            callType,
-                            transactionId: transaction._id,
-                            callUniqueId
-                        });
+                    io.to(receiverSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType, transactionId: transaction._id });
                 }
-                // ================= BILLING LOGIC (CHAT STYLE) =================
-
-                // // 1️⃣ caller balance
-                // const caller = await User.findById(callerId);
-                // const userBalance = Number(caller?.walletBalance || 0);
-
-                // // 2️⃣ receiver cost
-                // const receiver = await User.findById(receiverId);
-                // const perMinuteCost =
-                //     callType === "voice"
-                //         ? Number(receiver?.voiceCallCost)
-                //         : Number(receiver?.videoCallCost);
-
-                // if (!perMinuteCost || perMinuteCost <= 0) {
-                //     console.log("❌ Invalid call cost");
-                //     return;
-                // }
-
-                // const perSecondCost = perMinuteCost / 60;
-
-                // // 2️⃣ max seconds
-                // const maxSeconds = Math.floor(userBalance / perSecondCost);
-                // console.log("User can talk for", maxSeconds, "seconds");
-
-                // // 3️⃣ timer
-                // let elapsedSeconds = 0;
-
-                // const interval = setInterval(async () => {
-                //     elapsedSeconds++;
-
-                //     if (elapsedSeconds >= maxSeconds) {
-                //         clearInterval(interval);
-
-                //         await User.findByIdAndUpdate(callerId, {
-                //             walletBalance: userBalance - (elapsedSeconds * perSecondCost)
-                //         });
-
-                //         transaction.duration = elapsedSeconds;
-                //         transaction.status = "completed";
-                //         transaction.endTime = new Date();
-                //         await transaction.save();
-
-                //         io.to(callerId).emit("autoCallEnded-no-balance");
-                //         io.to(receiverId).emit("autoCallEnded-no-balance");
-                //     }
-                // }, 1000);
-
-                // // ✅ store interval for later cleanup
-                // activeCalls.set(callId, { billingInterval: interval });
+               
 
             } catch (error) {
                 console.error("Error in call-accepted:", error);
             }
         });
-
-
 
         socket.on("user-is-on", async ({ callerId, receiverId, channelName, callType, }) => {
             console.log("callerId, receiverId, channelName, callType        =>", callerId, receiverId, channelName, callType)
@@ -569,25 +496,34 @@ const ioServer = (server) => {
 
         })
 
-        socket.on("user-connected-time-updated", async ({ callUniqueId }) => {
+        socket.on("user-connected-time-updated", async ({ callerId, receiverId, channelName, callType, }) => {
+        
+            if (channelName) {
+                const callSession = await CallSession.findOne({
+                    sessionId: channelName
+                });
 
-            const callSession = await CallSession.findOne({
-                callUniqueId
-            });
+                if (!callSession || !callSession.transtionId) {
+                    console.log("❌ CallSession or transactionId not found");
+                    return;
+                }
 
-            if (!callSession || !callSession.transtionId) return;
+                const transaction = await TransactionHistroy.findById(
+                    callSession.transtionId
+                );
 
-            const transaction = await TransactionHistroy.findById(
-                callSession.transtionId
-            );
+                if (!transaction) {
+                    console.log("❌ Transaction not found");
+                    return;
+                }
 
-            if (!transaction || transaction.startTime) return; // 🔒 idempotent
+                transaction.startTime = new Date();
+                await transaction.save();
 
-            transaction.startTime = new Date();
-            transaction.status = "active";
-            await transaction.save();
-            console.log("✅ Correct transaction updated:", callUniqueId);
-        });
+                console.log("✅ Transaction startTime updated");
+            }
+
+        })
 
 
 
