@@ -8,6 +8,9 @@ const callSessionsSchema = new mongoose.Schema(
             ref: "ragisterUser",
             required: true,
         },
+        callUniqueId: {
+            type: String
+        },
         callerId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "ragisterUser",
@@ -26,12 +29,13 @@ const callSessionsSchema = new mongoose.Schema(
         endTime: { type: Date },
         status: {
             type: String,
-            enum: ["ongoing", "completed", "missed", "cancelled"],
+            enum: ["ongoing", "completed", "missed", "cancelled", "pending"],
             default: "ongoing",
         },
         createdAt: { type: Date, default: Date.now },
         updatedAt: { type: Date, default: Date.now },
     },
+
     { timestamps: true }
 );
 
