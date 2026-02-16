@@ -448,23 +448,21 @@ const ioServer = (server) => {
                 const receiver = await User.findById(receiverId);
                 const perMinuteCost =
                     callType === "voice"
-                        ? Number(receiver?.voiceCallCost || 0)
-                        : Number(receiver?.videoCallCost || 0);
+                        ? Number(receiver?.voiceCallCost)
+                        : Number(receiver?.videoCallCost);
 
-                const perSecondCost = perMinuteCost / 60;
-
-                // 3️⃣ balance check
-                if (userBalance < perSecondCost) {
-                    io.to(callerId).emit("autoCallEnded-no-balance");
-                    io.to(receiverId).emit("autoCallEnded-no-balance");
+                if (!perMinuteCost || perMinuteCost <= 0) {
+                    console.log("❌ Invalid call cost");
                     return;
                 }
 
-                // 4️⃣ max seconds calculation
+                const perSecondCost = perMinuteCost / 60;
+
+                // 2️⃣ max seconds
                 const maxSeconds = Math.floor(userBalance / perSecondCost);
                 console.log("User can talk for", maxSeconds, "seconds");
 
-                // 5️⃣ timer start
+                // 3️⃣ timer
                 let elapsedSeconds = 0;
 
                 const interval = setInterval(async () => {
@@ -473,37 +471,22 @@ const ioServer = (server) => {
                     if (elapsedSeconds >= maxSeconds) {
                         clearInterval(interval);
 
-                        // 6️⃣ final wallet update
                         await User.findByIdAndUpdate(callerId, {
                             walletBalance: userBalance - (elapsedSeconds * perSecondCost)
                         });
 
-                        // 7️⃣ update transaction
                         transaction.duration = elapsedSeconds;
                         transaction.status = "completed";
                         transaction.endTime = new Date();
                         await transaction.save();
 
-                        // 8️⃣ update call session
-                        await CallSession.findOneAndUpdate(
-                            { sessionId: channelName },
-                            { status: "ended", endTime: new Date() }
-                        );
-
-                        // 9️⃣ emit to frontend
-                        io.to(callerId).emit("autoCallEnded-no-balance", {
-                            transactionId: transaction._id
-                        });
-
-                        io.to(receiverId).emit("autoCallEnded-no-balance", {
-                            transactionId: transaction._id
-                        });
-
-                        console.log("🔥 Call auto-ended due to balance");
+                        io.to(callerId).emit("autoCallEnded-no-balance");
+                        io.to(receiverId).emit("autoCallEnded-no-balance");
                     }
                 }, 1000);
-                // 🧠 store interval so manual end can clear it
-                activeCalls.get(callId).billingInterval = callInterval;
+
+                // ✅ store interval for later cleanup
+                activeCalls.set(callId, { billingInterval: interval });
 
             } catch (error) {
                 console.error("Error in call-accepted:", error);
