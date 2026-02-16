@@ -438,83 +438,70 @@ const ioServer = (server) => {
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType, transactionId: transaction._id });
                 }
-                // ================= CALL BILLING LOGIC =================
+                // ================= BILLING LOGIC (CHAT STYLE) =================
 
-                const callerInfo = await User.findById(callerId);
-                let userBalance = Number(callerInfo?.walletBalance || 0);
+                // 1️⃣ caller balance
+                const caller = await User.findById(callerId);
+                const userBalance = Number(caller?.walletBalance || 0);
 
-                const receiverInfo = await User.findById(receiverId);
-
-                // cost per minute (voice / video)
+                // 2️⃣ receiver cost
+                const receiver = await User.findById(receiverId);
                 const perMinuteCost =
                     callType === "voice"
-                        ? Number(receiverInfo?.voiceCallCost || 0)
-                        : Number(receiverInfo?.videoCallCost || 0);
+                        ? Number(receiver?.voiceCallCost || 0)
+                        : Number(receiver?.videoCallCost || 0);
 
                 const perSecondCost = perMinuteCost / 60;
 
-                // ❌ Balance check before starting call
+                // 3️⃣ balance check
                 if (userBalance < perSecondCost) {
-                    console.log("❌ Insufficient balance to start call");
-
-                    io.to(callerSocketId).emit("autoCallEnded-no-balance", {
-                        reason: "no-balance"
-                    });
-
-                    io.to(receiverSocketId).emit("autoCallEnded-no-balance", {
-                        reason: "no-balance"
-                    });
-
+                    io.to(callerId).emit("autoCallEnded-no-balance");
+                    io.to(receiverId).emit("autoCallEnded-no-balance");
                     return;
                 }
 
-                let remainingBalance = userBalance;
-                let callSeconds = 0;
+                // 4️⃣ max seconds calculation
+                const maxSeconds = Math.floor(userBalance / perSecondCost);
+                console.log("User can talk for", maxSeconds, "seconds");
 
-                // 🔁 Per second billing
-                const callInterval = setInterval(async () => {
-                    if (remainingBalance >= perSecondCost) {
-                        remainingBalance -= perSecondCost;
-                        callSeconds++;
+                // 5️⃣ timer start
+                let elapsedSeconds = 0;
 
-                        // OPTIONAL: live balance update
+                const interval = setInterval(async () => {
+                    elapsedSeconds++;
+
+                    if (elapsedSeconds >= maxSeconds) {
+                        clearInterval(interval);
+
+                        // 6️⃣ final wallet update
                         await User.findByIdAndUpdate(callerId, {
-                            walletBalance: remainingBalance
+                            walletBalance: userBalance - (elapsedSeconds * perSecondCost)
                         });
 
-                    } else {
-                        clearInterval(callInterval);
-
-                        console.log("🔥 CALL AUTO ENDED (NO BALANCE)");
-
-                        // 🧾 Update transaction
-                        transaction.duration = callSeconds;
+                        // 7️⃣ update transaction
+                        transaction.duration = elapsedSeconds;
                         transaction.status = "completed";
                         transaction.endTime = new Date();
                         await transaction.save();
 
-                        // 🧾 Update call session
-                        // await CallSession.findOneAndUpdate(
-                        //     { sessionId: channelName },
-                        //     {
-                        //         status: "ended",
-                        //         endTime: new Date()
-                        //     }
-                        // );
+                        // 8️⃣ update call session
+                        await CallSession.findOneAndUpdate(
+                            { sessionId: channelName },
+                            { status: "ended", endTime: new Date() }
+                        );
 
-                        // 🔔 Emit to both users
-                        io.to(callerSocketId).emit("autoCallEnded-no-balance", {
-                            transactionId: transaction._id,
-                            reason: "no-balance"
+                        // 9️⃣ emit to frontend
+                        io.to(callerId).emit("autoCallEnded-no-balance", {
+                            transactionId: transaction._id
                         });
 
-                        io.to(receiverSocketId).emit("autoCallEnded-no-balance", {
-                            transactionId: transaction._id,
-                            reason: "no-balance"
+                        io.to(receiverId).emit("autoCallEnded-no-balance", {
+                            transactionId: transaction._id
                         });
+
+                        console.log("🔥 Call auto-ended due to balance");
                     }
                 }, 1000);
-
                 // 🧠 store interval so manual end can clear it
                 activeCalls.get(callId).billingInterval = callInterval;
 
