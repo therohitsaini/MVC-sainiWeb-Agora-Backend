@@ -25,7 +25,7 @@ const callSessionsSchema = new mongoose.Schema(
         shopId: {
             type: String
         },
-        startTime: { type: Date, required: true },
+        startTime: { type: Date,},
         endTime: { type: Date },
         status: {
             type: String,
