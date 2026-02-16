@@ -520,6 +520,10 @@ const ioServer = (server) => {
 
         })
 
+        socket.on("both-update-time", async (data) => {
+            console.log("Data__________", data)
+        })
+
         //---------------- end call logics ----------------
 
         socket.on("call-ended", async (data) => {
