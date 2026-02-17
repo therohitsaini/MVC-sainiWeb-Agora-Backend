@@ -494,17 +494,26 @@ const ioServer = (server) => {
             //     await transaction.save();
 
             //     console.log("✅ Transaction startTime updated");
-            if (transactionId) {
-                const updateTime = await TransactionHistroy.findById(transactionId)
-                if (!updateTime) {
-                    console.log("❌ Transaction not found");
-                    return;
-                }
-                updateTime.startTime = new Date()
-                await updateTime.save()
-                console.log("time update after join both user_______________________________", transactionId)
+            if (!transactionId) return;
 
+            const cleanTransactionId = transactionId.replace(/"/g, "");
+
+            if (!mongoose.Types.ObjectId.isValid(cleanTransactionId)) {
+                console.log("❌ Invalid transactionId:", transactionId);
+                return;
             }
+
+            const updateTime = await TransactionHistroy.findById(cleanTransactionId);
+            if (!updateTime) {
+                console.log("❌ Transaction not found");
+                return;
+            }
+
+            updateTime.startTime = new Date();
+            await updateTime.save();
+
+            console.log("✅ time updated after both users joined:", cleanTransactionId);
+
 
 
         })
@@ -788,7 +797,7 @@ const ioServer = (server) => {
                 const totalSeconds_ = Math.floor(
                     (endTime - new Date(transaction.startTime)) / 1000
                 );
-                const totalSeconds = totalSeconds_ -10
+                const totalSeconds = totalSeconds_ - 10
 
                 const callCostPerMinute =
                     callType === "voice"
