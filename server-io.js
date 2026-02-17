@@ -873,7 +873,8 @@ const ioServer = (server) => {
                     direction: "credit",
                     description: `Call ended for ${formatTime(totalSeconds)} seconds`,
                     status: "success",
-                }], { session });
+                }], { session, ordered: true });
+
 
                 // Commit transaction
                 await session.commitTransaction();
