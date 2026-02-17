@@ -654,7 +654,7 @@ const ioServer = (server) => {
         // });
 
         socket.on("call-ended", async (data) => {
-            const { transactionId, callerId, receiverId, shopId, callType, channelName, endby } = data;
+            const { transactionId, callerId, receiverId, shopId, callType, channelName, endby = "user_cut_call" } = data;
             console.log("data_______________________✅", "transactionId", transactionId, "callerId", callerId, "receiverId", receiverId, "shopId", shopId, "callType", callType, "channelName", channelName, "endby", endby)
 
             let session;
@@ -785,12 +785,12 @@ const ioServer = (server) => {
 
                 // Calculate call duration and costs
                 const endTime = new Date();
-                const totalSeconds_ = Math.floor(
+                const totalSeconds = Math.floor(
                     (endTime - new Date(transaction.startTime)) / 1000
                 );
-                console.log("totalSeconds_", totalSeconds_);
 
-                let totalSeconds = totalSeconds_ - 5; // Subtract 5 seconds buffer
+
+
                 console.log("adjusted totalSeconds", totalSeconds);
 
                 const callCostPerMinute =
