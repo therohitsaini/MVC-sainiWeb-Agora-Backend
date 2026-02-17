@@ -750,150 +750,93 @@ const ioServer = (server) => {
                 endBy
             } = data;
 
-            const session = await mongoose.startSession();
-            session.startTransaction();
+            // 1️⃣ transactionId resolve karo
+            let finalTransactionId = transactionId;
 
-            try {
-                let finalTransactionId;
-
-                // ================================
-                // 1️⃣ FIND TRANSACTION ID
-                // ================================
-                if (endBy === "USER") {
-                    // USER → transactionId must exist
-                    if (!transactionId) {
-                        console.log("❌ USER end but transactionId missing");
-                        return;
-                    }
-                    finalTransactionId = transactionId;
-                }
-
-                if (endBy === "CONSULTANT") {
-                    // CONSULTANT → find via CallSession
-                    const callSession = await CallSession.findOne({
-                        sessionId: channelName,
-                        callerId,
-                        receiverId
-                    });
-
-                    if (!callSession || !callSession.transtionId) {
-                        console.log("❌ CallSession / transactionId missing");
-                        return;
-                    }
-                    finalTransactionId = callSession.transtionId;
-                }
-
-                // ================================
-                // 2️⃣ FETCH TRANSACTION
-                // ================================
-                const transaction = await TransactionHistroy
-                    .findById(finalTransactionId)
-                    .session(session);
-
-                if (!transaction) {
-                    console.log("❌ Transaction not found");
+            if (!finalTransactionId) {
+                const callSession = await CallSession.findOne({ sessionId: channelName });
+                if (!callSession?.transtionId) {
+                    console.log("❌ No transactionId found — IGNORE");
                     return;
                 }
-
-                // ================================
-                // 3️⃣ DUPLICATE PROTECTION (MOST IMPORTANT)
-                // ================================
-                if (transaction.status === "completed") {
-                    console.log("⚠️ Transaction already completed → SKIP");
-                    await session.abortTransaction();
-                    return;
-                }
-
-                // ================================
-                // 4️⃣ CALCULATE TIME (SERVER TIME)
-                // ================================
-                const endTime = new Date();
-                const rawSeconds = Math.floor(
-                    (endTime - new Date(transaction.startTime)) / 1000
-                );
-
-                const totalSeconds = Math.max(0, rawSeconds - 5); // buffer
-
-                // ================================
-                // 5️⃣ COST CALCULATION
-                // ================================
-                const receiver = await User.findById(receiverId).session(session);
-                const caller = await User.findById(callerId).session(session);
-                const shop = await shopModel.findById(shopId).session(session);
-
-                const perMinute =
-                    callType === "voice"
-                        ? Number(receiver.voicePerMinute)
-                        : Number(receiver.videoPerMinute);
-
-                const perSecond = perMinute / 60;
-                const totalAmount = Number((totalSeconds * perSecond).toFixed(2));
-
-                const adminCommission =
-                    (totalAmount * Number(shop.adminPersenTage)) / 100;
-
-                const receiverShare = totalAmount - adminCommission;
-
-                // ================================
-                // 6️⃣ UPDATE TRANSACTION
-                // ================================
-                transaction.endTime = endTime;
-                transaction.duration = totalSeconds;
-                transaction.totalAmount = totalAmount;
-                transaction.status = "completed";
-                transaction.endedBy = endBy;
-
-                await transaction.save({ session });
-
-                // ================================
-                // 7️⃣ WALLET UPDATES
-                // ================================
-                await User.findByIdAndUpdate(
-                    callerId,
-                    { $inc: { walletBalance: -totalAmount } },
-                    { session }
-                );
-
-                await User.findByIdAndUpdate(
-                    receiverId,
-                    { $inc: { walletBalance: receiverShare } },
-                    { session }
-                );
-
-                await shopModel.findByIdAndUpdate(
-                    shopId,
-                    { $inc: { adminWalletBalance: adminCommission } },
-                    { session }
-                );
-
-                await session.commitTransaction();
-
-                // ================================
-                // 8️⃣ EMIT RESULT
-                // ================================
-                io.to(callerId).emit("callEnded", {
-                    transactionId: finalTransactionId,
-                    totalSeconds,
-                    totalAmount,
-                    endedBy: endBy
-                });
-
-                io.to(receiverId).emit("callEnded", {
-                    transactionId: finalTransactionId,
-                    totalSeconds,
-                    totalAmount,
-                    endedBy: endBy
-                });
-
-                console.log("✅ Call ended safely:", finalTransactionId);
-
-            } catch (err) {
-                console.error("❌ Call end error:", err);
-                await session.abortTransaction();
-            } finally {
-                session.endSession();
+                finalTransactionId = callSession.transtionId;
             }
+
+            // 2️⃣ transaction lao
+            const transaction = await TransactionHistroy.findById(finalTransactionId);
+            if (!transaction) {
+                console.log("❌ Transaction not found — IGNORE");
+                return;
+            }
+
+            // 🔒 3️⃣ MOST IMPORTANT LOCK
+            if (transaction.status === "completed") {
+                console.log("⏭️ Already completed — IGNORE");
+                return;
+            }
+
+            // 4️⃣ duration calculate
+            const endTime = new Date();
+            const totalSecondsRaw = Math.floor(
+                (endTime - new Date(transaction.startTime)) / 1000
+            );
+            const totalSeconds = Math.max(0, totalSecondsRaw - 5);
+
+            // 5️⃣ cost
+            const receiver = await User.findById(receiverId);
+            const shop = await shopModel.findById(shopId);
+
+            const perMinute =
+                callType === "voice"
+                    ? Number(receiver.voicePerMinute)
+                    : Number(receiver.videoPerMinute);
+
+            const perSecond = perMinute / 60;
+            const totalAmount = Number((totalSeconds * perSecond).toFixed(2));
+            const adminCommission = (totalAmount * shop.adminPersenTage) / 100;
+            const receiverShare = totalAmount - adminCommission;
+
+            // 🔐 6️⃣ ATOMIC UPDATE (duplicate se safe)
+            const updated = await TransactionHistroy.findOneAndUpdate(
+                { _id: finalTransactionId, status: { $ne: "completed" } },
+                {
+                    $set: {
+                        endTime,
+                        duration: totalSeconds,
+                        totalAmount,
+                        status: "completed",
+                        endBy
+                    }
+                },
+                { new: true }
+            );
+
+            if (!updated) {
+                console.log("⏭️ Someone already closed this call");
+                return;
+            }
+
+            // 7️⃣ wallet update (sirf 1 baar)
+            await User.findByIdAndUpdate(callerId, {
+                $inc: { walletBalance: -totalAmount }
+            });
+
+            await User.findByIdAndUpdate(receiverId, {
+                $inc: { walletBalance: receiverShare }
+            });
+
+            await shopModel.findByIdAndUpdate(shopId, {
+                $inc: { adminWalletBalance: adminCommission }
+            });
+
+            // 8️⃣ notify
+            io.to(callerId).emit("callEnded", { totalSeconds, totalAmount });
+            io.to(receiverId).emit("callEnded", { totalSeconds, totalAmount });
+
+            console.log("✅ Call closed safely:", finalTransactionId);
         });
+
+        
         socket.on("disconnect", async () => {
             console.log("❌ Socket disconnected:", socket.id);
 
