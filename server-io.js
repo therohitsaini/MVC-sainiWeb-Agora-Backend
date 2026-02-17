@@ -701,7 +701,7 @@ const ioServer = (server) => {
             // 5️⃣ cost
             const receiver = await User.findById(receiverId);
             const shop = await shopModel.findById(shopId);
-
+            console.log("receiver", receiver)
             const perMinute =
                 callType === "voice"
                     ? Number(receiver.voicePerMinute)
