@@ -437,7 +437,7 @@ const ioServer = (server) => {
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType, transactionId: transaction._id });
                 }
-               
+
 
             } catch (error) {
                 console.error("Error in call-accepted:", error);
@@ -467,20 +467,23 @@ const ioServer = (server) => {
                     callType
                 });
             }
+        })
+
+        socket.on("user-connected-time-updated", async ({ callerId, receiverId, channelName, callType, transactionId }) => {
 
             // if (channelName) {
             //     const callSession = await CallSession.findOne({
             //         sessionId: channelName
             //     });
 
-            //     if (!callSession || !callSession.transtionId) {
-            //         console.log("❌ CallSession or transactionId not found");
-            //         return;
-            //     }
+            //     // if (!callSession || !callSession.transtionId) {
+            //     //     console.log("❌ CallSession or transactionId not found");
+            //     //     return;
+            //     // }
 
-            //     const transaction = await TransactionHistroy.findById(
-            //         callSession.transtionId
-            //     );
+            // // const transaction = await TransactionHistroy.findById(
+            //     callSession.transtionId
+            // );
 
             //     if (!transaction) {
             //         console.log("❌ Transaction not found");
@@ -491,37 +494,18 @@ const ioServer = (server) => {
             //     await transaction.save();
 
             //     console.log("✅ Transaction startTime updated");
-            // }
-
-
-        })
-
-        socket.on("user-connected-time-updated", async ({ callerId, receiverId, channelName, callType, }) => {
-        
-            if (channelName) {
-                const callSession = await CallSession.findOne({
-                    sessionId: channelName
-                });
-
-                if (!callSession || !callSession.transtionId) {
-                    console.log("❌ CallSession or transactionId not found");
-                    return;
-                }
-
-                const transaction = await TransactionHistroy.findById(
-                    callSession.transtionId
-                );
-
-                if (!transaction) {
+            if (transactionId) {
+                const updateTime = await TransactionHistroy.findById(transactionId)
+                if (!updateTime) {
                     console.log("❌ Transaction not found");
                     return;
                 }
+                updateTime.startTime = new Date()
+                await updateTime.save()
+                console.log("time update after join both user", transactionId)
 
-                transaction.startTime = new Date();
-                await transaction.save();
-
-                console.log("✅ Transaction startTime updated");
             }
+
 
         })
 
