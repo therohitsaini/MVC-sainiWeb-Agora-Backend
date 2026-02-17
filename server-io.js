@@ -656,90 +656,244 @@ const ioServer = (server) => {
         });
 
 
-        socket.on("endChat", async (data) => {
-            const { transactionId, userId, consultantId, shopId } = data;
+        // socket.on("endChat", async (data) => {
+        //     const { transactionId, userId, consultantId, shopId } = data;
+        //     const session = await mongoose.startSession();
+        //     session.startTransaction(); 
+
+        //     try {
+        //         const transaction = await TransactionHistroy.findById(transactionId).session(session);
+        //         if (!transaction) throw new Error("Transaction not found");
+        //         if (transaction.status === "completed") {
+        //             console.log("Chat already completed");
+        //             await session.abortTransaction();
+        //             return;
+        //         }
+
+        //         const consultantCost = await User.findById(consultantId).session(session);
+        //         console.log("consultantCost", consultantCost)
+        //         if (!consultantCost) throw new Error("Consultant not found");
+
+        //         const shop = await shopModel.findById(shopId).session(session);
+        //         if (!shop) throw new Error("Shop not found");
+        //         const user_ = await User.findById(userId).session(session);
+        //         if (!user_) throw new Error("User not found");
+        //         const endTime = new Date();
+        //         const totalSeconds = Math.floor((endTime - new Date(transaction.startTime)) / 1000);
+        //         const perSecondCost = consultantCost.chatPerMinute / 60;
+        //         console.log("perSecondCost", perSecondCost)
+        //         const totalAmount = Number((totalSeconds * perSecondCost).toFixed(2));
+        //         console.log("totalAmount", totalAmount)
+        //         const adminCommission = totalAmount * Number(shop.adminPersenTage) / 100;
+        //         const consultantShare = totalAmount - adminCommission;
+        //         const shopShare = adminCommission;
+        //         transaction.endTime = endTime;
+        //         transaction.totalSeconds = totalSeconds;
+        //         transaction.totalAmount = totalAmount;
+        //         transaction.status = "completed";
+        //         await transaction.save({ session });
+        //         console.log("totalAmount", totalAmount)
+        //         await User.findByIdAndUpdate(userId, { $inc: { walletBalance: -totalAmount } }, { session });
+        //         await User.findByIdAndUpdate(consultantId, { $inc: { walletBalance: consultantShare } }, { session });
+        //         await shopModel.findByIdAndUpdate(shopId, { $inc: { adminWalletBalance: shopShare } }, { session });
+
+        //         await TransactionHistroy.findByIdAndUpdate(transactionId, {
+        //             $inc: { adminAmount: adminCommission, consultantAmount: consultantShare, amount: totalAmount }
+        //         }, { session });
+
+        //         await User.findByIdAndUpdate(userId, { $set: { isChatAccepted: "request", chatLock: true } }, { session });
+
+        //         await WalletHistory.create({
+        //             userId: userId,
+        //             shop_id: shopId,
+        //             amount: totalAmount,
+        //             transactionType: "usage",
+        //             referenceType: "chat",
+        //             direction: "debit",
+        //             description: `Chat ended for ${formatTime(totalSeconds)} minutes`,
+        //             status: "success",
+        //         });
+        //         await WalletHistory.create({
+        //             userId: consultantId,
+        //             shop_id: shopId,
+        //             amount: consultantShare,
+        //             transactionType: "usage",
+        //             referenceType: "chat",
+        //             direction: "credit",
+        //             description: `Chat ended for ${formatTime(totalSeconds)} minutes`,
+        //             status: "success",
+        //         });
+
+
+        //         await session.commitTransaction();
+
+        //         io.to(userId).emit("chatEnded", { transactionId, totalSeconds, totalAmount, reason: "ended" });
+        //         io.to(consultantId).emit("chatEnded", { transactionId, totalSeconds, totalAmount, reason: "ended" });
+
+        //         console.log("✅ Chat ended:", transactionId);
+
+        //     } catch (error) {
+        //         console.log("Transaction error:", error);
+        //         await session.abortTransaction();
+        //     } finally {
+        //         session.endSession();
+        //     }
+        // });
+        socket.on("call-ended", async (data) => {
+            const {
+                transactionId,
+                callerId,
+                receiverId,
+                shopId,
+                callType,
+                channelName,
+                endBy
+            } = data;
+
             const session = await mongoose.startSession();
             session.startTransaction();
 
             try {
-                const transaction = await TransactionHistroy.findById(transactionId).session(session);
-                if (!transaction) throw new Error("Transaction not found");
+                let finalTransactionId;
+
+                // ================================
+                // 1️⃣ FIND TRANSACTION ID
+                // ================================
+                if (endBy === "USER") {
+                    // USER → transactionId must exist
+                    if (!transactionId) {
+                        console.log("❌ USER end but transactionId missing");
+                        return;
+                    }
+                    finalTransactionId = transactionId;
+                }
+
+                if (endBy === "CONSULTANT") {
+                    // CONSULTANT → find via CallSession
+                    const callSession = await CallSession.findOne({
+                        sessionId: channelName,
+                        callerId,
+                        receiverId
+                    });
+
+                    if (!callSession || !callSession.transtionId) {
+                        console.log("❌ CallSession / transactionId missing");
+                        return;
+                    }
+                    finalTransactionId = callSession.transtionId;
+                }
+
+                // ================================
+                // 2️⃣ FETCH TRANSACTION
+                // ================================
+                const transaction = await TransactionHistroy
+                    .findById(finalTransactionId)
+                    .session(session);
+
+                if (!transaction) {
+                    console.log("❌ Transaction not found");
+                    return;
+                }
+
+                // ================================
+                // 3️⃣ DUPLICATE PROTECTION (MOST IMPORTANT)
+                // ================================
                 if (transaction.status === "completed") {
-                    console.log("Chat already completed");
+                    console.log("⚠️ Transaction already completed → SKIP");
                     await session.abortTransaction();
                     return;
                 }
 
-                const consultantCost = await User.findById(consultantId).session(session);
-                console.log("consultantCost", consultantCost)
-                if (!consultantCost) throw new Error("Consultant not found");
-
-                const shop = await shopModel.findById(shopId).session(session);
-                if (!shop) throw new Error("Shop not found");
-                const user_ = await User.findById(userId).session(session);
-                if (!user_) throw new Error("User not found");
+                // ================================
+                // 4️⃣ CALCULATE TIME (SERVER TIME)
+                // ================================
                 const endTime = new Date();
-                const totalSeconds = Math.floor((endTime - new Date(transaction.startTime)) / 1000);
-                const perSecondCost = consultantCost.chatPerMinute / 60;
-                console.log("perSecondCost", perSecondCost)
-                const totalAmount = Number((totalSeconds * perSecondCost).toFixed(2));
-                console.log("totalAmount", totalAmount)
-                const adminCommission = totalAmount * Number(shop.adminPersenTage) / 100;
-                const consultantShare = totalAmount - adminCommission;
-                const shopShare = adminCommission;
+                const rawSeconds = Math.floor(
+                    (endTime - new Date(transaction.startTime)) / 1000
+                );
+
+                const totalSeconds = Math.max(0, rawSeconds - 5); // buffer
+
+                // ================================
+                // 5️⃣ COST CALCULATION
+                // ================================
+                const receiver = await User.findById(receiverId).session(session);
+                const caller = await User.findById(callerId).session(session);
+                const shop = await shopModel.findById(shopId).session(session);
+
+                const perMinute =
+                    callType === "voice"
+                        ? Number(receiver.voicePerMinute)
+                        : Number(receiver.videoPerMinute);
+
+                const perSecond = perMinute / 60;
+                const totalAmount = Number((totalSeconds * perSecond).toFixed(2));
+
+                const adminCommission =
+                    (totalAmount * Number(shop.adminPersenTage)) / 100;
+
+                const receiverShare = totalAmount - adminCommission;
+
+                // ================================
+                // 6️⃣ UPDATE TRANSACTION
+                // ================================
                 transaction.endTime = endTime;
-                transaction.totalSeconds = totalSeconds;
+                transaction.duration = totalSeconds;
                 transaction.totalAmount = totalAmount;
                 transaction.status = "completed";
+                transaction.endedBy = endBy;
+
                 await transaction.save({ session });
-                console.log("totalAmount", totalAmount)
-                await User.findByIdAndUpdate(userId, { $inc: { walletBalance: -totalAmount } }, { session });
-                await User.findByIdAndUpdate(consultantId, { $inc: { walletBalance: consultantShare } }, { session });
-                await shopModel.findByIdAndUpdate(shopId, { $inc: { adminWalletBalance: shopShare } }, { session });
 
-                await TransactionHistroy.findByIdAndUpdate(transactionId, {
-                    $inc: { adminAmount: adminCommission, consultantAmount: consultantShare, amount: totalAmount }
-                }, { session });
+                // ================================
+                // 7️⃣ WALLET UPDATES
+                // ================================
+                await User.findByIdAndUpdate(
+                    callerId,
+                    { $inc: { walletBalance: -totalAmount } },
+                    { session }
+                );
 
-                await User.findByIdAndUpdate(userId, { $set: { isChatAccepted: "request", chatLock: true } }, { session });
+                await User.findByIdAndUpdate(
+                    receiverId,
+                    { $inc: { walletBalance: receiverShare } },
+                    { session }
+                );
 
-                await WalletHistory.create({
-                    userId: userId,
-                    shop_id: shopId,
-                    amount: totalAmount,
-                    transactionType: "usage",
-                    referenceType: "chat",
-                    direction: "debit",
-                    description: `Chat ended for ${formatTime(totalSeconds)} minutes`,
-                    status: "success",
-                });
-                await WalletHistory.create({
-                    userId: consultantId,
-                    shop_id: shopId,
-                    amount: consultantShare,
-                    transactionType: "usage",
-                    referenceType: "chat",
-                    direction: "credit",
-                    description: `Chat ended for ${formatTime(totalSeconds)} minutes`,
-                    status: "success",
-                });
-
+                await shopModel.findByIdAndUpdate(
+                    shopId,
+                    { $inc: { adminWalletBalance: adminCommission } },
+                    { session }
+                );
 
                 await session.commitTransaction();
 
-                io.to(userId).emit("chatEnded", { transactionId, totalSeconds, totalAmount, reason: "ended" });
-                io.to(consultantId).emit("chatEnded", { transactionId, totalSeconds, totalAmount, reason: "ended" });
+                // ================================
+                // 8️⃣ EMIT RESULT
+                // ================================
+                io.to(callerId).emit("callEnded", {
+                    transactionId: finalTransactionId,
+                    totalSeconds,
+                    totalAmount,
+                    endedBy: endBy
+                });
 
-                console.log("✅ Chat ended:", transactionId);
+                io.to(receiverId).emit("callEnded", {
+                    transactionId: finalTransactionId,
+                    totalSeconds,
+                    totalAmount,
+                    endedBy: endBy
+                });
 
-            } catch (error) {
-                console.log("Transaction error:", error);
+                console.log("✅ Call ended safely:", finalTransactionId);
+
+            } catch (err) {
+                console.error("❌ Call end error:", err);
                 await session.abortTransaction();
             } finally {
                 session.endSession();
             }
         });
-
         socket.on("disconnect", async () => {
             console.log("❌ Socket disconnected:", socket.id);
 

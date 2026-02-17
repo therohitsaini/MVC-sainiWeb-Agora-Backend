@@ -51,6 +51,9 @@ const transactionSchema = new mongoose.Schema({
         enum: ["active", "ended", "completed"],
         default: "active"
     },
+    endedBy: {
+        type: String
+    },
     type: {
         type: String,
         enum: ["chat", "voice", "video"],
