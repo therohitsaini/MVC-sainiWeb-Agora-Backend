@@ -502,7 +502,7 @@ const ioServer = (server) => {
                 }
                 updateTime.startTime = new Date()
                 await updateTime.save()
-                console.log("time update after join both user", transactionId)
+                console.log("time update after join both user_______________________________", transactionId)
 
             }
 
