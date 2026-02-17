@@ -785,13 +785,10 @@ const ioServer = (server) => {
 
                 // Calculate call duration and costs
                 const endTime = new Date();
-                const totalSeconds = Math.floor(
+                const totalSeconds_ = Math.floor(
                     (endTime - new Date(transaction.startTime)) / 1000
                 );
-
-
-
-                console.log("adjusted totalSeconds", totalSeconds);
+                const totalSeconds = totalSeconds_ -10
 
                 const callCostPerMinute =
                     callType === "voice"
