@@ -545,9 +545,12 @@ const ioServer = (server) => {
                 const shop = await shopModel.findById(shopId).session(session);
                 if (!shop) throw new Error("Shop not found");
                 const endTime = new Date();
-                const totalSeconds = Math.floor(
+                const totalSeconds_ = Math.floor(
                     (endTime - new Date(transaction.startTime)) / 1000
-                ) - 5;
+                );
+                console.log("totalSeconds_", totalSeconds_)
+                let totalSeconds = totalSeconds_ - 5
+                console.log("totalSeconds_", totalSeconds)
 
                 const callCostPerMinute =
                     callType === "voice"
