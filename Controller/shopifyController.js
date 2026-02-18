@@ -92,7 +92,9 @@ const installShopifyApp = async (req, res) => {
 
 const authCallback = async (req, res) => {
     try {
-        console.log("🔁 Auth callback triggered");
+        console.log("🔁 Auth callback triggered -----------");
+        console.log(req.query);
+
         const { shop, hmac, code, host } = req.query;
         if (!shop || !hmac || !code) {
             console.log("❌ Missing required parameters");
