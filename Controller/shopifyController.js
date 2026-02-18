@@ -144,8 +144,43 @@ const authCallback = async (req, res) => {
 
     console.log("shop");
     console.log(shop);
+    // --------------------------------
 
-    const shopInfo = await axios.post(`https://${shop}/admin/api/2024-01/graphql.json`,
+
+    try {
+    const graphqlQuery = `
+      query {
+        shop {
+          id
+          name
+          email
+          myshopifyDomain
+          currencyCode
+        }
+      }
+    `;
+
+    const response = await axios.post(
+      `https://${shop}/admin/api/2025-10/graphql.json`,
+      { query: graphqlQuery },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "X-Shopify-Access-Token": accessToken
+        }
+      }
+    );
+
+    if (response.data.errors) {
+      console.error("GraphQL Errors:", response.data.errors);
+      return null;
+    }
+
+    console.log("response");
+    console.log(response);
+
+
+    const shopInfo = await axios.post(`https://${shop}/admin/api/2025-10/graphql.json`,
     {
         query: `
         query {
