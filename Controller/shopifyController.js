@@ -21,7 +21,7 @@ const client_id = process.env.SHOPIFY_CLIENT_ID
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET
 const SCOPES = "read_customers,write_customers,write_draft_orders,read_draft_orders,read_orders,write_orders,read_orders,write_orders";
 const APP_URL = process.env.APP_URL;
-console.log("SHOPIFY_API_SECRET", SHOPIFY_API_SECRET)
+
 
 /**
  * STEP 1: Shopify App Installation Function
@@ -91,196 +91,126 @@ const installShopifyApp = async (req, res) => {
 
 
 const authCallback = async (req, res) => {
-    // try {
-    console.log("🔁 Auth callback triggered -----------");
-    console.log(req.query);
-
-    const { shop, hmac, code, host } = req.query;
-    if (!shop || !hmac || !code) {
-        console.log("❌ Missing required parameters");
-        return res.status(400).send("Missing required parameters");
-    }
-    const params = { ...req.query };
-    delete params.hmac;
-    delete params.signature;
-
-    const sortedKeys = Object.keys(params).sort();
-    const message = sortedKeys
-        .map((key) => `${key}=${params[key]}`)
-        .join("&");
-
-    const generatedHmac = crypto
-        .createHmac("sha256", SHOPIFY_API_SECRET)
-        .update(message)
-        .digest("hex");
-
-    if (generatedHmac.toLowerCase() !== hmac.toLowerCase()) {
-        console.log("❌ HMAC validation failed");
-        return res.status(400).send("HMAC validation failed");
-    }
-
-    console.log("✅ HMAC validation successful");
-    if (!shop.endsWith('.myshopify.com')) {
-        return res.status(400).send("Invalid shop domain");
-    }
-
-    const tokenResponse = await axios.post(
-        `https://${shop}/admin/oauth/access_token`,
-        {
-            client_id: client_id,
-            client_secret: SHOPIFY_API_SECRET,
-            code,
+    try {
+        console.log("🔁 Auth callback triggered");
+        const { shop, hmac, code, host } = req.query;
+        if (!shop || !hmac || !code) {
+            console.log("❌ Missing required parameters");
+            return res.status(400).send("Missing required parameters");
         }
-    );
+        const params = { ...req.query };
+        delete params.hmac;
+        delete params.signature;
 
+        const sortedKeys = Object.keys(params).sort();
+        const message = sortedKeys
+            .map((key) => `${key}=${params[key]}`)
+            .join("&");
 
-    const accessToken = tokenResponse.data.access_token;
-    if (!accessToken) {
-        return res.status(400).send("Failed to get access token");
-    }
+        const generatedHmac = crypto
+            .createHmac("sha256", SHOPIFY_API_SECRET)
+            .update(message)
+            .digest("hex");
 
-    console.log("accessToken");
-    console.log(accessToken);
-
-    console.log("shop");
-    console.log(shop);
-    // --------------------------------
-
-
-    
-    const graphqlQuery = `
-      query {
-        shop {
-          id
-          name
-          email
-          myshopifyDomain
-          currencyCode
+        if (generatedHmac.toLowerCase() !== hmac.toLowerCase()) {
+            console.log("❌ HMAC validation failed");
+            return res.status(400).send("HMAC validation failed");
         }
-      }
-    `;
 
-    const response = await axios.post(
-      `https://${shop}/admin/api/2025-10/graphql.json`,
-      { query: graphqlQuery },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Access-Token": accessToken
-        }
-      }
-    );
+        console.log("✅ HMAC validation successful");
 
-    if (response.data.errors) {
-      console.error("GraphQL Errors:", response.data.errors);
-      return null;
-    }
-
-    console.log("response");
-    console.log(response);
-
-
-    const shopInfo = await axios.post(`https://${shop}/admin/api/2025-10/graphql.json`,
-    {
-        query: `
-        query {
-            shop {
-            id
-            name
-            email
-            domain
-            myshopifyDomain
-            plan {
-                displayName
-                partnerDevelopment
-                shopifyPlus
+        const tokenResponse = await axios.post(
+            `https://${shop}/admin/oauth/access_token`,
+            {
+                client_id: client_id,
+                client_secret: SHOPIFY_API_SECRET,
+                code,
             }
+        );
+
+        const accessToken = tokenResponse.data.access_token;
+        if (!accessToken) {
+            return res.status(400).send("Failed to get access token");
+        }
+
+        const shopInfo = await axios.get(
+            `https://${shop}/admin/api/2024-01/shop.json`,
+            {
+                headers: {
+                    "X-Shopify-Access-Token": accessToken
+                }
             }
+        );
+        const shopId = shopInfo.data.shop.id;
+        const ownerEmail = shopInfo.data.shop.email;
+
+        let shopDoc = await shopModel.findOne({ shop });
+
+        if (shopDoc) {
+            shopDoc.accessToken = accessToken;
+            shopDoc.shopId = shopId;
+            shopDoc.email = ownerEmail;
+            shopDoc.installedAt = new Date();
+            await shopDoc.save();
+        } else {
+            await new shopModel({
+                shop,
+                accessToken,
+                shopId,
+                email: ownerEmail,
+                installedAt: new Date(),
+                appEnabled: false,
+                planStatus:"new"
+
+            }).save();
         }
-        `
-    },
-    {
-        headers: {
-        "X-Shopify-Access-Token": accessToken,
-        "Content-Type": "application/json"
+
+        const AdminUser = await shopModel.findOne({ shop: shop });
+        if (!AdminUser) {
+            return res.status(400).send("Admin user not found");
         }
-    });
-console.log("shopInfo");
-    console.log(shopInfo);
-const shopData = shopInfo.data.data.shop;
+        /** Delete All App Uninstall Webhooks */
+        // await deleteAllAppUninstallWebhooks(shop, accessToken);
+        /** Register Order Paid Webhook */
 
-    
+        await registerAppUninstallWebhook(shop, accessToken);
+        const AdminiId = AdminUser._id;
+        let finalHost = host;
+        if (!finalHost || !finalHost.startsWith('YWRtaW4')) {
+            const shopDomain = shop.replace('.myshopify.com', '');
+            const hostString = `admin.shopify.com/store/${shopDomain}`;
+            finalHost = Buffer.from(hostString).toString('base64');
+        } else {
+            console.log("✅ Using Shopify provided host");
+        }
 
-    const shopId = shopInfo.data.shop.id;
-    const ownerEmail = shopInfo.data.shop.email;
+        // if (!AdminUser.isPaid || AdminUser.planStatus !== "ACTIVE") {
+        //     console.log("❌ No active plan, redirecting to pricing");
+        //     const pricingRedirectUrl = `${frontendUrl}/pricing?` + new URLSearchParams({
+        //         shop: shop,
+        //         host: finalHost,
+        //         adminId: AdminUser._id.toString(),
+        //         source: 'shopify_auth'
+        //     }).toString();
 
-    let shopDoc = await shopModel.findOne({ shop });
+        //     return res.redirect(pricingRedirectUrl);
+        // }
 
-    if (shopDoc) {
-        shopDoc.accessToken = accessToken;
-        shopDoc.shopId = shopId;
-        shopDoc.email = ownerEmail;
-        shopDoc.installedAt = new Date();
-        await shopDoc.save();
-    } else {
-        await new shopModel({
-            shop,
-            accessToken,
-            shopId,
-            email: ownerEmail,
-            installedAt: new Date(),
-            appEnabled: false,
-            planStatus: "new"
+        const redirectUrl = `${frontendUrl}/?` + new URLSearchParams({
+            shop: shop,
+            host: finalHost,
+            embedded: '1',
+            adminId: AdminiId.toString(),
+            source: 'shopify_auth',
+            timestamp: Date.now().toString(),
+            session: require('crypto').randomBytes(16).toString('hex')
+        }).toString();
 
-        }).save();
+        return res.redirect(redirectUrl);
+    } catch (error) {
+        console.error("❌ Auth callback error:", error.message || error);
+        return res.status(500).send("Failed to complete authentication");
     }
-
-    const AdminUser = await shopModel.findOne({ shop: shop });
-    if (!AdminUser) {
-        return res.status(400).send("Admin user not found");
-    }
-    /** Delete All App Uninstall Webhooks */
-    // await deleteAllAppUninstallWebhooks(shop, accessToken);
-    /** Register Order Paid Webhook */
-
-    await registerAppUninstallWebhook(shop, accessToken);
-    const AdminiId = AdminUser._id;
-    let finalHost = host;
-    if (!finalHost || !finalHost.startsWith('YWRtaW4')) {
-        const shopDomain = shop.replace('.myshopify.com', '');
-        const hostString = `admin.shopify.com/store/${shopDomain}`;
-        finalHost = Buffer.from(hostString).toString('base64');
-    } else {
-        console.log("✅ Using Shopify provided host");
-    }
-
-    // if (!AdminUser.isPaid || AdminUser.planStatus !== "ACTIVE") {
-    //     console.log("❌ No active plan, redirecting to pricing");
-    //     const pricingRedirectUrl = `${frontendUrl}/pricing?` + new URLSearchParams({
-    //         shop: shop,
-    //         host: finalHost,
-    //         adminId: AdminUser._id.toString(),
-    //         source: 'shopify_auth'
-    //     }).toString();
-
-    //     return res.redirect(pricingRedirectUrl);
-    // }
-
-    const redirectUrl = `${frontendUrl}/?` + new URLSearchParams({
-        shop: shop,
-        host: finalHost,
-        embedded: '1',
-        adminId: AdminiId.toString(),
-        source: 'shopify_auth',
-        timestamp: Date.now().toString(),
-        session: require('crypto').randomBytes(16).toString('hex')
-    }).toString();
-
-    return res.redirect(redirectUrl);
-    // } catch (error) {
-    //     console.error("❌ Auth callback error:", error.message || error);
-    //     return res.status(500).send("Failed to complete authentication");
-    // }
 };
 
 /** Proxy for Shopify Theme Assets 
