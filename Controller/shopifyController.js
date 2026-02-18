@@ -130,6 +130,9 @@ const authCallback = async (req, res) => {
             }
         );
 
+        console.log("tokenResponse");
+        console.log(tokenResponse);
+
         const accessToken = tokenResponse.data.access_token;
         if (!accessToken) {
             return res.status(400).send("Failed to get access token");
@@ -143,6 +146,10 @@ const authCallback = async (req, res) => {
                 }
             }
         );
+
+        console.log("shopInfo");
+        console.log(shopInfo);
+
         const shopId = shopInfo.data.shop.id;
         const ownerEmail = shopInfo.data.shop.email;
 
