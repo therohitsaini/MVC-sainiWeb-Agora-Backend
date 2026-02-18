@@ -147,7 +147,7 @@ const authCallback = async (req, res) => {
     // --------------------------------
 
 
-    try {
+    
     const graphqlQuery = `
       query {
         shop {
