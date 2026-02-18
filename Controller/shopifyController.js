@@ -145,17 +145,36 @@ const authCallback = async (req, res) => {
     console.log("shop");
     console.log(shop);
 
-    const shopInfo = await axios.get(
-        `https://${shop}/admin/api/2024-01/shop.json`,
-        {
-            headers: {
-                "X-Shopify-Access-Token": accessToken
+    const shopInfo = await axios.post(`https://${shop}/admin/api/2024-01/graphql.json`,
+    {
+        query: `
+        query {
+            shop {
+            id
+            name
+            email
+            domain
+            myshopifyDomain
+            plan {
+                displayName
+                partnerDevelopment
+                shopifyPlus
+            }
             }
         }
-    );
-
-    console.log("shopInfo");
+        `
+    },
+    {
+        headers: {
+        "X-Shopify-Access-Token": accessToken,
+        "Content-Type": "application/json"
+        }
+    });
+console.log("shopInfo");
     console.log(shopInfo);
+const shopData = shopInfo.data.data.shop;
+
+    
 
     const shopId = shopInfo.data.shop.id;
     const ownerEmail = shopInfo.data.shop.email;
