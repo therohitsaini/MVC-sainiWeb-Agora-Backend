@@ -130,16 +130,18 @@ const authCallback = async (req, res) => {
             }
         );
 
-        console.log("tokenResponse");
-        console.log(tokenResponse);
-
+        
         const accessToken = tokenResponse.data.access_token;
         if (!accessToken) {
             return res.status(400).send("Failed to get access token");
         }
 
+        console.log("accessToken");
+        console.log(accessToken);
+
+
         const shopInfo = await axios.get(
-            `https://${shop}/admin/api/2024-01/shop.json`,
+            `https://${shop}/admin/api/2025-10/shop.json`,
             {
                 headers: {
                     "X-Shopify-Access-Token": accessToken
