@@ -139,6 +139,8 @@ const authCallback = async (req, res) => {
         console.log("accessToken");
         console.log(accessToken);
 
+        console.log("shop");
+        console.log(shop);
 
         const shopInfo = await axios.get(
             `https://${shop}/admin/api/2025-10/shop.json`,
