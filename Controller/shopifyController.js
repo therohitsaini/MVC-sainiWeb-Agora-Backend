@@ -88,23 +88,35 @@ const installShopifyApp = async (req, res) => {
     }
 
 };
-
-
 const authCallback = async (req, res) => {
     try {
-        console.log("🔁 Auth callback triggered");
+        console.log("🔁 Auth callback hit");
+
+        // 🔒 HARD GUARD — Shopify iframe reload protection
+        if (!req || !req.query || !req.query.shop) {
+            console.log("⚠️ Callback without shop param", req?.query);
+            return res.status(200).send("OK");
+        }
+
         const { shop, hmac, code, host } = req.query;
+        console.log("📥 Query params:", req.query);
+
         if (!shop || !hmac || !code) {
-            console.log("❌ Missing required parameters");
+            console.log("❌ Missing required params", { shop, hmac, code });
             return res.status(400).send("Missing required parameters");
         }
+
+        /* ---------------- HMAC VALIDATION ---------------- */
+
         const params = { ...req.query };
         delete params.hmac;
         delete params.signature;
 
-        const sortedKeys = Object.keys(params).sort();
-        const message = sortedKeys
-            .map((key) => `${key}=${params[key]}`)
+        const message = Object.keys(params)
+            .sort()
+            .map((key) =>
+                `${key}=${Array.isArray(params[key]) ? params[key].join(",") : params[key]}`
+            )
             .join("&");
 
         const generatedHmac = crypto
@@ -112,27 +124,35 @@ const authCallback = async (req, res) => {
             .update(message)
             .digest("hex");
 
-        if (generatedHmac.toLowerCase() !== hmac.toLowerCase()) {
+        if (generatedHmac !== hmac) {
             console.log("❌ HMAC validation failed");
             return res.status(400).send("HMAC validation failed");
         }
 
-        console.log("✅ HMAC validation successful");
+        console.log("✅ HMAC validation passed");
 
+        /* ---------------- TOKEN EXCHANGE ---------------- */
+
+        console.log("🔑 Exchanging access token...");
         const tokenResponse = await axios.post(
             `https://${shop}/admin/oauth/access_token`,
             {
                 client_id: client_id,
                 client_secret: SHOPIFY_API_SECRET,
-                code,
+                code
             }
         );
 
-        const accessToken = tokenResponse.data.access_token;
+        const accessToken = tokenResponse.data?.access_token;
+        console.log("🔐 Access token received:", !!accessToken);
+
         if (!accessToken) {
             return res.status(400).send("Failed to get access token");
         }
 
+        /* ---------------- FETCH SHOP INFO ---------------- */
+
+        console.log("🏪 Fetching shop info...");
         const shopInfo = await axios.get(
             `https://${shop}/admin/api/2024-01/shop.json`,
             {
@@ -141,77 +161,195 @@ const authCallback = async (req, res) => {
                 }
             }
         );
+
         const shopId = shopInfo.data.shop.id;
         const ownerEmail = shopInfo.data.shop.email;
 
-        let shopDoc = await shopModel.findOne({ shop });
+        console.log("🏷️ Shop ID:", shopId);
+        console.log("📧 Owner email:", ownerEmail);
 
-        if (shopDoc) {
-            shopDoc.accessToken = accessToken;
-            shopDoc.shopId = shopId;
-            shopDoc.email = ownerEmail;
-            shopDoc.installedAt = new Date();
-            await shopDoc.save();
-        } else {
-            await new shopModel({
+        /* ---------------- UPSERT SHOP (NO NULL EVER) ---------------- */
+
+        const AdminUser = await shopModel.findOneAndUpdate(
+            { shop },
+            {
                 shop,
                 accessToken,
                 shopId,
                 email: ownerEmail,
                 installedAt: new Date(),
                 appEnabled: false,
-                planStatus:"new"
+                planStatus: "new"
+            },
+            { new: true, upsert: true }
+        );
 
-            }).save();
-        }
+        console.log("✅ Shop saved/updated:", AdminUser._id.toString());
 
-        const AdminUser = await shopModel.findOne({ shop: shop });
-        if (!AdminUser) {
-            return res.status(400).send("Admin user not found");
-        }
-        /** Delete All App Uninstall Webhooks */
-        // await deleteAllAppUninstallWebhooks(shop, accessToken);
-        /** Register Order Paid Webhook */
+        /* ---------------- WEBHOOK ---------------- */
 
+        console.log("🔔 Registering uninstall webhook...");
         await registerAppUninstallWebhook(shop, accessToken);
-        const AdminiId = AdminUser._id;
+
+        /* ---------------- HOST FIX ---------------- */
+
         let finalHost = host;
-        if (!finalHost || !finalHost.startsWith('YWRtaW4')) {
-            const shopDomain = shop.replace('.myshopify.com', '');
+        if (!finalHost || !finalHost.startsWith("YWRtaW4")) {
+            const shopDomain = shop.replace(".myshopify.com", "");
             const hostString = `admin.shopify.com/store/${shopDomain}`;
-            finalHost = Buffer.from(hostString).toString('base64');
+            finalHost = Buffer.from(hostString).toString("base64");
+            console.log("🛠️ Generated host:", finalHost);
         } else {
             console.log("✅ Using Shopify provided host");
         }
 
-        // if (!AdminUser.isPaid || AdminUser.planStatus !== "ACTIVE") {
-        //     console.log("❌ No active plan, redirecting to pricing");
-        //     const pricingRedirectUrl = `${frontendUrl}/pricing?` + new URLSearchParams({
-        //         shop: shop,
-        //         host: finalHost,
-        //         adminId: AdminUser._id.toString(),
-        //         source: 'shopify_auth'
-        //     }).toString();
+        /* ---------------- REDIRECT ---------------- */
 
-        //     return res.redirect(pricingRedirectUrl);
-        // }
+        const redirectUrl =
+            `${frontendUrl}/?` +
+            new URLSearchParams({
+                shop,
+                host: finalHost,
+                embedded: "1",
+                adminId: AdminUser._id.toString(),
+                source: "shopify_auth",
+                timestamp: Date.now().toString(),
+                session: crypto.randomBytes(16).toString("hex")
+            }).toString();
 
-        const redirectUrl = `${frontendUrl}/?` + new URLSearchParams({
-            shop: shop,
-            host: finalHost,
-            embedded: '1',
-            adminId: AdminiId.toString(),
-            source: 'shopify_auth',
-            timestamp: Date.now().toString(),
-            session: require('crypto').randomBytes(16).toString('hex')
-        }).toString();
+        console.log("➡️ Redirecting to frontend:", redirectUrl);
 
         return res.redirect(redirectUrl);
+
     } catch (error) {
-        console.error("❌ Auth callback error:", error.message || error);
-        return res.status(500).send("Failed to complete authentication");
+        console.error("❌ Auth callback failed:", error.response?.data || error.message);
+        return res.status(500).send("Authentication failed");
     }
 };
+
+// const authCallback = async (req, res) => {
+//     try {
+//         console.log("🔁 Auth callback triggered");
+//         const { shop, hmac, code, host } = req.query;
+//         if (!shop || !hmac || !code) {
+//             console.log("❌ Missing required parameters");
+//             return res.status(400).send("Missing required parameters");
+//         }
+//         console.log("_________",req.query)
+//         const params = { ...req.query };
+//         delete params.hmac;
+//         delete params.signature;
+
+//         const sortedKeys = Object.keys(params).sort();
+//         const message = sortedKeys
+//             .map((key) => `${key}=${params[key]}`)
+//             .join("&");
+
+//         const generatedHmac = crypto
+//             .createHmac("sha256", SHOPIFY_API_SECRET)
+//             .update(message)
+//             .digest("hex");
+
+//         if (generatedHmac.toLowerCase() !== hmac.toLowerCase()) {
+//             console.log("❌ HMAC validation failed");
+//             return res.status(400).send("HMAC validation failed");
+//         }
+
+//         console.log("✅ HMAC validation successful");
+
+//         const tokenResponse = await axios.post(
+//             `https://${shop}/admin/oauth/access_token`,
+//             {
+//                 client_id: client_id,
+//                 client_secret: SHOPIFY_API_SECRET,
+//                 code,
+//             }
+//         );
+
+//         const accessToken = tokenResponse.data.access_token;
+//         if (!accessToken) {
+//             return res.status(400).send("Failed to get access token");
+//         }
+
+//         const shopInfo = await axios.get(
+//             `https://${shop}/admin/api/2024-01/shop.json`,
+//             {
+//                 headers: {
+//                     "X-Shopify-Access-Token": accessToken
+//                 }
+//             }
+//         );
+//         const shopId = shopInfo.data.shop.id;
+//         const ownerEmail = shopInfo.data.shop.email;
+
+//         let shopDoc = await shopModel.findOne({ shop });
+
+//         if (shopDoc) {
+//             shopDoc.accessToken = accessToken;
+//             shopDoc.shopId = shopId;
+//             shopDoc.email = ownerEmail;
+//             shopDoc.installedAt = new Date();
+//             await shopDoc.save();
+//         } else {
+//             await new shopModel({
+//                 shop,
+//                 accessToken,
+//                 shopId,
+//                 email: ownerEmail,
+//                 installedAt: new Date(),
+//                 appEnabled: false,
+//                 planStatus:"new"
+
+//             }).save();
+//         }
+
+//         const AdminUser = await shopModel.findOne({ shop: shop });
+//         if (!AdminUser) {
+//             return res.status(400).send("Admin user not found");
+//         }
+//         /** Delete All App Uninstall Webhooks */
+//         // await deleteAllAppUninstallWebhooks(shop, accessToken);
+//         /** Register Order Paid Webhook */
+
+//         await registerAppUninstallWebhook(shop, accessToken);
+//         const AdminiId = AdminUser._id;
+//         let finalHost = host;
+//         if (!finalHost || !finalHost.startsWith('YWRtaW4')) {
+//             const shopDomain = shop.replace('.myshopify.com', '');
+//             const hostString = `admin.shopify.com/store/${shopDomain}`;
+//             finalHost = Buffer.from(hostString).toString('base64');
+//         } else {
+//             console.log("✅ Using Shopify provided host");
+//         }
+
+//         // if (!AdminUser.isPaid || AdminUser.planStatus !== "ACTIVE") {
+//         //     console.log("❌ No active plan, redirecting to pricing");
+//         //     const pricingRedirectUrl = `${frontendUrl}/pricing?` + new URLSearchParams({
+//         //         shop: shop,
+//         //         host: finalHost,
+//         //         adminId: AdminUser._id.toString(),
+//         //         source: 'shopify_auth'
+//         //     }).toString();
+
+//         //     return res.redirect(pricingRedirectUrl);
+//         // }
+
+//         const redirectUrl = `${frontendUrl}/?` + new URLSearchParams({
+//             shop: shop,
+//             host: finalHost,
+//             embedded: '1',
+//             adminId: AdminiId.toString(),
+//             source: 'shopify_auth',
+//             timestamp: Date.now().toString(),
+//             session: require('crypto').randomBytes(16).toString('hex')
+//         }).toString();
+
+//         return res.redirect(redirectUrl);
+//     } catch (error) {
+//         console.error("❌ Auth callback error:", error.message || error);
+//         return res.status(500).send("Failed to complete authentication");
+//     }
+// };
 
 /** Proxy for Shopify Theme Assets 
  * 1. GET /apps/theme/header?shop=store.myshopify.com
