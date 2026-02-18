@@ -91,7 +91,7 @@ const installShopifyApp = async (req, res) => {
 
 
 const authCallback = async (req, res) => {
-    try {
+    // try {
         console.log("🔁 Auth callback triggered -----------");
         console.log(req.query);
 
@@ -209,10 +209,10 @@ const authCallback = async (req, res) => {
         }).toString();
 
         return res.redirect(redirectUrl);
-    } catch (error) {
-        console.error("❌ Auth callback error:", error.message || error);
-        return res.status(500).send("Failed to complete authentication");
-    }
+    // } catch (error) {
+    //     console.error("❌ Auth callback error:", error.message || error);
+    //     return res.status(500).send("Failed to complete authentication");
+    // }
 };
 
 /** Proxy for Shopify Theme Assets 
