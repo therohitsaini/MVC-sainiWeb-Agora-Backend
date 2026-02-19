@@ -266,9 +266,6 @@ const ioServer = (server) => {
 
 
         socket.on("conFirmChatEmit", (acceptDataIds) => {
-
-            console.log("conFirmChatEmit", acceptDataIds);
-
             const { userId, shopId, consultantId } = acceptDataIds;
 
             if (!userId || !shopId || !consultantId) return;
@@ -284,80 +281,7 @@ const ioServer = (server) => {
         });
 
 
-        socket.on("acceptUserChat", async (acceptData) => {
-            const { userId, shopId, consultantId } = acceptData;
-            if (!mongoose.Types.ObjectId.isValid(userId)) return;
 
-            const user = await User.findById(userId);
-            if (!user || user.isChatAccepted !== "request") return;
-
-            user.isChatAccepted = "accepted";
-            user.chatLock = false
-            await user.save();
-
-            const transaction = await TransactionHistroy.create({
-                senderId: userId,
-                receiverId: consultantId,
-                shop_id: shopId,
-                startTime: new Date(),
-                status: "active",
-                type: "chat"
-            });
-
-            io.to(userId).emit("chatTimerStarted", {
-                transactionId: transaction._id,
-                startTime: transaction.startTime,
-                consultantId,
-                shopId
-            });
-
-            io.to(consultantId).emit("chatTimerStarted", {
-                transactionId: transaction._id,
-                startTime: transaction.startTime,
-                userId,
-                shopId
-            });
-            let userBalance = Number(user?.walletBalance);
-            const consultantCost = await User.findById(consultantId);
-            const consultantChatCost = Number(consultantCost?.chatPerMinute);
-            const perSecondCost = consultantChatCost / 60;
-            if (userBalance < perSecondCost) {
-                console.log("Insufficient balance to start chat");
-                return;
-            }
-            const maxChatSeconds = Math.floor(userBalance / perSecondCost);
-            const minutes = Math.floor(maxChatSeconds / 60);
-            const seconds = maxChatSeconds % 60;
-
-            console.log(`User can chat for ${minutes} minutes and ${seconds} seconds`);
-            let remainingBalance = userBalance;
-            let chatSeconds = 0;
-
-            const interval = setInterval(() => {
-                if (remainingBalance >= perSecondCost) {
-                    remainingBalance -= perSecondCost;
-                    chatSeconds++;
-                } else {
-                    clearInterval(interval);
-                    console.log("🔥 BACKEND: autoChatEnded EMIT", {
-                        transactionId: transaction._id,
-                        userId,
-                        consultantId
-                    });
-
-                    io.to(userId).emit("autoChatEnded", {
-                        transactionId: transaction._id,
-                        reason: "auto-ended"
-                    });
-
-                    io.to(consultantId).emit("autoChatEnded", {
-                        transactionId: transaction._id,
-                        reason: "auto-ended"
-                    });
-                }
-            }, 1000);
-
-        });
 
         //---------------- accept call logics ----------------
 
@@ -437,7 +361,20 @@ const ioServer = (server) => {
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType, transactionId: transaction._id });
                 }
-
+                const user = await User.findById(callerId)
+                let userBalance = Number(user?.walletBalance);
+                const consultantCost = await User.findById(receiverId);
+                let isCall = callType === "voice" ? voicePerMinute : videoPerMinute
+                const consultantChatCost = Number(consultantCost?.isCall);
+                const perSecondCost = consultantChatCost / 60;
+                if (userBalance < perSecondCost) {
+                    console.log("Insufficient balance to start chat");
+                    return;
+                }
+                const maxChatSeconds = Math.floor(userBalance / perSecondCost);
+                const minutes = Math.floor(maxChatSeconds / 60);
+                const seconds = maxChatSeconds % 60;
+                console.log(`User can call for ${minutes} minutes and ${seconds} seconds`);
 
             } catch (error) {
                 console.error("Error in call-accepted:", error);
@@ -914,6 +851,82 @@ const ioServer = (server) => {
                     session.endSession();
                 }
             }
+        });
+
+
+        socket.on("acceptUserChat", async (acceptData) => {
+            const { userId, shopId, consultantId } = acceptData;
+            if (!mongoose.Types.ObjectId.isValid(userId)) return;
+
+            const user = await User.findById(userId);
+            if (!user || user.isChatAccepted !== "request") return;
+
+            user.isChatAccepted = "accepted";
+            user.chatLock = false
+            await user.save();
+
+            const transaction = await TransactionHistroy.create({
+                senderId: userId,
+                receiverId: consultantId,
+                shop_id: shopId,
+                startTime: new Date(),
+                status: "active",
+                type: "chat"
+            });
+
+            io.to(userId).emit("chatTimerStarted", {
+                transactionId: transaction._id,
+                startTime: transaction.startTime,
+                consultantId,
+                shopId
+            });
+
+            io.to(consultantId).emit("chatTimerStarted", {
+                transactionId: transaction._id,
+                startTime: transaction.startTime,
+                userId,
+                shopId
+            });
+            let userBalance = Number(user?.walletBalance);
+            const consultantCost = await User.findById(consultantId);
+            const consultantChatCost = Number(consultantCost?.chatPerMinute);
+            const perSecondCost = consultantChatCost / 60;
+            if (userBalance < perSecondCost) {
+                console.log("Insufficient balance to start chat");
+                return;
+            }
+            const maxChatSeconds = Math.floor(userBalance / perSecondCost);
+            const minutes = Math.floor(maxChatSeconds / 60);
+            const seconds = maxChatSeconds % 60;
+
+            console.log(`User can chat for ${minutes} minutes and ${seconds} seconds`);
+            let remainingBalance = userBalance;
+            let chatSeconds = 0;
+
+            const interval = setInterval(() => {
+                if (remainingBalance >= perSecondCost) {
+                    remainingBalance -= perSecondCost;
+                    chatSeconds++;
+                } else {
+                    clearInterval(interval);
+                    console.log("🔥 BACKEND: autoChatEnded EMIT", {
+                        transactionId: transaction._id,
+                        userId,
+                        consultantId
+                    });
+
+                    io.to(userId).emit("autoChatEnded", {
+                        transactionId: transaction._id,
+                        reason: "auto-ended"
+                    });
+
+                    io.to(consultantId).emit("autoChatEnded", {
+                        transactionId: transaction._id,
+                        reason: "auto-ended"
+                    });
+                }
+            }, 1000);
+
         });
 
         //----------------------------------------------- chat end --------------------------------------------------------------//
