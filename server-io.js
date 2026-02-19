@@ -797,7 +797,7 @@ const ioServer = (server) => {
                 const totalSeconds_ = Math.floor(
                     (endTime - new Date(transaction.startTime)) / 1000
                 );
-                const totalSeconds = totalSeconds_ - 10
+                const totalSeconds = totalSeconds_ - 0
 
                 const callCostPerMinute =
                     callType === "voice"
