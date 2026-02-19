@@ -361,20 +361,39 @@ const ioServer = (server) => {
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType, transactionId: transaction._id });
                 }
-                const user = await User.findById(callerId)
-                let userBalance = Number(user?.walletBalance);
-                const consultantCost = await User.findById(receiverId);
-                let isCall = callType === "voice" ? voicePerMinute : videoPerMinute
-                const consultantChatCost = Number(consultantCost?.isCall);
-                const perSecondCost = consultantChatCost / 60;
-                if (userBalance < perSecondCost) {
-                    console.log("Insufficient balance to start chat");
+                const user = await User.findById(callerId);
+                if (!user) return console.log("Caller not found");
+
+                const consultant = await User.findById(receiverId);
+                if (!consultant) return console.log("Consultant not found");
+
+                const userBalance = Number(user.walletBalance || 0);
+
+                const perMinuteCost =
+                    callType === "voice"
+                        ? Number(consultant.voicePerMinute)
+                        : Number(consultant.videoPerMinute);
+
+                if (!perMinuteCost || perMinuteCost <= 0) {
+                    console.log("Invalid consultant pricing");
                     return;
                 }
-                const maxChatSeconds = Math.floor(userBalance / perSecondCost);
-                const minutes = Math.floor(maxChatSeconds / 60);
-                const seconds = maxChatSeconds % 60;
-                console.log(`User can call for ${minutes} minutes and ${seconds} seconds`);
+
+                const perSecondCost = perMinuteCost / 60;
+
+                if (userBalance < perSecondCost) {
+                    console.log("Insufficient balance to start call");
+                    return;
+                }
+
+                const maxCallSeconds = Math.floor(userBalance / perSecondCost);
+                const minutes = Math.floor(maxCallSeconds / 60);
+                const seconds = maxCallSeconds % 60;
+
+                console.log(
+                    `User can call for ${minutes} minutes and ${seconds} seconds`
+                );
+
 
             } catch (error) {
                 console.error("Error in call-accepted:", error);
