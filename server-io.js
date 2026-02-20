@@ -376,17 +376,10 @@ const ioServer = (server) => {
                         ? Number(consultant.voicePerMinute)
                         : Number(consultant.videoPerMinute);
                 console.log("callCostPerMinute", callCostPerMinute)
-                // if (!perMinuteCost || perMinuteCost <= 0) {
-                //     console.log("Invalid consultant pricing");
-                //     return;
-                // }
+
 
                 const perSecondCost = callCostPerMinute / 60;
 
-                // if (userBalance < perSecondCost) {
-                //     console.log("Insufficient balance to start call");
-                //     return;
-                // }
 
                 const maxCallSeconds = Math.floor(userBalance / perSecondCost);
                 const minutes = Math.floor(maxCallSeconds / 60);
@@ -395,6 +388,27 @@ const ioServer = (server) => {
                 console.log(
                     `User can call for ${minutes} minutes and ${seconds} seconds`
                 );
+                const interval = setInterval(async () => {
+                    if (userBalance >= perSecondCost) {
+                        userBalance -= perSecondCost;
+                        chatSeconds++;
+                    } else {
+                        clearInterval(interval);
+                        activeCalls.delete(callId);
+
+                        io.to(callerSocketId).emit("autoCallEnded-no-balance", {
+                            transactionId: transaction._id,
+                            reason: "insufficient-balance"
+                        });
+
+                        io.to(receiverSocketId).emit("autoCallEnded-no-balance", {
+                            transactionId: transaction._id,
+                            reason: "insufficient-balance"
+                        });
+
+                        console.log("🔥 Call auto-ended due to low balance");
+                    }
+                }, 1000);
 
 
             } catch (error) {
