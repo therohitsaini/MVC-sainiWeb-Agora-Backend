@@ -579,7 +579,7 @@ const proxyShopifyConsultantLoginPage = (req, res) => {
     return renderShopifyPage(
         req,
         res,
-        `${frontendUrl}/consultant-dashboard?shop=${shop}`,
+        `${frontendUrl}/consultant-dashboard?shop=${shop}&${"69959e1e6caa0dfd3a3f045d"}`,
         {
             title: "Consultant App"
         }
