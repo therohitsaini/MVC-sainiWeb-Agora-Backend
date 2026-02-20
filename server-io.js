@@ -361,11 +361,13 @@ const ioServer = (server) => {
                 if (receiverSocketId) {
                     io.to(receiverSocketId).emit("call-accepted-started", { callerId, receiverId, channelName, callType, transactionId: transaction._id });
                 }
-                // const user = await User.findById(callerId);
-                // if (!user) return console.log("Caller not found");
+                const user = await User.findById(callerId);
+                if (!user) return console.log("Caller not found");
 
-                // const consultant = await User.findById(receiverId);
-                // if (!consultant) return console.log("Consultant not found");
+                const consultant = await User.findById(receiverId);
+                if (!consultant) return console.log("Consultant not found");
+                console.log("user",user)
+                console.log("consultant",consultant)
 
                 // const userBalance = Number(user.walletBalance || 0);
 
