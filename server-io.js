@@ -368,7 +368,7 @@ const ioServer = (server) => {
                 const consultant = await User.findById(receiverId);
                 if (!consultant) return console.log("Consultant not found");
 
-                const userBalance = Number(user.walletBalance || 0);
+                let userBalance = Number(user.walletBalance || 0);
 
 
                 const callCostPerMinute =
