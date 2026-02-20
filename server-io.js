@@ -381,20 +381,20 @@ const ioServer = (server) => {
                 //     return;
                 // }
 
-                // const perSecondCost = perMinuteCost / 60;
+                const perSecondCost = callCostPerMinute / 60;
 
                 // if (userBalance < perSecondCost) {
                 //     console.log("Insufficient balance to start call");
                 //     return;
                 // }
 
-                // const maxCallSeconds = Math.floor(userBalance / perSecondCost);
-                // const minutes = Math.floor(maxCallSeconds / 60);
-                // const seconds = maxCallSeconds % 60;
+                const maxCallSeconds = Math.floor(userBalance / perSecondCost);
+                const minutes = Math.floor(maxCallSeconds / 60);
+                const seconds = maxCallSeconds % 60;
 
-                // console.log(
-                //     `User can call for ${minutes} minutes and ${seconds} seconds`
-                // );
+                console.log(
+                    `User can call for ${minutes} minutes and ${seconds} seconds`
+                );
 
 
             } catch (error) {
