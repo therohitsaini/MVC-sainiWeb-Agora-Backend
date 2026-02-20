@@ -81,7 +81,7 @@ const installShopifyApp = async (req, res) => {
             }&scope=${SCOPES
             }&redirect_uri=${encodeURIComponent(redirectUri)
             }&state=${state}`;
-            console.log('installUrl',installUrl)
+        console.log('installUrl', installUrl)
         return res.status(200).send({
             installed: false,
             installUrl: installUrl,
@@ -236,7 +236,7 @@ const authCallback = async (req, res) => {
             console.log("❌ Missing required parameters");
             return res.status(400).send("Missing required parameters");
         }
-        console.log("_________",req.query)
+        console.log("_________", req.query)
         const params = { ...req.query };
         delete params.hmac;
         delete params.signature;
@@ -299,7 +299,7 @@ const authCallback = async (req, res) => {
                 email: ownerEmail,
                 installedAt: new Date(),
                 appEnabled: false,
-                planStatus:"new"
+                planStatus: "new"
 
             }).save();
         }
@@ -406,7 +406,7 @@ const proxyThemeAssetsController = async (req, res) => {
                 return res.status(401).send("Storefront locked. Enter password or use preview.");
             }
         }
-
+        console.log("____________________", userId, shopDocId)
         const homeHtml = typeof homeResp.data === "string" ? homeResp.data : (await homeResp.text());
         const headMatch = homeHtml.match(/<head[\s\S]*?<\/head>/i);
         const headHtml = headMatch ? headMatch[0] : `
