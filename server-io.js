@@ -292,6 +292,7 @@ const ioServer = (server) => {
                     return;
                 }
 
+
                 const callId = `${callerId}_${receiverId}_${channelName}`;
                 const call = activeCalls.get(callId);
 
@@ -366,16 +367,15 @@ const ioServer = (server) => {
 
                 const consultant = await User.findById(receiverId);
                 if (!consultant) return console.log("Consultant not found");
-                console.log("user",user)
-                console.log("consultant",consultant)
 
-                // const userBalance = Number(user.walletBalance || 0);
+                const userBalance = Number(user.walletBalance || 0);
 
-                // const perMinuteCost =
-                //     callType === "voice"
-                //         ? Number(consultant.voicePerMinute)
-                //         : Number(consultant.videoPerMinute);
 
+                const callCostPerMinute =
+                    callType === "voice"
+                        ? Number(consultant.voicePerMinute)
+                        : Number(consultant.videoPerMinute);
+                console.log("callCostPerMinute", callCostPerMinute)
                 // if (!perMinuteCost || perMinuteCost <= 0) {
                 //     console.log("Invalid consultant pricing");
                 //     return;
