@@ -377,12 +377,7 @@ const ioServer = (server) => {
                         : Number(consultant.videoPerMinute);
                 console.log("callCostPerMinute", callCostPerMinute)
 
-                if (!perSecondCost || perSecondCost <= 0) {
-                    console.log("Invalid call cost");
-                    return;
-                }
-
-
+        
                 const perSecondCost = callCostPerMinute / 60;
                 let maxCallSeconds = Math.floor(userBalance / perSecondCost);
                 const minutes = Math.floor(maxCallSeconds / 60);
