@@ -369,26 +369,21 @@ const ioServer = (server) => {
                 if (!consultant) return console.log("Consultant not found");
 
                 let userBalance = Number(user.walletBalance || 0);
-
+                let chatSeconds = 0;
 
                 const callCostPerMinute =
                     callType === "voice"
                         ? Number(consultant.voicePerMinute)
                         : Number(consultant.videoPerMinute);
-                console.log("callCostPerMinute", callCostPerMinute)
 
+                if (!callCostPerMinute || callCostPerMinute <= 0) {
+                    console.log("Invalid call cost");
+                    return;
+                }
 
                 const perSecondCost = callCostPerMinute / 60;
 
-
-                const maxCallSeconds = Math.floor(userBalance / perSecondCost);
-                const minutes = Math.floor(maxCallSeconds / 60);
-                const seconds = maxCallSeconds % 60;
-
-                console.log(
-                    `User can call for ${minutes} minutes and ${seconds} seconds`
-                );
-                const interval = setInterval(async () => {
+                const interval = setInterval(() => {
                     if (userBalance >= perSecondCost) {
                         userBalance -= perSecondCost;
                         chatSeconds++;
