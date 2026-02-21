@@ -757,7 +757,7 @@ const ioServer = (server) => {
 
                 const receiver = await User.findById(receiverId).session(session);
                 if (!receiver) throw new Error("Receiver not found");
-
+                shopId = '699852a7c1284f43e86923f9'
                 const shop = await shopModel.findById(shopId).session(session);
                 if (!shop) throw new Error("Shop not found");
                 console.log("shop_____________", shop)
