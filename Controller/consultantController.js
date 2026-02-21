@@ -687,7 +687,7 @@ const removeChatListAndConsultantIdFromChatList = async (req, res) => {
         if (!updateUserChatRequest) {
             return res.status(400).json({ message: 'User not found' });
         }
-        updateUserChatRequest.isChatAccepted = "request";
+        updateUserChatRequest.isChatAccepted = "chatEnd";
         await updateUserChatRequest.save();
 
         const chatList = await ChatList.findByIdAndDelete(id);
