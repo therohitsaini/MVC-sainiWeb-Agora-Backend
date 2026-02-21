@@ -104,6 +104,12 @@ const ioServer = (server) => {
                     .select("fullname profileImage")
                     .lean();
 
+
+                const customerUser = await User.findOne({
+                    _id: { $in: [senderId, receiverId] },
+                    userType: "customer"
+                });
+                console.log("customerUser", customerUser)
                 const messageWithSender = {
                     ...savedChat.toObject(),
                     senderName: senderInfo?.fullname || "User",
@@ -1017,7 +1023,6 @@ const ioServer = (server) => {
                 transaction.totalAmount = totalAmount;
                 transaction.status = "completed";
                 await transaction.save({ session });
-                console.log("totalAmount", totalAmount)
                 await User.findByIdAndUpdate(userId, { $inc: { walletBalance: -totalAmount } }, { session });
                 await User.findByIdAndUpdate(consultantId, { $inc: { walletBalance: consultantShare } }, { session });
                 await shopModel.findByIdAndUpdate(shopId, { $inc: { adminWalletBalance: shopShare } }, { session });
@@ -1027,7 +1032,6 @@ const ioServer = (server) => {
                 }, { session });
 
                 await User.findByIdAndUpdate(userId, { $set: { isChatAccepted: "request", chatLock: true } }, { session });
-
                 await WalletHistory.create({
                     userId: userId,
                     shop_id: shopId,
