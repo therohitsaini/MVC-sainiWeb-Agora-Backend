@@ -377,7 +377,7 @@ const ioServer = (server) => {
                         : Number(consultant.videoPerMinute);
                 console.log("callCostPerMinute", callCostPerMinute)
 
-        
+
                 const perSecondCost = callCostPerMinute / 60;
                 let maxCallSeconds = Math.floor(userBalance / perSecondCost);
                 const minutes = Math.floor(maxCallSeconds / 60);
@@ -777,9 +777,11 @@ const ioServer = (server) => {
                 const perSecondCost = callCostPerMinute / 60;
                 const totalAmount = Number((totalSeconds * perSecondCost).toFixed(2));
                 const adminCommission = (totalAmount * Number(shop.adminPersenTage)) / 100;
-
+                console.log("adminCommission", adminCommission)
                 const receiverShare = totalAmount - adminCommission;
+                console.log("receiverShare", receiverShare)
                 const shopShare = adminCommission;
+                console.log("shopShare", shopShare)
 
                 // Update transaction
                 transaction.endTime = endTime;
