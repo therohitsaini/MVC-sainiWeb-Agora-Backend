@@ -10,7 +10,7 @@ const { missCalled } = require("./Modal/miscallasHistroy");
 const { WalletHistory } = require("./Modal/walletHistory");
 const { CallSession } = require("./Modal/callSessions");
 const { formatTime } = require("./Helper/helper");
-
+const { sendCallFCM } = require("./firebase/callPushNotification");
 const ioServer = (server) => {
     const io = new Server(server, {
         cors: {
@@ -166,19 +166,19 @@ const ioServer = (server) => {
                         shop
                     });
                 }
+                const consultant = await User.findById(receiverId)
+                if ( consultant.firebaseToken?.token) {
+                    await sendCallFCM({
+                        token: consultant.firebaseToken.token,
+                        callerId,
+                        callerName: callerInfo.fullname,
+                        channelName,
+                        callType,
+                        avatar: callerInfo.profileImage
+                    });
 
-                // if (!receiverSocketId && receiverInfo.firebaseToken?.token) {
-                //     await sendCallFCM({
-                //         token: receiverInfo.firebaseToken.token,
-                //         callerId,
-                //         callerName: callerInfo.fullname,
-                //         channelName,
-                //         callType,
-                //         avatar: callerInfo.profileImage
-                //     });
-
-                //     console.log("📲 Call FCM sent to receiver");
-                // }
+                    console.log("📲 Call FCM sent to receiver");
+                }
 
 
                 const call = {

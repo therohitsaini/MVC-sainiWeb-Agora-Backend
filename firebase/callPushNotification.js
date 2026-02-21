@@ -31,4 +31,4 @@ async function sendCallFCM({
     await admin.messaging().send(message);
 }
 
-module.export = sendCallFCM;
+module.exports  = { sendCallFCM };
