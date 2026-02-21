@@ -36,101 +36,7 @@ const ioServer = (server) => {
             await User.findByIdAndUpdate(uid, { isActive: true });
         });
 
-        socket.on("sendMessage", async (data) => {
-            const { senderId, receiverId, shop_id, text, timestamp } = data;
 
-            if (!senderId || !receiverId || !shop_id) {
-                console.log(" Missing required IDs");
-                return;
-            }
-            try {
-                const sender = await User.findById(senderId);
-                if (!sender) throw new Error("Sender not found");
-
-                /**
-                 * if sender is customer then deduct the amount from sender's
-                 *  wallet and add the amount to receiver's wallet and add the admin commission to the shop's wallet
-                 *  and create a transaction record in the database
-                 */
-
-                if (sender.userType === "customer") {
-                    const receiver = await User.findById(receiverId);
-                    if (!receiver) throw new Error("Receiver not found");
-                    const chatCost = Number(receiver.chatCost);
-
-                    if (Number(sender.walletBalance) < chatCost) {
-                        io.to(senderId.toString()).emit("balanceError", {
-                            message: "Insufficient wallet balance",
-                            required: chatCost,
-                            available: sender.walletBalance
-                        });
-                        return;
-                    }
-                }
-
-                const existingChat = await ChatList.findOne({
-                    senderId,
-                    receiverId,
-                    shop_id
-                });
-
-                if (!existingChat) {
-                    await ChatList.create([{
-                        senderId,
-                        receiverId,
-                        shop_id,
-                        lastMessage: text,
-                        lastMessageTime: timestamp,
-                        isRequest: false
-                    }]);
-                } else {
-                    await ChatList.updateOne(
-                        { _id: existingChat._id },
-                        { lastMessage: text, lastMessageTime: timestamp },
-
-                    );
-                }
-
-                const savedChat = await MessageModal.create({
-                    senderId,
-                    receiverId,
-                    shop_id,
-                    text,
-                    timestamp,
-                    isRead: false
-                });
-
-                const senderInfo = await User.findById(senderId)
-                    .select("fullname profileImage")
-                    .lean();
-
-
-                const customerUser = await User.findOne({
-                    _id: { $in: [senderId, receiverId] },
-                    userType: "customer"
-                });
-                console.log("customerUser", customerUser)
-                const messageWithSender = {
-                    ...savedChat.toObject(),
-                    senderName: senderInfo?.fullname || "User",
-                    avatar: senderInfo?.profileImage || null
-                };
-                io.emit("receiveMessage", messageWithSender);
-                const receiver = await User.findById(receiverId);
-                if (receiver?.firebaseToken?.token && !receiver?.isActive) {
-                    console.log("receiver.firebaseToken.token", receiver.firebaseToken.token);
-                    await sendFCM(
-                        receiver.firebaseToken.token,
-                        "New Message",
-                        text,
-                        "https://www.svgrepo.com/show/335455/profile-default.svg"
-                    );
-                }
-
-            } catch (error) {
-                console.error("❌ Transaction failed:", error);
-            }
-        });
 
         // ------------- call user --------------//
 
@@ -286,20 +192,6 @@ const ioServer = (server) => {
 
 
 
-        socket.on("conFirmChatEmit", (acceptDataIds) => {
-            const { userId, shopId, consultantId } = acceptDataIds;
-
-            if (!userId || !shopId || !consultantId) return;
-
-            io.to(userId).emit("acceptUser", {
-                userId,
-                shopId,
-                consultantId,
-                userAccepted: "accept"
-            });
-
-            console.log("✅ acceptUser emitted to user:", userId);
-        });
 
 
 
@@ -911,6 +803,112 @@ const ioServer = (server) => {
         });
 
 
+        socket.on("sendMessage", async (data) => {
+            const { senderId, receiverId, shop_id, text, timestamp } = data;
+
+            if (!senderId || !receiverId || !shop_id) {
+                console.log(" Missing required IDs");
+                return;
+            }
+            try {
+                const sender = await User.findById(senderId);
+                if (!sender) throw new Error("Sender not found");
+
+                /**
+                 * if sender is customer then deduct the amount from sender's
+                 *  wallet and add the amount to receiver's wallet and add the admin commission to the shop's wallet
+                 *  and create a transaction record in the database
+                 */
+
+                if (sender.userType === "customer") {
+                    const receiver = await User.findById(receiverId);
+                    if (!receiver) throw new Error("Receiver not found");
+                    const chatCost = Number(receiver.chatCost);
+
+                    if (Number(sender.walletBalance) < chatCost) {
+                        io.to(senderId.toString()).emit("balanceError", {
+                            message: "Insufficient wallet balance",
+                            required: chatCost,
+                            available: sender.walletBalance
+                        });
+                        return;
+                    }
+                }
+
+                const existingChat = await ChatList.findOne({
+                    senderId,
+                    receiverId,
+                    shop_id
+                });
+
+                if (!existingChat) {
+                    await ChatList.create([{
+                        senderId,
+                        receiverId,
+                        shop_id,
+                        lastMessage: text,
+                        lastMessageTime: timestamp,
+                        isRequest: false
+                    }]);
+                } else {
+                    await ChatList.updateOne(
+                        { _id: existingChat._id },
+                        { lastMessage: text, lastMessageTime: timestamp },
+
+                    );
+                }
+
+                const savedChat = await MessageModal.create({
+                    senderId,
+                    receiverId,
+                    shop_id,
+                    text,
+                    timestamp,
+                    isRead: false
+                });
+
+                const senderInfo = await User.findById(senderId)
+                    .select("fullname profileImage")
+                    .lean();
+
+                const customerUser = await User.findOne({
+                    _id: { $in: [senderId, receiverId] },
+                    userType: "customer"
+                });
+
+                if (customerUser?.isChatAccepted === "chatEnd") {
+                    await User.updateOne(
+                        { _id: customerUser._id },
+                        { $set: { isChatAccepted: "request" } }
+                    );
+
+                    console.log("✅ isChatAccepted updated to request");
+                }
+                // else → silently skip
+
+                console.log("customerUser", customerUser)
+                const messageWithSender = {
+                    ...savedChat.toObject(),
+                    senderName: senderInfo?.fullname || "User",
+                    avatar: senderInfo?.profileImage || null
+                };
+                io.emit("receiveMessage", messageWithSender);
+                const receiver = await User.findById(receiverId);
+                if (receiver?.firebaseToken?.token && !receiver?.isActive) {
+                    console.log("receiver.firebaseToken.token", receiver.firebaseToken.token);
+                    await sendFCM(
+                        receiver.firebaseToken.token,
+                        "New Message",
+                        text,
+                        "https://www.svgrepo.com/show/335455/profile-default.svg"
+                    );
+                }
+
+            } catch (error) {
+                console.error("❌ Transaction failed:", error);
+            }
+        });
+
         socket.on("acceptUserChat", async (acceptData) => {
             const { userId, shopId, consultantId } = acceptData;
             if (!mongoose.Types.ObjectId.isValid(userId)) return;
@@ -952,6 +950,8 @@ const ioServer = (server) => {
                 console.log("Insufficient balance to start chat");
                 return;
             }
+
+
             const maxChatSeconds = Math.floor(userBalance / perSecondCost);
             const minutes = Math.floor(maxChatSeconds / 60);
             const seconds = maxChatSeconds % 60;
@@ -984,6 +984,33 @@ const ioServer = (server) => {
                 }
             }, 1000);
 
+        });
+
+
+
+        socket.on("conFirmChatEmit", async (acceptDataIds) => {
+            const { userId, shopId, consultantId } = acceptDataIds;
+
+            if (!userId || !shopId || !consultantId) return;
+
+            const customerUser = await User.findById(userId)
+            if (customerUser?.isChatAccepted === "chatEnd") {
+                await User.updateOne(
+                    { _id: customerUser._id },
+                    { $set: { isChatAccepted: "unlock" } }
+                );
+
+                console.log("✅ isChatAccepted updated to request");
+            }
+
+            io.to(userId).emit("acceptUser", {
+                userId,
+                shopId,
+                consultantId,
+                userAccepted: "accept"
+            });
+
+            console.log("✅ acceptUser emitted to user:", userId);
         });
 
         //----------------------------------------------- chat end --------------------------------------------------------------//
@@ -1031,7 +1058,7 @@ const ioServer = (server) => {
                     $inc: { adminAmount: adminCommission, consultantAmount: consultantShare, amount: totalAmount }
                 }, { session });
 
-                await User.findByIdAndUpdate(userId, { $set: { isChatAccepted: "request", chatLock: true } }, { session });
+                await User.findByIdAndUpdate(userId, { $set: { isChatAccepted: "chatEnd", chatLock: true } }, { session });
                 await WalletHistory.create({
                     userId: userId,
                     shop_id: shopId,
