@@ -167,7 +167,7 @@ const ioServer = (server) => {
                     });
                 }
                 const consultant = await User.findById(receiverId)
-                if ( consultant.firebaseToken?.token) {
+                if (!receiverSocketId && consultant.firebaseToken?.token) {
                     await sendCallFCM({
                         token: consultant.firebaseToken.token,
                         callerId,
