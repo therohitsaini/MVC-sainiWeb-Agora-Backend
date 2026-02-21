@@ -142,7 +142,7 @@ const ioServer = (server) => {
 
                     const receiverInfo = await User.findById({ _id: receiverId }).select(isCallTypeCost).lean();
                     if (!receiverInfo) throw new Error("Receiver not found");
-
+                    console.log("receiverInfo", receiverInfo)
                     const callCost = Number(receiverInfo[isCallTypeCost]);
                     if (Number(callerInfo.walletBalance) < callCost) {
                         io.to(callerId.toString()).emit("balanceError", {
@@ -166,6 +166,21 @@ const ioServer = (server) => {
                         shop
                     });
                 }
+
+                // if (!receiverSocketId && receiverInfo.firebaseToken?.token) {
+                //     await sendCallFCM({
+                //         token: receiverInfo.firebaseToken.token,
+                //         callerId,
+                //         callerName: callerInfo.fullname,
+                //         channelName,
+                //         callType,
+                //         avatar: callerInfo.profileImage
+                //     });
+
+                //     console.log("📲 Call FCM sent to receiver");
+                // }
+
+
                 const call = {
                     callId,
                     callerId,
