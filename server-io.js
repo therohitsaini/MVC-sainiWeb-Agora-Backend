@@ -752,7 +752,6 @@ const ioServer = (server) => {
                     return;
                 }
 
-                // Find all required users and shop
                 const caller = await User.findById(callerId).session(session);
                 if (!caller) throw new Error("Caller not found");
 
@@ -761,13 +760,15 @@ const ioServer = (server) => {
 
                 const shop = await shopModel.findById(shopId).session(session);
                 if (!shop) throw new Error("Shop not found");
+                console.log("shop_____________", shop)
+                console.log("shop_____________adminPersenTage", shop.adminPersenTage)
 
-                // Calculate call duration and costs
+
                 const endTime = new Date();
-                const totalSeconds_ = Math.floor(
+                const totalSeconds = Math.floor(
                     (endTime - new Date(transaction.startTime)) / 1000
                 );
-                const totalSeconds = totalSeconds_ - 0
+                // const totalSeconds = totalSeconds_ - 0
 
                 const callCostPerMinute =
                     callType === "voice"
