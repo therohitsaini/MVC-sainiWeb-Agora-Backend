@@ -406,7 +406,6 @@ const proxyThemeAssetsController = async (req, res) => {
                 return res.status(401).send("Storefront locked. Enter password or use preview.");
             }
         }
-        console.log("____________________", userId.userId, shopDocId)
         const homeHtml = typeof homeResp.data === "string" ? homeResp.data : (await homeResp.text());
         const headMatch = homeHtml.match(/<head[\s\S]*?<\/head>/i);
         const headHtml = headMatch ? headMatch[0] : `
