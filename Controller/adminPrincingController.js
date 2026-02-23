@@ -3,9 +3,8 @@ const { shopModel } = require("../Modal/shopify");
 const pricingCallback = async (req, res) => {
     try {
         const { shop } = req.query;
-
+        console.log("req____",req.query)
         if (!shop) return res.status(400).send("not found");
-
         const match = shop?.match(/^([a-z0-9-]+)\.myshopify\.com$/);
         if (!match) {
             return res.status(400).send("Invalid shop domain");
