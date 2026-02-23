@@ -14,16 +14,25 @@ async function getChargeDetails(shop, accessToken, charge_id) {
     return response.data.recurring_application_charge;
 }
 
+function getPlanType(trialEndsOn, billingOn) {
+    const trialDate = new Date(trialEndsOn);
+    const billingDate = new Date(billingOn);
+
+    const diffInDays =
+        (billingDate - trialDate) / (1000 * 60 * 60 * 24);
+
+    if (diffInDays > 300) {
+        return "YEARLY";
+    }
+    return "MONTHLY";
+}
+
 const pricingCallback = async (req, res) => {
     try {
         const { shop, charge_id } = req.query;
         console.log("req____", req.query)
         console.log("-------------", req.path)
-        // if (req.path === "/1") {
-        //     console.log("Request came from route 1");
-        // } else if (req.path === "/2") {
-        //     console.log("Request came from route 2");
-        // }
+
         if (!shop) return res.status(400).send("not found");
         const match = shop?.match(/^([a-z0-9-]+)\.myshopify\.com$/);
         if (!match) {
@@ -31,9 +40,7 @@ const pricingCallback = async (req, res) => {
         }
         const shopHandle = match[1];
         console.log("shopHandle", shopHandle)
-
         const shop_ = await shopModel.findOne({ shop });
-
         if (!shop_) return res.status(404).send("Shop not found");
         const charge = await getChargeDetails(
             shop,
@@ -41,11 +48,28 @@ const pricingCallback = async (req, res) => {
             charge_id
         );
         console.log("charge", charge)
-        let planName;
-        if (charge_id === "26034864191") {
-            planName = "Basic"
+
+        const planType = getPlanType(
+            charge.trial_ends_on,
+            charge.billing_on
+        );
+        const planData = {
+            planName: charge.name,
+            planType: planType,
+            planAmount: charge.price
+        };
+
+        if (shop_.accountPlanInfo?.length) {
+            shop_.accountPlanInfo[0].planName = planData.planName;
+            shop_.accountPlanInfo[0].planType = planData.planType;
+            shop_.accountPlanInfo[0].planAmount = planData.planAmount;
+        } else {
+            shop_.accountPlanInfo = [planData];
         }
+
         shop_.planStatus = "ACTIVE";
+        shop_.activeChargeId = charge.id;
+
         await shop_.save();
 
         return res.send(`
