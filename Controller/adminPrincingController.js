@@ -56,13 +56,16 @@ const pricingCallback = async (req, res) => {
         const planData = {
             planName: charge.name,
             planType: planType,
-            planAmount: charge.price
+            planAmount: charge.price,
+            currency: charge.currency
         };
 
         if (shop_.accountPlanInfo?.length) {
             shop_.accountPlanInfo[0].planName = planData.planName;
             shop_.accountPlanInfo[0].planType = planData.planType;
             shop_.accountPlanInfo[0].planAmount = planData.planAmount;
+            shop_.accountPlanInfo[0].currency = planData.currency;
+
         } else {
             shop_.accountPlanInfo = [planData];
         }

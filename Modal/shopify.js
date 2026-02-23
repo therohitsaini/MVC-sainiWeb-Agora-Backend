@@ -30,10 +30,11 @@ const shop = new mongoose.Schema({
     accountPlanInfo: [{
         planName: String,
         planType: String,
-        planAmount: String
+        planAmount: String,
+        currency: String
     }
     ],
-    chargeId: {
+    activeChargeId: {
         type: String,
         default: ""
     },
