@@ -640,7 +640,8 @@ const proxyProfileSection = (req, res) => {
     const consultantId = req.query.consultantId || "";
     const shopId = req.query.shopId || "";
     const customerId = req.query.logged_in_customer_id;
-    console.log("___________customerId___________", customerId);
+    const customerId_ = req.query.logged_in_customer_id;
+    console.log("___________customerId___________", customerId_);
     console.log("shopId", shopId);
     console.log("consultantId", consultantId);
     console.log("shop", shop);
