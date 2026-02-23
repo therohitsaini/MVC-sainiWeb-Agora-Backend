@@ -670,7 +670,7 @@ const proxyProfileSection = async (req, res) => {
     }
 
     console.log("shopId", shop);
-    const iframeUrl = `${frontendUrl}/profile?&shop=${shop}&logged_in_customer_Id=${customerId}`;
+    const iframeUrl = `${frontendUrl}/profile?&shop=${shop}&logged_in_customer_Id=${customerId}&userId=${userId}&shopId=${shopDocId?._id}`;
     return renderShopifyPage(
         req,
         res,
