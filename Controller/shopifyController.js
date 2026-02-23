@@ -635,7 +635,7 @@ const proxyShopifyChatSection = (req, res) => {
     );
 };
 
-const proxyProfileSection = (req, res) => {
+const proxyProfileSection = async (req, res) => {
     const shop = req.query.shop;
     const consultantId = req.query.consultantId || "";
     const shopId = req.query.shopId || "";
@@ -645,6 +645,25 @@ const proxyProfileSection = (req, res) => {
     console.log("shopId", shopId);
     console.log("consultantId", consultantId);
     console.log("shop", shop);
+
+    let userId;
+    if (shop && customerId) {
+        try {
+            const result = await manageShopifyUser(shop, customerId);
+            userId = result;
+
+            if (result.success) {
+                console.log("✅ Customer registration:", result.message, result.userId ? `userId: ${result.userId}` : '');
+            } else {
+                console.log("⚠️ Customer registration failed:", result.message);
+            }
+        } catch (error) {
+            console.error("❌ Error registering customer:", error.message);
+        }
+    }
+
+    const shopDocId = await shopModel.findOne({ shop: shop });
+    console.log("userId__shop", shopDocId._id, userId);
 
     if (!customerId) {
         return res.redirect(`https://${shop}/account/login`);
