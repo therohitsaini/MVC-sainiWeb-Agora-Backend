@@ -27,7 +27,16 @@ const shop = new mongoose.Schema({
             updatedAt: { type: Date, default: Date.now }
         }
     ],
-
+    accountPlanInfo: [{
+        planName: String,
+        planType: String,
+        planAmount: String
+    }
+    ],
+    chargeId: {
+        type: String,
+        default: ""
+    },
     planStatus: {
         type: String,
         default: ""
