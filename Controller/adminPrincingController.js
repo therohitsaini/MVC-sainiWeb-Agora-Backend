@@ -18,6 +18,12 @@ const pricingCallback = async (req, res) => {
     try {
         const { shop, charge_id } = req.query;
         console.log("req____", req.query)
+        console.log("-------------", req.path)
+        // if (req.path === "/1") {
+        //     console.log("Request came from route 1");
+        // } else if (req.path === "/2") {
+        //     console.log("Request came from route 2");
+        // }
         if (!shop) return res.status(400).send("not found");
         const match = shop?.match(/^([a-z0-9-]+)\.myshopify\.com$/);
         if (!match) {

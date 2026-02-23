@@ -89,7 +89,6 @@ const { shopifyDraftOrderRoute } = require("./Routes/shopifyDraftOrderRoute");
 const { userRouter } = require("./Routes/userRoutes");
 const { adminRoute } = require("./Routes/adminRoute");
 const { adminPrincingRoute } = require("./Routes/adminPrincingRoutes");
-const { pricingCallback } = require("./Controller/adminPrincingController");
 
 
 app.use("/api/call", callRoutes);
@@ -118,7 +117,7 @@ app.use("/api/draft-order", shopifyDraftOrderRoute);
 app.use("/api/users", userRouter);
 app.use("/api/admin", adminRoute);
 app.use("/api/princing", adminPrincingRoute)
-app.use("/pricing-callback/*", pricingCallback)
+app.use("/pricing-callback", adminPrincingRoute)
 
 /** Web Hook Routes */
 
