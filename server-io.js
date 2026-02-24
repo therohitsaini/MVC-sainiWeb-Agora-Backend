@@ -11,6 +11,7 @@ const { WalletHistory } = require("./Modal/walletHistory");
 const { CallSession } = require("./Modal/callSessions");
 const { formatTime } = require("./Helper/helper");
 const { sendCallFCM } = require("./firebase/callPushNotification");
+const { ConsultantClient } = require("./Modal/consultantClient");
 const ioServer = (server) => {
     const io = new Server(server, {
         cors: {
@@ -875,6 +876,10 @@ const ioServer = (server) => {
                     _id: { $in: [senderId, receiverId] },
                     userType: "customer"
                 });
+                const consultantUser = await User.findOne({
+                    _id: { $in: [senderId, receiverId] },
+                    userType: "consultant"
+                });
 
                 if (customerUser?.isChatAccepted === "chatEnd") {
                     await User.updateOne(
@@ -884,9 +889,23 @@ const ioServer = (server) => {
 
                     console.log("✅ isChatAccepted updated to request");
                 }
-                // else → silently skip
+                // consultant client list 
+                if (customerUser) {
+                    const existingChat = await ConsultantClient.findOne({
+                        userId: customerUser._id,
+                        consultantId: consultantUser._id,
+                        shop_id
+                    });
+                    if (!existingChat) {
+                        await ChatList.create({
+                            userId: customerUser._id,
+                            consultantId: consultantUser._id,
+                            shop_id
+                        });
+                    }
+                }
 
-                console.log("customerUser", customerUser)
+
                 const messageWithSender = {
                     ...savedChat.toObject(),
                     senderName: senderInfo?.fullname || "User",
