@@ -471,6 +471,7 @@ const proxyShopifyConsultantPage = async (req, res) => {
         let homeResp = await fetchWithSession(makeUrl(`https://${shop}/`));
         let jarFetch = null;
 
+        // 🔐 Handle storefront password
         if (homeResp.status >= 300 && homeResp.status < 400) {
             const password = process.env.STOREFRONT_PASSWORD;
 
@@ -478,28 +479,36 @@ const proxyShopifyConsultantPage = async (req, res) => {
             const client = wrapper(
                 axios.create({ jar, withCredentials: true, headers: { "User-Agent": userAgent } })
             );
+
             await client.get(`https://${shop}/password`).catch(() => { });
             await client.post(
                 `https://${shop}/password`,
                 new URLSearchParams({ password }).toString(),
                 { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
             );
+
             homeResp = await client.get(makeUrl(`https://${shop}/`));
             jarFetch = async (url) => (await client.get(url)).data;
         }
 
+        // ⭐ ALWAYS READ HTML SAFELY
         let homeHtml = "";
 
         if (homeResp.data) {
+            // axios
             homeHtml = homeResp.data;
         } else {
+            // fetch
             homeHtml = await homeResp.text();
         }
+
+        // HEAD extract
         const headMatch = homeHtml.match(/<head[\s\S]*?<\/head>/i);
         const headHtml =
             headMatch?.[0] ||
             `<head><meta charset="UTF-8"><title>App</title></head>`;
 
+        // ⭐ Safe section fetcher
         const sectionFetch = jarFetch
             ? (url) => jarFetch(url)
             : async (url) => {
@@ -509,14 +518,15 @@ const proxyShopifyConsultantPage = async (req, res) => {
 
         const headerHtml = await sectionFetch(makeUrl(`https://${shop}/?section_id=header`));
         const footerHtml = await sectionFetch(makeUrl(`https://${shop}/?section_id=footer`));
-        // <header style="flex-shrink:0;">${headerHtml}</header>
-            // <footer style="flex-shrink:0;">${footerHtml}</footer>
+
         // Build final HTML
         const pageHtml = `
         <!DOCTYPE html>
         <html>
           ${headHtml}
           <body style="margin:0;padding:0;display:flex;flex-direction:column;min-height:100vh;">
+            <header style="flex-shrink:0;">${headerHtml}</header>
+            
             <main style="flex:1;overflow:hidden;position:relative;">
               <iframe 
                 id="agora-iframe"
@@ -525,7 +535,7 @@ const proxyShopifyConsultantPage = async (req, res) => {
               ></iframe>
             </main>
   
-        
+            <footer style="flex-shrink:0;">${footerHtml}</footer>
   
             <!-- Parent script (MUST HAVE) -->
             <script src="https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.6/iframeResizer.min.js"></script>
@@ -555,6 +565,8 @@ const proxyShopifyConsultantLoginPage = (req, res) => {
     return renderShopifyPage(
         req,
         res,
+        chat = "chatSection",
+
         `${frontendUrl}/consultant-dashboard?shop=${shop}`,
         {
             title: "Consultant App"
