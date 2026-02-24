@@ -278,7 +278,7 @@ const authCallback = async (req, res) => {
         const shopId = shopInfo.data.shop.id;
         const ownerEmail = shopInfo.data.shop.email;
         const shopCurrency = shopInfo.data.shop.currency
-        console.log("shopInfo", shopInfo)
+        console.log("shopInfo", shopInfo.data.shop.money_format)
         let shopDoc = await shopModel.findOne({ shop });
 
         if (shopDoc) {
@@ -296,7 +296,7 @@ const authCallback = async (req, res) => {
                 installedAt: new Date(),
                 appEnabled: false,
                 planStatus: "new",
-                currency:shopCurrency
+                currency: shopCurrency
 
             }).save();
         }
