@@ -898,7 +898,7 @@ const ioServer = (server) => {
                     console.log("receiver.firebaseToken.token", receiver.firebaseToken.token);
                     await sendFCM(
                         receiver.firebaseToken.token,
-                        "New Message",
+                        senderInfo.fullname,
                         text,
                         "https://www.svgrepo.com/show/335455/profile-default.svg"
                     );
@@ -1029,7 +1029,6 @@ const ioServer = (server) => {
                 }
 
                 const consultantCost = await User.findById(consultantId).session(session);
-                console.log("consultantCost", consultantCost)
                 if (!consultantCost) throw new Error("Consultant not found");
 
                 const shop = await shopModel.findById(shopId).session(session);
@@ -1039,9 +1038,7 @@ const ioServer = (server) => {
                 const endTime = new Date();
                 const totalSeconds = Math.floor((endTime - new Date(transaction.startTime)) / 1000);
                 const perSecondCost = consultantCost.chatPerMinute / 60;
-                console.log("perSecondCost", perSecondCost)
                 const totalAmount = Number((totalSeconds * perSecondCost).toFixed(2));
-                console.log("totalAmount", totalAmount)
                 const adminCommission = totalAmount * Number(shop.adminPersenTage) / 100;
                 const consultantShare = totalAmount - adminCommission;
                 const shopShare = adminCommission;
