@@ -471,7 +471,6 @@ const proxyShopifyConsultantPage = async (req, res) => {
         let homeResp = await fetchWithSession(makeUrl(`https://${shop}/`));
         let jarFetch = null;
 
-        // 🔐 Handle storefront password
         if (homeResp.status >= 300 && homeResp.status < 400) {
             const password = process.env.STOREFRONT_PASSWORD;
 
@@ -479,36 +478,28 @@ const proxyShopifyConsultantPage = async (req, res) => {
             const client = wrapper(
                 axios.create({ jar, withCredentials: true, headers: { "User-Agent": userAgent } })
             );
-
             await client.get(`https://${shop}/password`).catch(() => { });
             await client.post(
                 `https://${shop}/password`,
                 new URLSearchParams({ password }).toString(),
                 { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
             );
-
             homeResp = await client.get(makeUrl(`https://${shop}/`));
             jarFetch = async (url) => (await client.get(url)).data;
         }
 
-        // ⭐ ALWAYS READ HTML SAFELY
         let homeHtml = "";
 
         if (homeResp.data) {
-            // axios
             homeHtml = homeResp.data;
         } else {
-            // fetch
             homeHtml = await homeResp.text();
         }
-
-        // HEAD extract
         const headMatch = homeHtml.match(/<head[\s\S]*?<\/head>/i);
         const headHtml =
             headMatch?.[0] ||
             `<head><meta charset="UTF-8"><title>App</title></head>`;
 
-        // ⭐ Safe section fetcher
         const sectionFetch = jarFetch
             ? (url) => jarFetch(url)
             : async (url) => {
@@ -526,8 +517,6 @@ const proxyShopifyConsultantPage = async (req, res) => {
         <html>
           ${headHtml}
           <body style="margin:0;padding:0;display:flex;flex-direction:column;min-height:100vh;">
-       
-            
             <main style="flex:1;overflow:hidden;position:relative;">
               <iframe 
                 id="agora-iframe"
