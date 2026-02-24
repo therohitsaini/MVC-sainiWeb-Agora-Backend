@@ -890,20 +890,21 @@ const ioServer = (server) => {
                     console.log("✅ isChatAccepted updated to request");
                 }
                 // consultant client list 
-                if (customerUser) {
-                    const existingChat = await ConsultantClient.findOne({
+                // if (customerUser) {
+                    const existingUser = await ConsultantClient.findOne({
                         userId: customerUser._id,
                         consultantId: consultantUser._id,
                         shop_id
                     });
-                    if (!existingChat) {
+                    if (!existingUser) {
                         await ChatList.create({
                             userId: customerUser._id,
                             consultantId: consultantUser._id,
                             shop_id
                         });
+                        console.log("______created")
                     }
-                }
+                // }
 
 
                 const messageWithSender = {
