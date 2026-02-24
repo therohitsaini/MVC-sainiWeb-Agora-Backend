@@ -277,8 +277,9 @@ const authCallback = async (req, res) => {
         );
         const shopId = shopInfo.data.shop.id;
         const ownerEmail = shopInfo.data.shop.email;
-        const shopCurrency = shopInfo.data.shop.currency
-        console.log("shopInfo", shopInfo.data.shop.money_format)
+        const currencyCode = shopInfo.data.shop.email.currency;
+        const shopCurrency = shopInfo.data.shop.money_format.replace("{{amount}}", "").trim()
+        console.log("shopInfo", shopInfo.data.shop.money_format.replace("{{amount}}", "").trim())
         let shopDoc = await shopModel.findOne({ shop });
 
         if (shopDoc) {
@@ -296,6 +297,7 @@ const authCallback = async (req, res) => {
                 installedAt: new Date(),
                 appEnabled: false,
                 planStatus: "new",
+                currencyCode: currencyCode,
                 currency: shopCurrency
 
             }).save();
