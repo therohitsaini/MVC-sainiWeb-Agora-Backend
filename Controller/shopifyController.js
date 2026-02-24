@@ -230,13 +230,11 @@ const installShopifyApp = async (req, res) => {
 
 const authCallback = async (req, res) => {
     try {
-        console.log("🔁 Auth callback triggered");
         const { shop, hmac, code, host } = req.query;
         if (!shop || !hmac || !code) {
             console.log("❌ Missing required parameters");
             return res.status(400).send("Missing required parameters");
         }
-        console.log("_________", req.query)
         const params = { ...req.query };
         delete params.hmac;
         delete params.signature;
@@ -255,9 +253,6 @@ const authCallback = async (req, res) => {
             console.log("❌ HMAC validation failed");
             return res.status(400).send("HMAC validation failed");
         }
-
-        console.log("✅ HMAC validation successful");
-
         const tokenResponse = await axios.post(
             `https://${shop}/admin/oauth/access_token`,
             {
@@ -282,7 +277,7 @@ const authCallback = async (req, res) => {
         );
         const shopId = shopInfo.data.shop.id;
         const ownerEmail = shopInfo.data.shop.email;
-
+        console.log("shopInfo", shopInfo)
         let shopDoc = await shopModel.findOne({ shop });
 
         if (shopDoc) {
@@ -322,18 +317,6 @@ const authCallback = async (req, res) => {
         } else {
             console.log("✅ Using Shopify provided host");
         }
-
-        // if (!AdminUser.isPaid || AdminUser.planStatus !== "ACTIVE") {
-        //     console.log("❌ No active plan, redirecting to pricing");
-        //     const pricingRedirectUrl = `${frontendUrl}/pricing?` + new URLSearchParams({
-        //         shop: shop,
-        //         host: finalHost,
-        //         adminId: AdminUser._id.toString(),
-        //         source: 'shopify_auth'
-        //     }).toString();
-
-        //     return res.redirect(pricingRedirectUrl);
-        // }
 
         const redirectUrl = `${frontendUrl}/?` + new URLSearchParams({
             shop: shop,
