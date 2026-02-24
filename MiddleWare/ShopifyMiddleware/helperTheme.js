@@ -107,7 +107,7 @@ async function renderShopifyPage(req, res, iframeUrl, chat = "", options = {}) {
         ${headHtml}
         <body style="margin:0;padding:0;display:flex;flex-direction:column;min-height:90vh;">
           <header style="flex-shrink:0;">
-           ${chat === "chatSection" ? "" : footerHtml}
+           ${chat === "chatSection" ? "" : headerHtml}
           </header>
           <main style="flex:1;overflow:hidden;position:relative;">
             <iframe 
