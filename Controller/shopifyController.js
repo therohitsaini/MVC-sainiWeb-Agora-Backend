@@ -565,9 +565,8 @@ const proxyShopifyConsultantLoginPage = (req, res) => {
     return renderShopifyPage(
         req,
         res,
-        chat = "chatSection",
-
         `${frontendUrl}/consultant-dashboard?shop=${shop}`,
+        chat = "chatSection",
         {
             title: "Consultant App"
         }
