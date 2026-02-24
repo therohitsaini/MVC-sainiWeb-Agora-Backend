@@ -518,14 +518,15 @@ const proxyShopifyConsultantPage = async (req, res) => {
 
         const headerHtml = await sectionFetch(makeUrl(`https://${shop}/?section_id=header`));
         const footerHtml = await sectionFetch(makeUrl(`https://${shop}/?section_id=footer`));
-
+        // <header style="flex-shrink:0;">${headerHtml}</header>
+            // <footer style="flex-shrink:0;">${footerHtml}</footer>
         // Build final HTML
         const pageHtml = `
         <!DOCTYPE html>
         <html>
           ${headHtml}
           <body style="margin:0;padding:0;display:flex;flex-direction:column;min-height:100vh;">
-            <header style="flex-shrink:0;">${headerHtml}</header>
+       
             
             <main style="flex:1;overflow:hidden;position:relative;">
               <iframe 
@@ -535,7 +536,7 @@ const proxyShopifyConsultantPage = async (req, res) => {
               ></iframe>
             </main>
   
-            <footer style="flex-shrink:0;">${footerHtml}</footer>
+        
   
             <!-- Parent script (MUST HAVE) -->
             <script src="https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.6/iframeResizer.min.js"></script>
