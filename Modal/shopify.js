@@ -42,6 +42,11 @@ const shop = new mongoose.Schema({
         type: String,
         default: ""
     },
+    currency: {
+        type: String,
+        required: true,
+
+    },
     installedAt: { type: Date, default: Date.now }
 });
 
