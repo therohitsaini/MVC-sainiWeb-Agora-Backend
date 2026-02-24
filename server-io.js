@@ -897,7 +897,7 @@ const ioServer = (server) => {
                         shop_id
                     });
                     if (!existingUser) {
-                        await ChatList.create({
+                        await ConsultantClient.create({
                             userId: customerUser._id,
                             consultantId: consultantUser._id,
                             shop_id
