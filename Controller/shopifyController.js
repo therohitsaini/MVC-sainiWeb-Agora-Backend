@@ -558,8 +558,6 @@ const proxyShopifyConsultantPage = async (req, res) => {
     }
 };
 
-
-
 const proxyShopifyConsultantLoginPage = (req, res) => {
     const shop = req.query.shop;
     return renderShopifyPage(

@@ -49,7 +49,7 @@ const shop = new mongoose.Schema({
     },
     currencyCode: {
         type: String,
-        required: true,
+        // required: true,
     },
     installedAt: { type: Date, default: Date.now }
 });
