@@ -103,6 +103,7 @@ const getVouchersController = async (req, res) => {
         }
         const vouchers = {
             voucherCode: admin.vouchers,
+            shopCurrency: admin.currency,
             id: admin._id
 
         }
@@ -168,7 +169,7 @@ const getUserWalletHistroy = async (req, res) => {
             userId,
             shop_id: shopId
         })
-            .populate("userId", "fullname email") 
+            .populate("userId", "fullname email")
             .sort({ createdAt: -1 })
             .lean();
 
@@ -233,7 +234,7 @@ const getUserConversationController = async (req, res) => {
                     : c.senderId;
 
             return {
-                ...c.toObject(),    
+                ...c.toObject(),
                 consultant
             };
         });
