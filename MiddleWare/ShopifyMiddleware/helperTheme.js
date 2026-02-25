@@ -105,7 +105,7 @@ async function renderShopifyPage(req, res, iframeUrl, chat = "", options = {}) {
       <!DOCTYPE html>
       <html>
         ${headHtml}
-        <body style="margin:0;padding:0;display:flex;flex-direction:column;min-height:90vh;">
+        <body style="margin:0;padding:0;display:flex;flex-direction:column;min-height:100vh;">
           <header style="flex-shrink:0;">
            ${chat === "chatSection" ? "" : headerHtml}
           </header>
@@ -225,7 +225,7 @@ async function renderShopifyPage(req, res, iframeUrl, chat = "", options = {}) {
               checkOrigin: false,
               autoResize: true,
               heightCalculationMethod: "bodyScroll",
-              minHeight: 90vh,
+              minHeight: 100vh,
             }, "#agora-iframe");
           </script>
         </body>
