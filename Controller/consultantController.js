@@ -12,6 +12,7 @@ const validator = require("validator");
 const { TransactionHistroy } = require("../Modal/transactionHistroy");
 const { WalletHistory } = require("../Modal/walletHistory");
 const { WithdrawalRequestSchema } = require("../Modal/withdrawalSchema");
+const { ConsultantClient } = require("../Modal/consultantClient");
 
 
 
@@ -630,7 +631,7 @@ const getChatListByShopIdAndConsultantId = async (request, response) => {
         if (!mongoose.Types.ObjectId.isValid(shop_id)) {
             return response.status(400).json({ message: 'Invalid shop ID' });
         }
-        const chatList = await ChatList.find({ shop_id: shop_id, receiverId: consultant_id }).populate("senderId").populate("receiverId").populate("shop_id").sort({  updatedAt: -1 });
+        const chatList = await ChatList.find({ shop_id: shop_id, receiverId: consultant_id }).populate("senderId").populate("receiverId").populate("shop_id").sort({ updatedAt: -1 });
         if (!chatList) {
             return response.status(400).json({ message: 'Chat list not found' });
         }
@@ -700,6 +701,67 @@ const removeChatListAndConsultantIdFromChatList = async (req, res) => {
         return response.status(500).json({ message: 'Server error' });
     }
 }
+// const getConsultantAllUsers = async (req, res) => {
+//     try {
+//         const { id } = req.params;
+
+//         if (!mongoose.Types.ObjectId.isValid(id)) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Invalid consultant ID",
+//             });
+//         }
+
+//         const chats = await ChatList.find({
+//             $or: [{ senderId: id }, { receiverId: id }],
+//         })
+//             .populate({
+//                 path: "senderId",
+//                 match: { userType: "customer" },
+//                 select: "fullname email phone userType profileImage isActive",
+//             })
+//             .populate({
+//                 path: "receiverId",
+//                 match: { userType: "customer" },
+//                 select: "fullname email phone userType profileImage isActive",
+//             })
+//             .sort({ createdAt: -1 });
+//         const customers = chats
+//             .map((chat) => {
+//                 const customer = chat.senderId || chat.receiverId;
+
+//                 if (!customer) return null;
+
+//                 return {
+//                     chatListId: chat._id,
+//                     createdAt: chat.createdAt,
+//                     lastMessage: chat.lastMessage,
+//                     isRequest: chat.isRequest,
+//                     _id: customer._id,
+//                     fullname: customer.fullname,
+//                     email: customer.email,
+//                     phone: customer.phone,
+//                     userType: customer.userType,
+//                     profileImage: customer.profileImage,
+//                     isActive: customer.isActive,
+//                 };
+//             })
+//             .filter(Boolean);
+//         return res.status(200).json({
+//             success: true,
+//             message: "Consultant users fetched successfully",
+//             payload: customers,
+//         });
+
+//     } catch (error) {
+//         console.error("getConsultantAllUsers error:", error);
+//         return res.status(500).json({
+//             success: false,
+//             message: "Server error",
+//         });
+//     }
+// };
+
 const getConsultantAllUsers = async (req, res) => {
     try {
         const { id } = req.params;
@@ -711,45 +773,41 @@ const getConsultantAllUsers = async (req, res) => {
             });
         }
 
-        const chats = await ChatList.find({
-            $or: [{ senderId: id }, { receiverId: id }],
+        const chats = await ConsultantClient.find({
+            consultantId: id
         })
             .populate({
-                path: "senderId",
+                path: "userId",
                 match: { userType: "customer" },
                 select: "fullname email phone userType profileImage isActive",
             })
-            .populate({
-                path: "receiverId",
-                match: { userType: "customer" },
-                select: "fullname email phone userType profileImage isActive",
-            })
+
             .sort({ createdAt: -1 });
-        const customers = chats
-            .map((chat) => {
-                const customer = chat.senderId || chat.receiverId;
+        // const customers = chats
+        //     .map((chat) => {
+        //         const customer = chat.senderId || chat.receiverId;
 
-                if (!customer) return null;
+        //         if (!customer) return null;
 
-                return {
-                    chatListId: chat._id,
-                    createdAt: chat.createdAt,
-                    lastMessage: chat.lastMessage,
-                    isRequest: chat.isRequest,
-                    _id: customer._id,
-                    fullname: customer.fullname,
-                    email: customer.email,
-                    phone: customer.phone,
-                    userType: customer.userType,
-                    profileImage: customer.profileImage,
-                    isActive: customer.isActive,
-                };
-            })
-            .filter(Boolean);
+        //         return {
+        //             chatListId: chat._id,
+        //             createdAt: chat.createdAt,
+        //             lastMessage: chat.lastMessage,
+        //             isRequest: chat.isRequest,
+        //             _id: customer._id,
+        //             fullname: customer.fullname,
+        //             email: customer.email,
+        //             phone: customer.phone,
+        //             userType: customer.userType,
+        //             profileImage: customer.profileImage,
+        //             isActive: customer.isActive,
+        //         };
+        //     })
+        //     .filter(Boolean);
         return res.status(200).json({
             success: true,
             message: "Consultant users fetched successfully",
-            payload: customers,
+            payload: chats,
         });
 
     } catch (error) {
@@ -760,8 +818,6 @@ const getConsultantAllUsers = async (req, res) => {
         });
     }
 };
-
-
 const updateConsultantProfileStoreFront = async (req, res) => {
     try {
 
