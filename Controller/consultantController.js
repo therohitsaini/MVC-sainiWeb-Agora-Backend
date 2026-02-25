@@ -1092,6 +1092,21 @@ const getMonthlyRevenueController = async (req, res) => {
 };
 
 
+const tokenVerifyController = async (req, res) => {
+    try {
+        // yahan token already middleware ne verify kar diya hai
+        res.status(200).json({
+            success: true,
+            user: req.user,
+        });
+    } catch (err) {
+        res.status(401).json({
+            success: false,
+            message: "Token verification failed",
+        });
+    }
+};
+
 
 
 module.exports = {
@@ -1114,5 +1129,6 @@ module.exports = {
     getConsultantWalletHistroy,
     WithdrawalRequestController,
     getWithdrawalRequest,
-    getMonthlyRevenueController
+    getMonthlyRevenueController,
+    tokenVerifyController
 }

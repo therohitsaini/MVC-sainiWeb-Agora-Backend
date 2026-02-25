@@ -18,11 +18,13 @@ const { consultantController,
    getConsultantWalletHistroy,
    WithdrawalRequestController,
    getWithdrawalRequest,
-   getMonthlyRevenueController
+   getMonthlyRevenueController,
+   tokenVerifyController
 } = require("../Controller/consultantController")
 const consultantRoute = express.Router()
 const multer = require("multer");
 const { verifyShopifyToken } = require("../MiddleWare/ShopifyMiddleware/verifyShopifyToken");
+const { authenticateToken } = require("../Auth/signup-signin");
 const upload = multer({ storage: multer.memoryStorage() });
 
 
@@ -46,6 +48,9 @@ consultantRoute.get("/find-coonsultant/wallet/history/:userId/:shopId", getConsu
 consultantRoute.post("/submit/withdrawal/request/:consultantId/:shopId", WithdrawalRequestController)
 consultantRoute.get("/find/consultant/withdrawal/request/:consultantId",getWithdrawalRequest)
 consultantRoute.get("/find/monthly-revenue/:shop_id/:consultantId",getMonthlyRevenueController)
+// add routes in index file 26 feb 26
+consultantRoute.get("/verify-token", authenticateToken,tokenVerifyController)
+
 
 
 
