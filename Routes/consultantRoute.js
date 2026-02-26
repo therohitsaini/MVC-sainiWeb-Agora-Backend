@@ -43,7 +43,7 @@ consultantRoute.get("/get/chat-list/:shop_id/:consultant_id", getChatListByShopI
 consultantRoute.delete("/remove/user/chat-list/:id/:senderId", removeChatListAndConsultantIdFromChatList);
 consultantRoute.get("/get/consultant/:id", getConsultantAllUsers);
 consultantRoute.put("/update-profile", upload.single("profileImage"), updateConsultantProfileStoreFront);
-consultantRoute.get("/find-user-chat-logs/:id", getUserConversationControllerConsultant)
+consultantRoute.get("/find-user-chat-logs/:id",authenticateToken, getUserConversationControllerConsultant)
 consultantRoute.get("/find-coonsultant/wallet/history/:userId/:shopId", getConsultantWalletHistroy)
 consultantRoute.post("/submit/withdrawal/request/:consultantId/:shopId", WithdrawalRequestController)
 consultantRoute.get("/find/consultant/withdrawal/request/:consultantId",getWithdrawalRequest)
