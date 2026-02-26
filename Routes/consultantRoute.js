@@ -37,18 +37,18 @@ consultantRoute.get("/consultant-history/:id", getConsultantHistory)
 consultantRoute.get("/consultant-all-user/:id", getConsultantAllUser)
 consultantRoute.get("/consultant-all-user-history", getConsultantAllUserHistory)
 consultantRoute.delete('/delete-consultant/:id', deleteConsultant);
-consultantRoute.get("/consultant-by-shop-id-and-consultant-id/:shop_id/:consultant_id",authenticateToken, getConsultantByShopIdAndConsultantId);
+consultantRoute.get("/consultant-by-shop-id-and-consultant-id/:shop_id/:consultant_id", authenticateToken, getConsultantByShopIdAndConsultantId);
 consultantRoute.post("/login-consultant", loginConsultant);
-consultantRoute.get("/get/chat-list/:shop_id/:consultant_id", getChatListByShopIdAndConsultantId);
+consultantRoute.get("/get/chat-list/:shop_id/:consultant_id", authenticateToken, getChatListByShopIdAndConsultantId);
 consultantRoute.delete("/remove/user/chat-list/:id/:senderId", removeChatListAndConsultantIdFromChatList);
-consultantRoute.get("/get/consultant/:id",authenticateToken, getConsultantAllUsers);
+consultantRoute.get("/get/consultant/:id", authenticateToken, getConsultantAllUsers);
 consultantRoute.put("/update-profile", upload.single("profileImage"), updateConsultantProfileStoreFront);
-consultantRoute.get("/find-user-chat-logs/:id",authenticateToken, getUserConversationControllerConsultant)
+consultantRoute.get("/find-user-chat-logs/:id", authenticateToken, getUserConversationControllerConsultant)
 consultantRoute.get("/find-consultant/wallet/history/:userId/:shopId", getConsultantWalletHistroy)
 consultantRoute.post("/submit/withdrawal/request/:consultantId/:shopId", WithdrawalRequestController)
-consultantRoute.get("/find/consultant/withdrawal/request/:consultantId",getWithdrawalRequest)
-consultantRoute.get("/find/monthly-revenue/:shop_id/:consultantId",getMonthlyRevenueController)
-consultantRoute.get("/verify-token", authenticateToken,tokenVerifyController)
+consultantRoute.get("/find/consultant/withdrawal/request/:consultantId", getWithdrawalRequest)
+consultantRoute.get("/find/monthly-revenue/:shop_id/:consultantId", getMonthlyRevenueController)
+consultantRoute.get("/verify-token", authenticateToken, tokenVerifyController)
 
 
 module.exports = { consultantRoute }
