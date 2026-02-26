@@ -560,6 +560,7 @@ const proxyShopifyConsultantPage = async (req, res) => {
 
 const proxyShopifyConsultantLoginPage = (req, res) => {
     const shop = req.query.shop;
+    console.log("shop___", shop)
     return renderShopifyPage(
         req,
         res,

@@ -101,7 +101,6 @@ const tokenVerify = async (request, response) => {
 
 
 const authenticateToken = async (request, response, next) => {
-   console.log("authenticateToken", request)
    try {
       const verify = await verify_Token(request)
       if (!verify) {
