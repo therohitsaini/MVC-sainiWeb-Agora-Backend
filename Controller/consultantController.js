@@ -381,14 +381,14 @@ const loginConsultant = async (request, response) => {
             });
         }
 
-        // 4. Generate JWT
+       
         const token = jwt.sign(
             { id: find_User._id, role: "consultant" },
-            "consultantsainiwebshopshopify ",
+            "consultantsainiwebshopshopify",
             { expiresIn: "10h" }
         );
 
-        // 5. Success response
+      
         return response.status(200).send({
             success: true,
             message: "Login successful",
