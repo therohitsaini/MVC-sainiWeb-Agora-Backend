@@ -347,7 +347,6 @@ const authCallback = async (req, res) => {
 
 const proxyThemeAssetsController = async (req, res) => {
     try {
-        console.log("___________________")
         const shop = req.query.shop
         const themeId = req.query.theme_id;
         const customerId = req.query.logged_in_customer_id;
