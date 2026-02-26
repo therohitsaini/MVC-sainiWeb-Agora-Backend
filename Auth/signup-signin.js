@@ -74,6 +74,7 @@ const signIn = async (request, response) => {
       if (!compairPassword) {
          return response.status(400).send({ massage: "Incrrect password ... ! " })
       }
+      console.log("JWT_SECRET_KEY", JWT_SECRET_KEY)
       const Token = JWT.sign(body, process.env.JWT_SECRET_KEY, { expiresIn: '7h' })
       return response.send({ massage: "Sign in successfully ", data: Token, userData: find_User })
 
