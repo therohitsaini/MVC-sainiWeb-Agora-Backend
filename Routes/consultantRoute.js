@@ -37,11 +37,11 @@ consultantRoute.get("/consultant-history/:id", getConsultantHistory)
 consultantRoute.get("/consultant-all-user/:id", getConsultantAllUser)
 consultantRoute.get("/consultant-all-user-history", getConsultantAllUserHistory)
 consultantRoute.delete('/delete-consultant/:id', deleteConsultant);
-consultantRoute.get("/consultant-by-shop-id-and-consultant-id/:shop_id/:consultant_id", getConsultantByShopIdAndConsultantId);
+consultantRoute.get("/consultant-by-shop-id-and-consultant-id/:shop_id/:consultant_id",authenticateToken, getConsultantByShopIdAndConsultantId);
 consultantRoute.post("/login-consultant", loginConsultant);
 consultantRoute.get("/get/chat-list/:shop_id/:consultant_id", getChatListByShopIdAndConsultantId);
 consultantRoute.delete("/remove/user/chat-list/:id/:senderId", removeChatListAndConsultantIdFromChatList);
-consultantRoute.get("/get/consultant/:id", getConsultantAllUsers);
+consultantRoute.get("/get/consultant/:id",authenticateToken, getConsultantAllUsers);
 consultantRoute.put("/update-profile", upload.single("profileImage"), updateConsultantProfileStoreFront);
 consultantRoute.get("/find-user-chat-logs/:id",authenticateToken, getUserConversationControllerConsultant)
 consultantRoute.get("/find-coonsultant/wallet/history/:userId/:shopId", getConsultantWalletHistroy)
