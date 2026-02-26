@@ -44,14 +44,11 @@ consultantRoute.delete("/remove/user/chat-list/:id/:senderId", removeChatListAnd
 consultantRoute.get("/get/consultant/:id",authenticateToken, getConsultantAllUsers);
 consultantRoute.put("/update-profile", upload.single("profileImage"), updateConsultantProfileStoreFront);
 consultantRoute.get("/find-user-chat-logs/:id",authenticateToken, getUserConversationControllerConsultant)
-consultantRoute.get("/find-coonsultant/wallet/history/:userId/:shopId", getConsultantWalletHistroy)
+consultantRoute.get("/find-consultant/wallet/history/:userId/:shopId", getConsultantWalletHistroy)
 consultantRoute.post("/submit/withdrawal/request/:consultantId/:shopId", WithdrawalRequestController)
 consultantRoute.get("/find/consultant/withdrawal/request/:consultantId",getWithdrawalRequest)
 consultantRoute.get("/find/monthly-revenue/:shop_id/:consultantId",getMonthlyRevenueController)
-// add routes in index file 26 feb 26
 consultantRoute.get("/verify-token", authenticateToken,tokenVerifyController)
-
-
 
 
 module.exports = { consultantRoute }
