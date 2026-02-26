@@ -2,7 +2,7 @@ const { User } = require("../Modal/userSchema")
 const bcrypt = require("bcrypt")
 const JWT = require("jsonwebtoken");
 const { verify_Token } = require("./auth");
-const JWT_SRCURITE_KEY = process.env.JWT_SECRET_KEY || "hytfrdghbgfcfcrfffff"
+const JWT_SRCURITE_KEY = "consultantsainiwebshopshopify"
 
 
 const generateAgoraUid = () => Math.floor(100000 + Math.random() * 900000);

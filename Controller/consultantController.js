@@ -13,6 +13,8 @@ const { TransactionHistroy } = require("../Modal/transactionHistroy");
 const { WalletHistory } = require("../Modal/walletHistory");
 const { WithdrawalRequestSchema } = require("../Modal/withdrawalSchema");
 const { ConsultantClient } = require("../Modal/consultantClient");
+const dotenv = require("dotenv")
+dotenv.config()
 
 
 
@@ -27,8 +29,7 @@ const consultantController = async (req, res) => {
         const { shop_id } = req.params;
         const body = req.body;
         const file = req.file;
-        console.log("___________file___________", file);
-        console.log("___________body___________", body);
+
 
         if (!shop_id || !mongoose.Types.ObjectId.isValid(shop_id)) {
             return res.status(400).json({
@@ -383,7 +384,7 @@ const loginConsultant = async (request, response) => {
         // 4. Generate JWT
         const token = jwt.sign(
             { id: find_User._id, role: "consultant" },
-            "process.env.JWT_SECRET_KEY",
+            "consultantsainiwebshopshopify ",
             { expiresIn: "10h" }
         );
 
