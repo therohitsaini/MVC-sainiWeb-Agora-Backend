@@ -1095,6 +1095,7 @@ const getMonthlyRevenueController = async (req, res) => {
 const tokenVerifyController = async (req, res) => {
     try {
         // yahan token already middleware ne verify kar diya hai
+        console.log("token veirfy is working ..........")
         res.status(200).json({
             success: true,
             user: req.user,

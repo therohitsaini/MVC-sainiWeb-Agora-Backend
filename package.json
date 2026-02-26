@@ -42,5 +42,8 @@
   "bugs": {
     "url": "https://github.com/therohitsaini/MVC-sainiWeb-Agora-Backend/issues"
   },
-  "homepage": "https://github.com/therohitsaini/MVC-sainiWeb-Agora-Backend#readme"
+  "homepage": "https://github.com/therohitsaini/MVC-sainiWeb-Agora-Backend#readme",
+  "devDependencies": {
+    "prettier": "^3.8.1"
+  }
 }
