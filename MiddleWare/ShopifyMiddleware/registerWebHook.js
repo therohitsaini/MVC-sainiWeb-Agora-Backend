@@ -1,6 +1,5 @@
 const axios = require("axios");
 const dotenv = require("dotenv");
-const { shopify } = require("../../config/shopifyConfig");
 dotenv.config();
 
 

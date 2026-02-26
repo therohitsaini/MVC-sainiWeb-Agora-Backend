@@ -4,7 +4,7 @@ dotenv.config();
 const { shopModel } = require('../Modal/shopify');
 const { manageShopifyUser } = require('../MiddleWare/ShopifyMiddleware/handleShopifyUser');
 const { renderShopifyPage } = require('../MiddleWare/ShopifyMiddleware/helperTheme');
-const { registerOrderPaidWebhook, registerOrderDeletedWebhook, registerAppUninstallWebhook, registerGdprWebhook, } = require('../MiddleWare/ShopifyMiddleware/registerWebHook');
+const {  registerAppUninstallWebhook, } = require('../MiddleWare/ShopifyMiddleware/registerWebHook');
 
 let axios, wrapper, CookieJar;
 try {
