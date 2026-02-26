@@ -44,7 +44,7 @@ consultantRoute.delete("/remove/user/chat-list/:id/:senderId", removeChatListAnd
 consultantRoute.get("/get/consultant/:id", authenticateToken, getConsultantAllUsers);
 consultantRoute.put("/update-profile", upload.single("profileImage"),authenticateToken, updateConsultantProfileStoreFront);
 consultantRoute.get("/find-user-chat-logs/:id", authenticateToken, getUserConversationControllerConsultant)
-consultantRoute.get("/find-consultant/wallet/history/:userId/:shopId", authenticateToken, getConsultantWalletHistroy)
+consultantRoute.get("/find-consultant/wallet/history/:userId/:shopId", getConsultantWalletHistroy)
 consultantRoute.post("/submit/withdrawal/request/:consultantId/:shopId", authenticateToken, WithdrawalRequestController)
 consultantRoute.get("/find/consultant/withdrawal/request/:consultantId", authenticateToken, getWithdrawalRequest)
 consultantRoute.get("/find/monthly-revenue/:shop_id/:consultantId", getMonthlyRevenueController) // defult did use 
