@@ -23,7 +23,7 @@ const verify_Token = async (request) => {
          return false
       }
 
-      const jwt_ = JWT.verify(token, "consultantsainiwebshopshopify" || "hytfrdghbgfcfcrfffff")
+      const jwt_ = JWT.verify(token,process.env.JWT_SECRET_KEY)
       return !!jwt_ && jwt_
    } catch (err) {
       console.log("token is invalid ", err)

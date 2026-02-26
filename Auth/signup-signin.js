@@ -2,7 +2,8 @@ const { User } = require("../Modal/userSchema")
 const bcrypt = require("bcrypt")
 const JWT = require("jsonwebtoken");
 const { verify_Token } = require("./auth");
-const JWT_SRCURITE_KEY = "consultantsainiwebshopshopify"
+const dotenv = require("dotenv")
+dotenv.config()
 
 
 const generateAgoraUid = () => Math.floor(100000 + Math.random() * 900000);
@@ -73,8 +74,7 @@ const signIn = async (request, response) => {
       if (!compairPassword) {
          return response.status(400).send({ massage: "Incrrect password ... ! " })
       }
-      const Token = JWT.sign(body, JWT_SRCURITE_KEY, { expiresIn: '10h' })
-
+      const Token = JWT.sign(body, process.env.JWT_SECRET_KEY, { expiresIn: '7h' })
       return response.send({ massage: "Sign in successfully ", data: Token, userData: find_User })
 
    } catch (err) {
