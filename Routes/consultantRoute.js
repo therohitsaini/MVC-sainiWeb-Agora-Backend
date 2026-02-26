@@ -42,12 +42,12 @@ consultantRoute.post("/login-consultant", loginConsultant);
 consultantRoute.get("/get/chat-list/:shop_id/:consultant_id", authenticateToken, getChatListByShopIdAndConsultantId);
 consultantRoute.delete("/remove/user/chat-list/:id/:senderId", removeChatListAndConsultantIdFromChatList);
 consultantRoute.get("/get/consultant/:id", authenticateToken, getConsultantAllUsers);
-consultantRoute.put("/update-profile", upload.single("profileImage"), updateConsultantProfileStoreFront);
+consultantRoute.put("/update-profile", upload.single("profileImage"),authenticateToken, updateConsultantProfileStoreFront);
 consultantRoute.get("/find-user-chat-logs/:id", authenticateToken, getUserConversationControllerConsultant)
-consultantRoute.get("/find-consultant/wallet/history/:userId/:shopId", getConsultantWalletHistroy)
-consultantRoute.post("/submit/withdrawal/request/:consultantId/:shopId", WithdrawalRequestController)
-consultantRoute.get("/find/consultant/withdrawal/request/:consultantId", getWithdrawalRequest)
-consultantRoute.get("/find/monthly-revenue/:shop_id/:consultantId", getMonthlyRevenueController)
+consultantRoute.get("/find-consultant/wallet/history/:userId/:shopId", authenticateToken, getConsultantWalletHistroy)
+consultantRoute.post("/submit/withdrawal/request/:consultantId/:shopId", authenticateToken, WithdrawalRequestController)
+consultantRoute.get("/find/consultant/withdrawal/request/:consultantId", authenticateToken, getWithdrawalRequest)
+consultantRoute.get("/find/monthly-revenue/:shop_id/:consultantId", getMonthlyRevenueController) // defult did use 
 consultantRoute.get("/verify-token", authenticateToken, tokenVerifyController)
 
 
