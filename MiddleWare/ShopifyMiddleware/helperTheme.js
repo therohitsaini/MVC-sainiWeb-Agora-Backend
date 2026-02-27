@@ -109,7 +109,7 @@ async function renderShopifyPage(req, res, iframeUrl, chat = "", options = {}) {
           <header style="flex-shrink:0;">
            ${chat === "chatSection" ? "" : headerHtml}
           </header>
-          <main style="flex:1;overflow:hidden;position:relative;">
+          <main style="flex:1;position:relative;">
            <iframe 
               id="agora-iframe"
               src="${iframeUrl}" 
