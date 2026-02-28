@@ -356,7 +356,7 @@ const proxyThemeAssetsController = async (req, res) => {
             try {
                 const result = await manageShopifyUser(shop, customerId);
                 userId = result;
-                // token = result;
+                token = result.token;
                 console.log("result", result)
                 if (result.success) {
                     console.log("✅ Customer registration:", result.message, result.userId ? `userId: ${result.userId}` : '');
@@ -367,7 +367,7 @@ const proxyThemeAssetsController = async (req, res) => {
                 console.error("❌ Error registering customer:", error.message);
             }
         }
-
+        console.log("token__________", token)
         const shopDocId = await shopModel.findOne({ shop: shop });
         console.log("userId__shop", shopDocId._id);
         const cookieHeader = req.headers.cookie || "";
@@ -410,6 +410,7 @@ const proxyThemeAssetsController = async (req, res) => {
             sectionFetch(makeUrl(`https://${shop}/?section_id=header`)),
             sectionFetch(makeUrl(`https://${shop}/?section_id=footer`))
         ]);
+
         const pageHtml = `
           <!DOCTYPE html>
           <html>
@@ -441,6 +442,14 @@ const proxyThemeAssetsController = async (req, res) => {
             </body>
           </html>
           `;
+        if (token) {
+            res.cookie("token", token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "None",
+                maxAge: 7 * 24 * 60 * 60 * 1000
+            });
+        }
         return res.status(200).send(pageHtml);
     }
 
