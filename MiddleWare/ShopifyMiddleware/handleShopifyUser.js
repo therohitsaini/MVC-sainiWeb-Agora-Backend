@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
+const jwt = require("jsonwebtoken");
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -46,11 +47,21 @@ const manageShopifyUser = async (shop, customerId) => {
             const getShop = await shopModel.findOne({ shop: shop });
 
             if (user) {
-                return { success: true, message: "Customer already exists", userId: user._id };
+                const token = jwt.sign(
+                    { id: user._id },
+                    process.env.JWT_SECRET_KEY,
+                    { expiresIn: "7d" }
+                );
+
+                return {
+                    success: true,
+                    message: "Customer already exists",
+                    userId: user._id,
+                    token
+                };
             } else {
                 // Combine firstName and lastName for fullname, handle null/undefined
                 const fullname = [customer.firstName, customer.lastName].filter(Boolean).join(' ') || 'Shopify Customer';
-
                 const newUser = new User({
                     shopifyCustomerId: id,
                     shop_id: getShop._id,
@@ -63,10 +74,14 @@ const manageShopifyUser = async (shop, customerId) => {
                     numberOfOrders: customer.numberOfOrders,
                     chatLock: true,
                 });
-                console.log("newUser    ", newUser);
+                console.log("newUser", newUser);
                 await newUser.save();
-
-                return { success: true, message: "Customer created successfully", shop_id: newUser.shop_id, userId: newUser._id };
+                const token = jwt.sign(
+                    { id: newUser._id },
+                    process.env.JWT_SECRET_KEY,
+                    { expiresIn: "7d" }
+                );
+                return { success: true, message: "Customer created successfully", shop_id: newUser.shop_id, userId: newUser._id, token };
             }
         }
         return { success: false, message: "Customer not found in Shopify" };

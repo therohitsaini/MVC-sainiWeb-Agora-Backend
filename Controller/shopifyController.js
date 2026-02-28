@@ -4,7 +4,7 @@ dotenv.config();
 const { shopModel } = require('../Modal/shopify');
 const { manageShopifyUser } = require('../MiddleWare/ShopifyMiddleware/handleShopifyUser');
 const { renderShopifyPage } = require('../MiddleWare/ShopifyMiddleware/helperTheme');
-const {  registerAppUninstallWebhook, } = require('../MiddleWare/ShopifyMiddleware/registerWebHook');
+const { registerAppUninstallWebhook, } = require('../MiddleWare/ShopifyMiddleware/registerWebHook');
 
 let axios, wrapper, CookieJar;
 try {
@@ -351,11 +351,13 @@ const proxyThemeAssetsController = async (req, res) => {
         const themeId = req.query.theme_id;
         const customerId = req.query.logged_in_customer_id;
         let userId;
+        let token;
         if (shop && customerId) {
             try {
                 const result = await manageShopifyUser(shop, customerId);
                 userId = result;
-
+                // token = result;
+                console.log("result", result)
                 if (result.success) {
                     console.log("✅ Customer registration:", result.message, result.userId ? `userId: ${result.userId}` : '');
                 } else {
