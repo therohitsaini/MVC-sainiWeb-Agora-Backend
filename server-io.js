@@ -81,16 +81,18 @@ const ioServer = (server) => {
                 }
                 const consultant = await User.findById(receiverId)
                 // if (!receiverSocketId && consultant.firebaseToken?.token) {
-                    await sendCallFCM({
-                        token: consultant.firebaseToken.token,
-                        callerId,
-                        callerName: callerInfo.fullname,
-                        channelName,
-                        callType,
-                        avatar: callerInfo.profileImage
-                    });
+                await sendCallFCM({
+                    token: consultant.firebaseToken.token,
+                    callerId,
+                    callerName: callerInfo.fullname,
+                    channelName,
+                    callType,
+                    receiverId,
+                    shop,
+                    avatar: callerInfo.profileImage
+                });
 
-                    console.log("📲 Call FCM sent to receiver");
+                console.log("📲 Call FCM sent to receiver");
                 // }
 
 
@@ -922,7 +924,7 @@ const ioServer = (server) => {
                         senderInfo.fullname,
                         text,
                         "https://www.svgrepo.com/show/335455/profile-default.svg",
-                         shop_Domain.shop
+                        shop_Domain.shop
                     );
                 }
 

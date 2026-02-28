@@ -6,6 +6,8 @@ async function sendCallFCM({
     callerName,
     channelName,
     callType,
+    receiverId,
+    shop,
     avatar
 }) {
     const message = {
@@ -15,7 +17,9 @@ async function sendCallFCM({
             callerId,
             callerName,
             channelName,
-            callType, // voice | video
+            callType,
+            receiverId,
+            shop,
             avatar: avatar || "",
         },
         android: {
