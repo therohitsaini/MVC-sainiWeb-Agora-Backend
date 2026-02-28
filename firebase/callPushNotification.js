@@ -8,6 +8,7 @@ async function sendCallFCM({
     callType,
     receiverId,
     shop,
+    shopId,
     avatar
 }) {
     const message = {
@@ -20,6 +21,7 @@ async function sendCallFCM({
             callType,
             receiverId,
             shop,
+            shopId,
             avatar: avatar || "",
         },
         android: {
