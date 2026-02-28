@@ -891,19 +891,19 @@ const ioServer = (server) => {
                 }
                 // consultant client list 
                 // if (customerUser) {
-                    const existingUser = await ConsultantClient.findOne({
+                const existingUser = await ConsultantClient.findOne({
+                    userId: customerUser._id,
+                    consultantId: consultantUser._id,
+                    shop_id
+                });
+                if (!existingUser) {
+                    await ConsultantClient.create({
                         userId: customerUser._id,
                         consultantId: consultantUser._id,
                         shop_id
                     });
-                    if (!existingUser) {
-                        await ConsultantClient.create({
-                            userId: customerUser._id,
-                            consultantId: consultantUser._id,
-                            shop_id
-                        });
-                        console.log("______created")
-                    }
+                    console.log("______created")
+                }
                 // }
 
 
@@ -914,15 +914,17 @@ const ioServer = (server) => {
                 };
                 io.emit("receiveMessage", messageWithSender);
                 const receiver = await User.findById(receiverId);
-                if (receiver?.firebaseToken?.token && !receiver?.isActive) {
+                // if (receiver?.firebaseToken?.token && !receiver?.isActive) {
                     console.log("receiver.firebaseToken.token", receiver.firebaseToken.token);
+                    const shop_Domain = await shopModel.findById(shop_id)
                     await sendFCM(
                         receiver.firebaseToken.token,
                         senderInfo.fullname,
                         text,
-                        "https://www.svgrepo.com/show/335455/profile-default.svg"
+                        "https://www.svgrepo.com/show/335455/profile-default.svg",
+                         shop_Domain.shop
                     );
-                }
+                // }
 
             } catch (error) {
                 console.error("❌ Transaction failed:", error);

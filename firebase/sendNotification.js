@@ -1,12 +1,13 @@
 const admin = require("../firebase/firebase");
 
-async function sendFCM(token, title, body, avatar) {
+async function sendFCM(token, title, body, avatar, shop_Domain) {
     const message = {
         token,
         data: {
             title: title,
             body: body,
-            avatar: avatar || "",   
+            avatar: avatar || "",
+            shopDomain: shop_Domain,
         },
         android: {
             priority: "high",
