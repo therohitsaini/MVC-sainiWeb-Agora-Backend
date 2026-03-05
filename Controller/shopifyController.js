@@ -661,13 +661,14 @@ const proxyProfileSection = async (req, res) => {
 
     const shopDocId = await shopModel.findOne({ shop: shop });
     console.log("userId__shop", shopDocId._id, userId);
+    let shopIdParams = shopDocId?._id.toString()
 
     if (!customerId) {
         return res.redirect(`https://${shop}/account/login`);
     }
 
     console.log("shopId", shop);
-    const iframeUrl = `${frontendUrl}/profile?&shop=${shop}&logged_in_customer_Id=${customerId}&userId=${userId}&shopId=${shopDocId?._id}`;
+    const iframeUrl = `${frontendUrl}/profile?&shop=${shop}&logged_in_customer_Id=${customerId}&userId=${userId}&shopId=${shopIdParams}`;
     return renderShopifyPage(
         req,
         res,

@@ -592,11 +592,11 @@ const deleteConsultant = async (request, response) => {
  * @param {string} shop_id 
  * @returns {Promise<{success: boolean, message: string, consultants: User[]}>}
  */
+
+
 const getConsultantByShopIdAndConsultantId = async (request, response) => {
     try {
         const { shop_id, consultant_id } = request.params;
-
-
         if (!mongoose.Types.ObjectId.isValid(shop_id)) {
             return response.status(400).json({ message: 'Invalid shop ID' });
         }
@@ -607,8 +607,6 @@ const getConsultantByShopIdAndConsultantId = async (request, response) => {
             return response.status(400).json({ message: 'Consultant Shop  ID is required' });
         }
         const consultant = await User.findOne({ _id: consultant_id, shop_id: shop_id });
-
-
         return response.status(200).send({ success: true, consultant });
     }
     catch (error) {
@@ -624,11 +622,11 @@ const getConsultantByShopIdAndConsultantId = async (request, response) => {
  * @param {string} consultant_id 
  * @returns {Promise<{success: boolean, message: string, chatList: ChatList[]}>}
  */
+
+
 const getChatListByShopIdAndConsultantId = async (request, response) => {
     try {
         const { shop_id, consultant_id } = request.params;
-
-
         if (!mongoose.Types.ObjectId.isValid(shop_id)) {
             return response.status(400).json({ message: 'Invalid shop ID' });
         }
@@ -702,66 +700,7 @@ const removeChatListAndConsultantIdFromChatList = async (req, res) => {
         return response.status(500).json({ message: 'Server error' });
     }
 }
-// const getConsultantAllUsers = async (req, res) => {
-//     try {
-//         const { id } = req.params;
 
-//         if (!mongoose.Types.ObjectId.isValid(id)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "Invalid consultant ID",
-//             });
-//         }
-
-//         const chats = await ChatList.find({
-//             $or: [{ senderId: id }, { receiverId: id }],
-//         })
-//             .populate({
-//                 path: "senderId",
-//                 match: { userType: "customer" },
-//                 select: "fullname email phone userType profileImage isActive",
-//             })
-//             .populate({
-//                 path: "receiverId",
-//                 match: { userType: "customer" },
-//                 select: "fullname email phone userType profileImage isActive",
-//             })
-//             .sort({ createdAt: -1 });
-//         const customers = chats
-//             .map((chat) => {
-//                 const customer = chat.senderId || chat.receiverId;
-
-//                 if (!customer) return null;
-
-//                 return {
-//                     chatListId: chat._id,
-//                     createdAt: chat.createdAt,
-//                     lastMessage: chat.lastMessage,
-//                     isRequest: chat.isRequest,
-//                     _id: customer._id,
-//                     fullname: customer.fullname,
-//                     email: customer.email,
-//                     phone: customer.phone,
-//                     userType: customer.userType,
-//                     profileImage: customer.profileImage,
-//                     isActive: customer.isActive,
-//                 };
-//             })
-//             .filter(Boolean);
-//         return res.status(200).json({
-//             success: true,
-//             message: "Consultant users fetched successfully",
-//             payload: customers,
-//         });
-
-//     } catch (error) {
-//         console.error("getConsultantAllUsers error:", error);
-//         return res.status(500).json({
-//             success: false,
-//             message: "Server error",
-//         });
-//     }
-// };
 
 const getConsultantAllUsers = async (req, res) => {
     try {
@@ -784,27 +723,6 @@ const getConsultantAllUsers = async (req, res) => {
             })
 
             .sort({ createdAt: -1 });
-        // const customers = chats
-        //     .map((chat) => {
-        //         const customer = chat.senderId || chat.receiverId;
-
-        //         if (!customer) return null;
-
-        //         return {
-        //             chatListId: chat._id,
-        //             createdAt: chat.createdAt,
-        //             lastMessage: chat.lastMessage,
-        //             isRequest: chat.isRequest,
-        //             _id: customer._id,
-        //             fullname: customer.fullname,
-        //             email: customer.email,
-        //             phone: customer.phone,
-        //             userType: customer.userType,
-        //             profileImage: customer.profileImage,
-        //             isActive: customer.isActive,
-        //         };
-        //     })
-        //     .filter(Boolean);
         return res.status(200).json({
             success: true,
             message: "Consultant users fetched successfully",
@@ -823,8 +741,6 @@ const updateConsultantProfileStoreFront = async (req, res) => {
     try {
 
         const { consultantId, shopId, name, email, phone, gender } = req.body;
-        console.log("___________", req.body)
-        // console.loge("______Image", req.file)
         if (!consultantId || !mongoose.Types.ObjectId.isValid(consultantId) || !shopId || !mongoose.Types.ObjectId.isValid(shopId)) {
             return res.status(400).json({
                 success: false,
@@ -872,7 +788,6 @@ const updateConsultantProfileStoreFront = async (req, res) => {
 const getUserConversationControllerConsultant = async (req, res) => {
     try {
         const { id } = req.params;
-        console.log("ddd_____", id)
         if (!mongoose.Types.ObjectId.isValid(id)) return console.log("Id is not valid")
         const conversations = await TransactionHistroy.find({
             $or: [
@@ -957,9 +872,7 @@ const WithdrawalRequestController = async (req, res) => {
         if (consultant.walletBalance < amount) {
             return res.status(400).send({ message: "Insufficient balance" });
         }
-        console.log("consultant", consultant)
         consultant.walletBalance -= amount;
-        console.log("consultant balance after cut  ", consultant)
         await consultant.save();
         const reqSave = await WithdrawalRequestSchema.create({
             consultantId,

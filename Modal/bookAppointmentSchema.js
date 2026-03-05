@@ -62,5 +62,4 @@ const appointmentSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// Model already exists check karo - duplicate model name se bachne ke liye
 module.exports = mongoose.models.Appointment || mongoose.model("Appointment", appointmentSchema);
