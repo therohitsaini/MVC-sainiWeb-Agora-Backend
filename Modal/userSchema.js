@@ -113,7 +113,7 @@ const registerUserSchema = new mongoose.Schema(
         profileImage: {
             type: String,
             // required: true,
-            default: null,
+            default: "default.png",
         },
 
         // Shopify

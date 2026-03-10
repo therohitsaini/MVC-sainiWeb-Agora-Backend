@@ -129,9 +129,8 @@ const consultantController = async (req, res) => {
                 message: "Password must be at least 6 characters"
             });
         }
-        console.log("body.password", body.password);
+       
         const hashPassword = await bcrypt.hash(body.password, 10);
-        console.log("hashPassword", hashPassword);
         const consultantDetails = new User({
             shop_id,
             fullname: body.fullName,
@@ -154,7 +153,7 @@ const consultantController = async (req, res) => {
             dateOfBirth: new Date(body.dateOfBirth),
             pan_cardNumber: body.pancardNumber,
             profileImage: imageURL,
-            isActive: true,
+            isActive: false,
             agoraUid: randomAgoraUid,
             userType: "consultant",
             consultantStatus: false,
