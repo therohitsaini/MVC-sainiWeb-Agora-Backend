@@ -82,7 +82,7 @@ const ioServer = (server) => {
                 const consultant = await User.findById(receiverId)
                 const shopId = await shopModel.findOne({ shop: shop })
                 if (!shopId) return
-                // if (!receiverSocketId && consultant.firebaseToken?.token) {
+                if (!receiverSocketId && consultant.firebaseToken?.token) {
                 await sendCallFCM({
                     token: consultant.firebaseToken.token,
                     callerId,
@@ -96,7 +96,7 @@ const ioServer = (server) => {
                 });
 
                 console.log("📲 Call FCM sent to receiver");
-                // }
+                }
 
 
                 const call = {
