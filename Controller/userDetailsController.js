@@ -95,6 +95,7 @@ const getVouchersController = async (req, res) => {
             });
         }
         const admin = await shopModel.findOne({ _id: adminId }).select("-accessToken").select("vouchers").select("_id");
+        console.log(admin)
         if (!admin) {
             return res.status(404).json({
                 success: false,
@@ -104,8 +105,8 @@ const getVouchersController = async (req, res) => {
         const vouchers = {
             voucherCode: admin.vouchers,
             shopCurrency: admin.currency,
-            id: admin._id
-
+            id: admin._id,
+            shop: admin.shop
         }
         res.status(200).json({
             success: true,
