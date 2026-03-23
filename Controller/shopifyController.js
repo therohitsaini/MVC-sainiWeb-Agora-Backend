@@ -81,7 +81,6 @@ const installShopifyApp = async (req, res) => {
             }&scope=${SCOPES
             }&redirect_uri=${encodeURIComponent(redirectUri)
             }&state=${state}`;
-        console.log('installUrl', installUrl)
         return res.status(200).send({
             installed: false,
             installUrl: installUrl,
