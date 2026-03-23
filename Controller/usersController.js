@@ -1,99 +1,124 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 const { User } = require("../Modal/userSchema");
 
 const usersController = async (req, res) => {
-    try {
-        const { userId } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid admin ID"
-            });
-        }
-        const user = await User.findById(userId).select("-password");
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found"
-            });
-        }
-        res.status(200).json({
-            success: true,
-            message: "User retrieved successfully",
-            data: user
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: "Server error while fetching user",
-
-        });
+  try {
+    const { userId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid admin ID",
+      });
     }
-}
-
-const checkedUserBlance = async (req, res) => {
-    try {
-        const { userId, consultantId } = req.params;
-        const { callType = "voice" } = req.query;
-
-        console.log("callType", callType);
-
-        const user = await User.findById(userId).select("walletBalance");
-        const consultant = await User.findById(consultantId)
-            .select("voicePerMinute videoPerMinute chatPerMinute")
-            .lean();
-
-        if (!user || !consultant) {
-            return res.status(404).json({
-                success: false,
-                message: "User or consultant not found"
-            });
-        }
-
-        console.log("user.walletBalance", user.walletBalance);
-
-        let callCost = 0;
-
-        if (callType === "chat") {
-            callCost = consultant.chatPerMinute;
-        } else if (callType === "voice") {
-            callCost = consultant.voicePerMinute;
-        } else if (callType === "video") {
-            callCost = consultant.videoPerMinute;
-        }
-
-        if (!callCost) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid call type"
-            });
-        }
-
-        if (user.walletBalance < callCost) {
-            return res.status(400).json({
-                success: false,
-                message: "Insufficient balance"
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            data: {
-                userBalance: user.walletBalance,
-                callCost,
-                callType
-            }
-        });
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: "Server error",
-            error: error.message
-        });
+    const user = await User.findById(userId).select("-password");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
+    res.status(200).json({
+      success: true,
+      message: "User retrieved successfully",
+      data: user,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching user",
+    });
+  }
 };
 
-module.exports = { usersController, checkedUserBlance };
+const checkedUserBlance = async (req, res) => {
+  try {
+    const { userId, consultantId } = req.params;
+    const { callType = "voice" } = req.query;
+
+    console.log("callType", callType);
+
+    const user = await User.findById(userId).select("walletBalance");
+    const consultant = await User.findById(consultantId)
+      .select("voicePerMinute videoPerMinute chatPerMinute")
+      .lean();
+
+    if (!user || !consultant) {
+      return res.status(404).json({
+        success: false,
+        message: "User or consultant not found",
+      });
+    }
+
+    let callCost = 0;
+
+    if (callType === "chat") {
+      callCost = consultant.chatPerMinute;
+    } else if (callType === "voice") {
+      callCost = consultant.voicePerMinute;
+    } else if (callType === "video") {
+      callCost = consultant.videoPerMinute;
+    }
+
+    if (!callCost) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid call type",
+      });
+    }
+
+    if (user.walletBalance < callCost) {
+      return res.status(400).json({
+        success: false,
+        message: "Insufficient balance",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        userBalance: user.walletBalance,
+        callCost,
+        callType,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+const checkUserAvailable = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    if (user.isActive === false) {
+      return res.status(400).json({
+        success: false,
+        message: "User is not available",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      data: user.isActive,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = { usersController, checkedUserBlance, checkUserAvailable };

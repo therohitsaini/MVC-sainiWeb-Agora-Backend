@@ -294,7 +294,6 @@ const ioServer = (server) => {
                     callType === "voice"
                         ? Number(consultant.voicePerMinute)
                         : Number(consultant.videoPerMinute);
-                console.log("callCostPerMinute", callCostPerMinute)
 
 
                 const perSecondCost = callCostPerMinute / 60;
@@ -302,9 +301,7 @@ const ioServer = (server) => {
                 const minutes = Math.floor(maxCallSeconds / 60);
                 const seconds = maxCallSeconds % 60;
                 let callSecond = 0
-                console.log(
-                    `User can call for ${minutes} minutes and ${seconds} seconds`
-                );
+              
                 const interval = setInterval(async () => {
                     if (userBalance >= perSecondCost) {
                         userBalance -= perSecondCost;
@@ -334,12 +331,8 @@ const ioServer = (server) => {
         });
 
         socket.on("user-is-on", async ({ callerId, receiverId, channelName, callType, }) => {
-            console.log("callerId, receiverId, channelName, callType        =>", callerId, receiverId, channelName, callType)
             const callerSocketId = onlineUsers.get(callerId);
             const receiverSocketId = onlineUsers.get(receiverId);
-
-            console.log("callerSocketId =>", callerSocketId);
-            console.log("receiverSocketId =>", receiverSocketId);
 
             if (callerSocketId) {
                 io.to(callerSocketId).emit("both-user-join", {
@@ -359,30 +352,7 @@ const ioServer = (server) => {
         })
 
         socket.on("user-connected-time-updated", async ({ callerId, receiverId, channelName, callType, transactionId }) => {
-
-            // if (channelName) {
-            //     const callSession = await CallSession.findOne({
-            //         sessionId: channelName
-            //     });
-
-            //     // if (!callSession || !callSession.transtionId) {
-            //     //     console.log("❌ CallSession or transactionId not found");
-            //     //     return;
-            //     // }
-
-            // // const transaction = await TransactionHistroy.findById(
-            //     callSession.transtionId
-            // );
-
-            //     if (!transaction) {
-            //         console.log("❌ Transaction not found");
-            //         return;
-            //     }
-
-            //     transaction.startTime = new Date();
-            //     await transaction.save();
-
-            //     console.log("✅ Transaction startTime updated");
+            
             if (!transactionId) return;
 
             const cleanTransactionId = transactionId.replace(/"/g, "");
