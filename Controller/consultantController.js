@@ -701,11 +701,13 @@ const getChatListByShopIdAndConsultantId = async (request, response) => {
       };
     });
 
-    return response.status(200).send({
-      success: true,
-      message: "Chat list fetched successfully",
-      payload,
-    });
+    return response
+      .status(200)
+      .send({
+        success: true,
+        message: "Chat list fetched successfully",
+        payload,
+      });
   } catch (error) {
     console.error(error);
     return response.status(500).json({ message: "Server error" });
@@ -784,22 +786,8 @@ const updateConsultantProfileStoreFront = async (req, res) => {
   try {
     const { consultantId, shopId, name, email, phone, gender } = req.body;
     const file = req.file;
-    console.log("file____________________", file);
-    if (!file) {
-      return res.status(400).json({
-        success: false,
-        message: "Profile image is required",
-      });
-    }
-    const ext = path.extname(file.originalname);
-    const fileName = `consultant-${Date.now()}${ext}`;
-    const filePath = path.join(uploadFolder, fileName);
-    fs.writeFileSync(filePath, file.buffer);
-    const imageURL = `uploads/consultants/${fileName}`;
-    const uploadFolder = path.join("uploads", "consultants");
-    if (!fs.existsSync(uploadFolder)) {
-      fs.mkdirSync(uploadFolder, { recursive: true });
-    }
+    console.log("file", file);
+
     if (
       !consultantId ||
       !mongoose.Types.ObjectId.isValid(consultantId) ||
@@ -823,6 +811,20 @@ const updateConsultantProfileStoreFront = async (req, res) => {
         success: false,
         message: "Consultant not found",
       });
+    }
+    let imageURL = existingConsultant.profileImage;
+    if (file) {
+      const uploadFolder = path.join("uploads", "consultants");
+      if (!fs.existsSync(uploadFolder)) {
+        fs.mkdirSync(uploadFolder, { recursive: true });
+      }
+
+      const ext = path.extname(file.originalname);
+      const fileName = `consultant-${Date.now()}${ext}`;
+      const filePath = path.join(uploadFolder, fileName);
+
+      fs.writeFileSync(filePath, file.buffer);
+      imageURL = `uploads/consultants/${fileName}`;
     }
     await User.findByIdAndUpdate(
       consultantId,
