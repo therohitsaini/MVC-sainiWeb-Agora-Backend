@@ -784,6 +784,7 @@ const updateConsultantProfileStoreFront = async (req, res) => {
   try {
     const { consultantId, shopId, name, email, phone, gender } = req.body;
     const file = req.file;
+    console.log("file____________________", file);
     if (!file) {
       return res.status(400).json({
         success: false,
