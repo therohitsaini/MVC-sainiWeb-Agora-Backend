@@ -144,7 +144,8 @@ const registerUserSchema = new mongoose.Schema(
 
         },
         isBusy: {
-            type: Boolean
+            type: Boolean,
+            default: false,
         },
         isChatAccepted: {
             type: String,

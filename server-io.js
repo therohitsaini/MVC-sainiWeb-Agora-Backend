@@ -231,7 +231,6 @@ const ioServer = (server) => {
                     type: callType,
                     duration: 0
                 });
-                console.log("transaction_______________________Created", transaction)
                 await transaction.save();
                 const existingSession = await CallSession.findOne({
                     sessionId: channelName,
@@ -286,6 +285,8 @@ const ioServer = (server) => {
 
                 const consultant = await User.findById(receiverId);
                 if (!consultant) return console.log("Consultant not found");
+                consultant.isBusy = true;
+                await consultant.save();
 
                 let userBalance = Number(user.walletBalance || 0);
 
@@ -646,6 +647,8 @@ const ioServer = (server) => {
 
                 const receiver = await User.findById(receiverId).session(session);
                 if (!receiver) throw new Error("Receiver not found");
+                receiver.isBusy = false;
+                await receiver.save();
                 // shopId = '699852a7c1284f43e86923f9'
                 const shop = await shopModel.findById(shopId).session(session);
                 if (!shop) throw new Error("Shop not found");
