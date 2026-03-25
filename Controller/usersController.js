@@ -107,6 +107,13 @@ const checkUserAvailable = async (req, res) => {
         message: "User is not available",
       });
     }
+    if (user.isBusy === true) {
+      return res.status(400).json({
+        success: false,
+        isBusy: true,
+        message: `${user.fullname} is busy`,
+      });
+    }
     return res.status(200).json({
       success: true,
       data: user.isActive,
