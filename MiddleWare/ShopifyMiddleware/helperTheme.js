@@ -226,7 +226,7 @@ async function renderShopifyPage(req, res, iframeUrl, chat = "", options = {}) {
               checkOrigin: false,
               autoResize: true,
               heightCalculationMethod: "bodyScroll",
-              minHeight: "100vh",
+              minHeight: 100vh,
             }, "#agora-iframe");
           </script>
         </body>
