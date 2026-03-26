@@ -15,7 +15,6 @@ const { WalletHistory } = require("../Modal/walletHistory");
 const createDraftOrder = async (req, res) => {
     try {
         const { shop, amount, title, userId } = req.body;
-        console.log("createDraftOrder called with:", req.body);
 
         if (!amount || !title || !userId) {
             return res
@@ -113,7 +112,6 @@ const createDraftOrder = async (req, res) => {
 
 
         if (!result) {
-            console.log("Unexpected draftOrderCreate response:", response.data);
             return res.status(500).json({
                 success: false,
                 message: "Failed to create draft order"
@@ -121,7 +119,6 @@ const createDraftOrder = async (req, res) => {
         }
 
         if (result.userErrors && result.userErrors.length) {
-            console.log("GraphQL draftOrderCreate errors:", result.userErrors);
             return res.status(400).json({
                 success: false,
                 message: "Draft order creation failed",

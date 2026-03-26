@@ -36,8 +36,6 @@ const checkedUserBlance = async (req, res) => {
     const { userId, consultantId } = req.params;
     const { callType = "voice" } = req.query;
 
-    console.log("callType", callType);
-
     const user = await User.findById(userId).select("walletBalance");
     const consultant = await User.findById(consultantId)
       .select("voicePerMinute videoPerMinute chatPerMinute")

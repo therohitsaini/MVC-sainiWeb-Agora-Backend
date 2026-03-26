@@ -82,7 +82,6 @@ const { callRoutes } = require("./Routes/videoCallRotes");
 const { signinSignupRouter } = require("./Routes/signin-signupRoute");
 const { userDetailsRouter } = require("./Routes/userDetailsRoutes");
 const { consultantRoute } = require("./Routes/consultantRoute");
-const { employRoute } = require("./Routes/employRutes");
 const chatRoutes = require("./Routes/chatRoutes");
 const firebaseRouter = require("./Routes/firebaseRoutes");
 const { shopifyDraftOrderRoute } = require("./Routes/shopifyDraftOrderRoute");
@@ -96,7 +95,7 @@ app.use("/api/auth", signinSignupRouter);
 app.use("/api/users", userDetailsRouter);
 app.use("/api/razerpay-create-order", razerPayRoute)
 app.use("/api-consultant", consultantRoute)
-app.use("/api-employee", employRoute)
+
 
 /** Shopify Routes */
 app.use("/app", shopifyRoute);

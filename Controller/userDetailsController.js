@@ -55,9 +55,7 @@ const getUserById = async (req, res) => {
 const getShopifyUserByCustomerId = async (req, res) => {
     try {
         const { customerId } = req.params;
-        console.log("customerId", customerId);
         const user = await User.findOne({ shopifyCustomerId: customerId });
-        console.log("user__SHOPIFY__", user);
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -95,7 +93,6 @@ const getVouchersController = async (req, res) => {
             });
         }
         const admin = await shopModel.findOne({ _id: adminId }).select("-accessToken").select("vouchers").select("_id");
-        console.log("admin___", admin)
         if (!admin) {
             return res.status(404).json({
                 success: false,
@@ -122,7 +119,6 @@ const getVouchersController = async (req, res) => {
 const getAppStatusController = async (req, res) => {
     try {
         const { shop, adminIdLocal } = req.query;
-        console.log("shop", shop);
         // if (!mongoose.Types.ObjectId.isValid(shop)) {
         //     return res.status(400).json({
         //         success: false,
@@ -191,7 +187,6 @@ const getUserWalletHistroy = async (req, res) => {
 const getcallSessionsController = async (req, res) => {
     try {
         const { channelName } = req.query;
-        console.log("channel__", req.body, channelName)
         const callSession = await CallSession.findOne({ sessionId: channelName });
         if (!callSession) {
             return res.status(404).json({
@@ -216,7 +211,6 @@ const getcallSessionsController = async (req, res) => {
 const getUserConversationController = async (req, res) => {
     try {
         const { id } = req.params;
-        console.log("ddd", id)
         if (!mongoose.Types.ObjectId.isValid(id)) return console.log("Id is not valid")
         const conversations = await TransactionHistroy.find({
             $or: [

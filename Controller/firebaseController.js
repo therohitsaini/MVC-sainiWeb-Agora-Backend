@@ -3,7 +3,6 @@ const { User } = require("../Modal/userSchema");
 const firebaseGetToken = async (req, res) => {
     try {
         const { token, userId, shopId } = req.body;
-        console.log("firebaseGetToken____________", req.body);
 
         if (!token || !userId || !shopId) {
             return res.status(400).json({
@@ -43,8 +42,6 @@ const firebaseGetToken = async (req, res) => {
         const message = existingToken 
             ? "Token updated successfully" 
             : "Token created successfully";
-
-        console.log(`✅ FCM Token ${existingToken ? 'updated' : 'created'} for user: ${userId}`);
 
         return res.status(200).json({
             success: true,
