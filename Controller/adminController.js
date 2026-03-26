@@ -46,7 +46,6 @@ const voucherController = async (req, res) => {
     try {
         const { adminId } = req.params;
         const { totalCoin, extraCoin, voucherCode } = req.body;
-        console.log(totalCoin, extraCoin, voucherCode);
 
         if (!adminId) {
             return res.status(400).json({
@@ -94,7 +93,6 @@ const voucherController = async (req, res) => {
 const deleteAdminController = async (req, res) => {
     try {
         const shop = req.headers["x-shopify-shop-domain"];
-
         const admin = await shopModel.findOneAndUpdate(
             { shop },
             {
@@ -122,80 +120,6 @@ const deleteAdminController = async (req, res) => {
     }
 }
 
-// const getTransactionController = async (req, res) => {
-
-//     try {
-//         const { adminId } = req.params;
-//         if (!adminId) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'Admin ID is required',
-//             });
-//         }
-
-//         if (!mongoose.Types.ObjectId.isValid(adminId)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'Invalid admin ID',
-//             });
-//         }
-
-//         const page = Number(req.query.page) || 3;
-//         const limit = Number(req.query.limit) || 14;
-//         const serach = req.query.searchQuery
-//         const skip = (page - 1) * limit;
-//         const type = Number(req.query.type) || 0;
-//         console.log("type", type);
-//         const typeMap = {
-//             0: "all",
-//             1: "chat",
-//             2: "voice",
-//             3: "video"
-//         };
-//         console.log("serach", serach)
-//         const typeValue = typeMap[type] || "all";
-//         console.log("typeValue", typeValue);
-
-//         const filter = { shop_id: adminId };
-
-//         if (typeValue !== "all") {
-//             filter.type = typeValue;
-//         }
-
-//         const transactions = await TransactionHistroy.find(filter)
-//             .populate('senderId', 'fullname email profileImage userType')
-//             .populate('receiverId', 'fullname email profileImage userType')
-//             .sort({ createdAt: -1 })
-//             .skip(skip)
-//             .limit(limit)
-//             .lean();
-
-
-//         const totalItems = await TransactionHistroy.countDocuments(filter);
-
-//         if (transactions.length === 0) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: 'No transactions found',
-//             });
-//         }
-
-//         res.status(200).json({
-//             success: true,
-//             message: 'Transactions retrieved successfully',
-//             data: transactions,
-//             totalItems,
-//             page,
-//             limit,
-//         });
-//     } catch (error) {
-//         console.error('Error in getTransactionController:', error);
-//         res.status(500).json({
-//             success: false,
-//             message: 'Internal server error',
-//         });
-//     }
-// };
 
 
 const getTransactionController = async (req, res) => {
@@ -226,12 +150,10 @@ const getTransactionController = async (req, res) => {
 
         const filter = { shop_id: adminId };
 
-        // 🔹 Type filter
         if (typeValue !== "all") {
             filter.type = typeValue;
         }
 
-        // 🔹 SEARCH LOGIC
         if (search) {
             const users = await User.find({
                 fullname: { $regex: search, $options: "i" }
@@ -254,7 +176,6 @@ const getTransactionController = async (req, res) => {
             .lean();
 
         const totalItems = await TransactionHistroy.countDocuments(filter);
-
         res.status(200).json({
             success: true,
             message: 'Transactions retrieved successfully',
@@ -280,11 +201,7 @@ const getUserConsultantController = async (req, res) => {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 10;
         const search = req.query.searchQuery || "";
-        console.log("getUserConsultantController??????????????????", search);
-        console.log("page", page);
-        console.log("limit", limit);
         const skip = (page - 1) * limit;
-        console.log("skip", skip);
         if (!mongoose.Types.ObjectId.isValid(adminId)) {
             return res.status(400).json({
                 success: false,
@@ -542,7 +459,6 @@ const voucherHandlerController = async (req, res) => {
         );
 
         await shop.save();
-
         return res.status(200).json({
             success: true,
             message: "Voucher deleted successfully",
@@ -612,7 +528,6 @@ const updatesVoucherController = async (req, res) => {
 const getWithdrawalRequest = async (req, res) => {
     try {
         const { adminId } = req.params
-        console.log("adminId", adminId)
         const page = Number(req.query.page) || 3;
         const limit = Number(req.query.limit) || 14;
         const skip = (page - 1) * limit;
@@ -653,7 +568,6 @@ const updateConsultantWidthrawalRequest = async (req, res) => {
     try {
         const { adminId } = req.params;
         const body = req.body;
-        console.log("body", req.body)
         if (!mongoose.Types.ObjectId.isValid(adminId)) {
             return res.status(400).json({
                 success: false,
@@ -673,7 +587,6 @@ const updateConsultantWidthrawalRequest = async (req, res) => {
             description: body.description,
         })
 
-        console.log("updateReq", updateReq)
 
         await WalletHistory.create({
             userId: body.userId,
@@ -763,7 +676,6 @@ const updateAdminPercentage = async (req, res) => {
     try {
         const { adminId } = req.params;
         const { adminPercentage } = req.body;
-        console.log("__________", adminId, adminPercentage)
 
         if (!mongoose.Types.ObjectId.isValid(adminId)) {
             return res.status(400).json({

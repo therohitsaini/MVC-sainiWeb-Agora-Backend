@@ -32,10 +32,8 @@ const APP_URL = process.env.APP_URL;
 
 const appIsInstalled = async (req, res) => {
     const { shop } = req.params;
-    console.log("shop____appIsInstalled", shop);
     if (!shop) return res.status(400).send("Missing shop param");
     const shopDoc = await shopModel.findOne({ shop: shop });
-    console.log("shopDoc____appIsInstalled", shopDoc.accessToken);
     if (shopDoc.accessToken) {
         return res.status(200).send({
             installed: true,
@@ -76,7 +74,6 @@ const installShopifyApp = async (req, res) => {
             baseUrl = `${protocol}://${host}`;
         }
         const redirectUri = `${baseUrl}/app/callback`;
-        console.log("redirectUri", redirectUri);
         const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${client_id
             }&scope=${SCOPES
             }&redirect_uri=${encodeURIComponent(redirectUri)
@@ -88,150 +85,12 @@ const installShopifyApp = async (req, res) => {
     }
 
 };
-// const authCallback = async (req, res) => {
-//     try {
-//         console.log("🔁 Auth callback hit");
 
-//         // 🔒 HARD GUARD — Shopify iframe reload protection
-//         if (!req || !req.query || !req.query.shop) {
-//             console.log("⚠️ Callback without shop param", req?.query);
-//             return res.status(200).send("OK");
-//         }
-
-//         const { shop, hmac, code, host } = req.query;
-//         console.log("📥 Query params:", req.query);
-
-//         if (!shop || !hmac || !code) {
-//             console.log("❌ Missing required params", { shop, hmac, code });
-//             return res.status(400).send("Missing required parameters");
-//         }
-
-//         /* ---------------- HMAC VALIDATION ---------------- */
-
-//         const params = { ...req.query };
-//         delete params.hmac;
-//         delete params.signature;
-
-//         const message = Object.keys(params)
-//             .sort()
-//             .map((key) =>
-//                 `${key}=${Array.isArray(params[key]) ? params[key].join(",") : params[key]}`
-//             )
-//             .join("&");
-
-//         const generatedHmac = crypto
-//             .createHmac("sha256", SHOPIFY_API_SECRET)
-//             .update(message)
-//             .digest("hex");
-
-//         if (generatedHmac !== hmac) {
-//             console.log("❌ HMAC validation failed");
-//             return res.status(400).send("HMAC validation failed");
-//         }
-
-//         console.log("✅ HMAC validation passed");
-
-//         /* ---------------- TOKEN EXCHANGE ---------------- */
-
-//         console.log("🔑 Exchanging access token...");
-//         const tokenResponse = await axios.post(
-//             `https://${shop}/admin/oauth/access_token`,
-//             {
-//                 client_id: client_id,
-//                 client_secret: SHOPIFY_API_SECRET,
-//                 code
-//             }
-//         );
-
-//         const accessToken = tokenResponse.data?.access_token;
-//         console.log("🔐 Access token received:", !!accessToken);
-
-//         if (!accessToken) {
-//             return res.status(400).send("Failed to get access token");
-//         }
-
-//         /* ---------------- FETCH SHOP INFO ---------------- */
-
-//         console.log("🏪 Fetching shop info...");
-//         const shopInfo = await axios.get(
-//             `https://${shop}/admin/api/2024-01/shop.json`,
-//             {
-//                 headers: {
-//                     "X-Shopify-Access-Token": accessToken
-//                 }
-//             }
-//         );
-
-//         const shopId = shopInfo.data.shop.id;
-//         const ownerEmail = shopInfo.data.shop.email;
-
-//         console.log("🏷️ Shop ID:", shopId);
-//         console.log("📧 Owner email:", ownerEmail);
-
-//         /* ---------------- UPSERT SHOP (NO NULL EVER) ---------------- */
-
-//         const AdminUser = await shopModel.findOneAndUpdate(
-//             { shop },
-//             {
-//                 shop,
-//                 accessToken,
-//                 shopId,
-//                 email: ownerEmail,
-//                 installedAt: new Date(),
-//                 appEnabled: false,
-//                 planStatus: "new"
-//             },
-//             { new: true, upsert: true }
-//         );
-
-//         console.log("✅ Shop saved/updated:", AdminUser._id.toString());
-
-//         /* ---------------- WEBHOOK ---------------- */
-
-//         console.log("🔔 Registering uninstall webhook...");
-//         await registerAppUninstallWebhook(shop, accessToken);
-
-//         /* ---------------- HOST FIX ---------------- */
-
-//         let finalHost = host;
-//         if (!finalHost || !finalHost.startsWith("YWRtaW4")) {
-//             const shopDomain = shop.replace(".myshopify.com", "");
-//             const hostString = `admin.shopify.com/store/${shopDomain}`;
-//             finalHost = Buffer.from(hostString).toString("base64");
-//             console.log("🛠️ Generated host:", finalHost);
-//         } else {
-//             console.log("✅ Using Shopify provided host");
-//         }
-
-//         /* ---------------- REDIRECT ---------------- */
-
-//         const redirectUrl =
-//             `${frontendUrl}/?` +
-//             new URLSearchParams({
-//                 shop,
-//                 host: finalHost,
-//                 embedded: "1",
-//                 adminId: AdminUser._id.toString(),
-//                 source: "shopify_auth",
-//                 timestamp: Date.now().toString(),
-//                 session: crypto.randomBytes(16).toString("hex")
-//             }).toString();
-
-//         console.log("➡️ Redirecting to frontend:", redirectUrl);
-
-//         return res.redirect(redirectUrl);
-
-//     } catch (error) {
-//         console.error("❌ Auth callback failed:", error.response?.data || error.message);
-//         return res.status(500).send("Authentication failed");
-//     }
-// };
 
 const authCallback = async (req, res) => {
     try {
         const { shop, hmac, code, host } = req.query;
         if (!shop || !hmac || !code) {
-            console.log("❌ Missing required parameters");
             return res.status(400).send("Missing required parameters");
         }
         const params = { ...req.query };
@@ -249,7 +108,6 @@ const authCallback = async (req, res) => {
             .digest("hex");
 
         if (generatedHmac.toLowerCase() !== hmac.toLowerCase()) {
-            console.log("❌ HMAC validation failed");
             return res.status(400).send("HMAC validation failed");
         }
         const tokenResponse = await axios.post(
@@ -278,7 +136,6 @@ const authCallback = async (req, res) => {
         const ownerEmail = shopInfo.data.shop.email;
         const currencyCode = shopInfo.data.shop.email.currency;
         const shopCurrency = shopInfo.data.shop.money_format.replace("{{amount}}", "").trim()
-        console.log("shopInfo", shopInfo.data.shop.money_format.replace("{{amount}}", "").trim())
         let shopDoc = await shopModel.findOne({ shop });
 
         if (shopDoc) {
@@ -356,7 +213,6 @@ const proxyThemeAssetsController = async (req, res) => {
                 const result = await manageShopifyUser(shop, customerId);
                 userId = result;
                 token = result.token;
-                console.log("result", result)
                 if (result.success) {
                     console.log("✅ Customer registration:", result.message, result.userId ? `userId: ${result.userId}` : '');
                 } else {
@@ -366,9 +222,7 @@ const proxyThemeAssetsController = async (req, res) => {
                 console.error("❌ Error registering customer:", error.message);
             }
         }
-        console.log("token__________", token)
         const shopDocId = await shopModel.findOne({ shop: shop });
-        console.log("userId__shop", shopDocId._id);
         const cookieHeader = req.headers.cookie || "";
         const userAgent = req.headers["user-agent"] || "node";
         const makeUrl = (base) => themeId ? `${base}${base.includes("?") ? "&" : "?"}theme_id=${themeId}` : base;
@@ -480,7 +334,6 @@ const proxyShopifyConsultantPage = async (req, res) => {
         let homeResp = await fetchWithSession(makeUrl(`https://${shop}/`));
         let jarFetch = null;
 
-        // 🔐 Handle storefront password
         if (homeResp.status >= 300 && homeResp.status < 400) {
             const password = process.env.STOREFRONT_PASSWORD;
 
@@ -637,10 +490,7 @@ const proxyProfileSection = async (req, res) => {
     const shopId = req.query.shopId || "";
     const customerId = req.query.logged_in_customer_id;
     const customerId_ = req.query.logged_in_customer_id;
-    console.log("___________customerId___________", customerId_);
-    console.log("shopId", shopId);
-    console.log("consultantId", consultantId);
-    console.log("shop", shop);
+   
 
     let userId;
     if (shop && customerId) {
