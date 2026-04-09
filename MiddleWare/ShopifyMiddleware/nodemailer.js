@@ -63,6 +63,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 const sendEmail = async ({ ownerEmail, userInstall }) => {
+    console.log("Runing .......")
   try {
     const info = await transporter.sendMail({
       from: fromEmail,
