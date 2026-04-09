@@ -46,7 +46,7 @@ const appInstall = `
 </div>
 `;
 
-const smtpHost = process.env.SMTP_HOST; L
+const smtpHost = process.env.SMTP_HOST; 
 const smtpPORT = process.env.SMTP_PORT;
 const smtpUSER = process.env.SMTP_USER;
 const smtpPASS = process.env.SMTP_PASS;
