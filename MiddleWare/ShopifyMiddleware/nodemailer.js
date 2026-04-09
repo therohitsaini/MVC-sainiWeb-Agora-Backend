@@ -51,7 +51,7 @@ const smtpPORT = process.env.SMTP_PORT;
 const smtpUSER = process.env.SMTP_USER;
 const smtpPASS = process.env.SMTP_PASS;
 const fromEmail = process.env.SMTP_FROM_EMAIL;
-console.log(smtpHost, smtpPORT, smtpUSER, smtpPASS, fromEmail);
+console.log("________________",smtpHost, smtpPORT, smtpUSER, smtpPASS, fromEmail);
 
 const transporter = nodemailer.createTransport({
   host: smtpHost,
