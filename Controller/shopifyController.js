@@ -11,7 +11,6 @@ const {
 const {
   registerAppUninstallWebhook,
 } = require("../MiddleWare/ShopifyMiddleware/registerWebHook");
-const nodemailer = require("nodemailer");
 const { sendEmail } = require("../MiddleWare/ShopifyMiddleware/nodemailer");
 
 let axios, wrapper, CookieJar;
@@ -26,9 +25,6 @@ const client_id = process.env.SHOPIFY_CLIENT_ID;
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET;
 const SCOPES = process.env.SCOPES;
 const APP_URL = process.env.APP_URL;
-
-
-
 
 /**
  * STEP 1: Shopify App Installation Function
@@ -165,10 +161,8 @@ const authCallback = async (req, res) => {
         currencyCode: currencyCode,
         currency: shopCurrency,
       }).save();
-      sendEmail(ownerEmail)
+      sendEmail({ ownerEmail, userInstall: true });
     }
-
-
 
     const AdminUser = await shopModel.findOne({ shop: shop });
     if (!AdminUser) {
@@ -188,7 +182,6 @@ const authCallback = async (req, res) => {
     } else {
       console.log("✅ Using Shopify provided host");
     }
-
 
     const redirectUrl =
       `${frontendUrl}/?` +

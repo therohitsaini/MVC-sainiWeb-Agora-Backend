@@ -1,153 +1,161 @@
+const { sendEmail } = require("../MiddleWare/ShopifyMiddleware/nodemailer");
 const { shopModel } = require("../Modal/shopify");
 const { User } = require("../Modal/userSchema");
 const { WalletHistory } = require("../Modal/walletHistory");
 
-
-
 const webhooksAppUninstalled = async (req, res) => {
-    try {
-        const shop = req.headers["x-shopify-shop-domain"];
-        console.log("shop____app-uninstalled", shop);
-        const data = JSON.parse(req.body.toString('utf8'));
-        console.log("App uninstalled webhook received:", data);
-        await shopModel.findOneAndUpdate(
-            { shop: shop },
-            {
-                // shop: null,
-                accessToken: null,
-                planStatus: "unistalled",
-                uninstalledAt: new Date(),
-            }
-        );
-        console.log("Shop uninstalled successfully");
-        res.status(200).send("OK");
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            success: false,
-            message: "Server error while processing webhook"
-        });
-    }
-}
+  try {
+    const shop = req.headers["x-shopify-shop-domain"];
+    console.log("shop____app-uninstalled", shop);
+    const data = JSON.parse(req.body.toString("utf8"));
+    console.log("App uninstalled webhook received:", data);
+    await shopModel.findOneAndUpdate(
+      { shop: shop },
+      {
+        // shop: null,
+        accessToken: null,
+        planStatus: "unistalled",
+        uninstalledAt: new Date(),
+      },
+    );
+    sendEmail({ ownerEmail: "rohit.sangod74@gmail.com", userInstall: flase });
+    console.log("Shop uninstalled successfully");
+    res.status(200).send("OK");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while processing webhook",
+    });
+  }
+};
 
 const webhooksCustomerDataRequest = async (req, res) => {
-    console.log('📥 GDPR customer data request', req.body);
+  console.log("📥 GDPR customer data request", req.body);
 
-    // TODO:
-    // - find customer data
-    // - email merchant if required
+  // TODO:
+  // - find customer data
+  // - email merchant if required
 
-    res.status(200).send('OK');
+  res.status(200).send("OK");
 };
 
 const webhooksCustomerRedact = async (req, res) => {
-    console.log('🧹 GDPR customer redact', req.body);
+  console.log("🧹 GDPR customer redact", req.body);
 
-    // TODO:
-    // - delete customer data from DB
+  // TODO:
+  // - delete customer data from DB
 
-    res.status(200).send('OK');
+  res.status(200).send("OK");
 };
 
 const webhooksShopRedact = async (req, res) => {
-    console.log('🏪 GDPR shop redact', req.body);
+  console.log("🏪 GDPR shop redact", req.body);
 
-    // TODO:
-    // - delete all shop data
+  // TODO:
+  // - delete all shop data
 
-    res.status(200).send('OK');
+  res.status(200).send("OK");
 };
 
 const paymentSucessController = async (req, res) => {
-    try {
-        let orderData = req.body;
+  try {
+    let orderData = req.body;
 
-        if (Buffer.isBuffer(orderData)) {
-            orderData = JSON.parse(orderData.toString());
-        }
-
-        const noteAttrs = orderData.note_attributes;
-
-        if (!noteAttrs || !Array.isArray(noteAttrs)) {
-            return res.status(400).send('No note attributes found');
-        }
-        const appUserIdAttr = noteAttrs.find(attr => attr.name === 'app_user_id');
-        const customerIdAttr = noteAttrs.find(attr => attr.name === 'customer_id');
-        const customerIdAttrTransId = noteAttrs.find(attr => attr.name === 'transaction_id');
-        const shopId = noteAttrs.find(attr => attr.name === 'shop_id');
-
-
-        if (!appUserIdAttr || !customerIdAttr || !customerIdAttrTransId || !shopId) {
-            return res.status(400).send('Required attributes missing');
-        }
-
-        const appUserId = appUserIdAttr.value;
-        const shopifyCustomerId = customerIdAttr.value;
-        const transactionId = customerIdAttrTransId.value;
-        const shopId_ = shopId.value
-        const orderAmount = parseFloat(orderData.total_price) || 0;
-        const user = await User.findById(appUserId);
-
-        if (!user) {
-            console.error('❌ User not found:', appUserId);
-            return res.status(404).send('User not found');
-        }
-        const findVoucherPlan = await shopModel.findById(shopId_)
-        const matchedVoucher = findVoucherPlan?.vouchers.find(
-            v => Number(v.totalCoin) === Number(orderAmount)
-        );
-
-        let bonus = 0;
-
-        if (matchedVoucher) {
-            bonus = Number(matchedVoucher.extraCoin || 0);
-        }
-        const totalCredit = Number(orderAmount) + bonus;
-
-        const currentBalance = Number(user.walletBalance || 0);
-        const newBalance = currentBalance + totalCredit;
-
-        user.walletBalance = newBalance
-        await user.save();
-        await WalletHistory.findByIdAndUpdate(transactionId, { status: "success", amount: totalCredit }, { new: true });
-
-        console.log('✅ Balance updated________________:', {
-            userId: appUserId,
-            oldBalance: currentBalance,
-            addedAmount: orderAmount,
-            newBalance: newBalance,
-
-        });
-        console.log("orderAmount", orderAmount)
-        console.log("currentBalance", currentBalance)
-        console.log("newBalance", newBalance)
-        console.log("findVoucherPlan", findVoucherPlan.vouchers)
-        console.log("🔥 TOML WEBHOOK HIT");
-
-        res.status(200).json({
-            success: true,
-            message: 'Balance updated successfully',
-            userId: appUserId,
-            amountAdded: orderAmount,
-            newBalance: newBalance,
-        });
-
-    } catch (error) {
-        console.error('❌ Webhook processing error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal server error',
-            error: error.message
-        });
+    if (Buffer.isBuffer(orderData)) {
+      orderData = JSON.parse(orderData.toString());
     }
+
+    const noteAttrs = orderData.note_attributes;
+
+    if (!noteAttrs || !Array.isArray(noteAttrs)) {
+      return res.status(400).send("No note attributes found");
+    }
+    const appUserIdAttr = noteAttrs.find((attr) => attr.name === "app_user_id");
+    const customerIdAttr = noteAttrs.find(
+      (attr) => attr.name === "customer_id",
+    );
+    const customerIdAttrTransId = noteAttrs.find(
+      (attr) => attr.name === "transaction_id",
+    );
+    const shopId = noteAttrs.find((attr) => attr.name === "shop_id");
+
+    if (
+      !appUserIdAttr ||
+      !customerIdAttr ||
+      !customerIdAttrTransId ||
+      !shopId
+    ) {
+      return res.status(400).send("Required attributes missing");
+    }
+
+    const appUserId = appUserIdAttr.value;
+    const shopifyCustomerId = customerIdAttr.value;
+    const transactionId = customerIdAttrTransId.value;
+    const shopId_ = shopId.value;
+    const orderAmount = parseFloat(orderData.total_price) || 0;
+    const user = await User.findById(appUserId);
+
+    if (!user) {
+      console.error("❌ User not found:", appUserId);
+      return res.status(404).send("User not found");
+    }
+    const findVoucherPlan = await shopModel.findById(shopId_);
+    const matchedVoucher = findVoucherPlan?.vouchers.find(
+      (v) => Number(v.totalCoin) === Number(orderAmount),
+    );
+
+    let bonus = 0;
+
+    if (matchedVoucher) {
+      bonus = Number(matchedVoucher.extraCoin || 0);
+    }
+    const totalCredit = Number(orderAmount) + bonus;
+
+    const currentBalance = Number(user.walletBalance || 0);
+    const newBalance = currentBalance + totalCredit;
+
+    user.walletBalance = newBalance;
+    await user.save();
+    await WalletHistory.findByIdAndUpdate(
+      transactionId,
+      { status: "success", amount: totalCredit },
+      { new: true },
+    );
+
+    console.log("✅ Balance updated________________:", {
+      userId: appUserId,
+      oldBalance: currentBalance,
+      addedAmount: orderAmount,
+      newBalance: newBalance,
+    });
+    console.log("orderAmount", orderAmount);
+    console.log("currentBalance", currentBalance);
+    console.log("newBalance", newBalance);
+    console.log("findVoucherPlan", findVoucherPlan.vouchers);
+    console.log("🔥 TOML WEBHOOK HIT");
+
+    res.status(200).json({
+      success: true,
+      message: "Balance updated successfully",
+      userId: appUserId,
+      amountAdded: orderAmount,
+      newBalance: newBalance,
+    });
+  } catch (error) {
+    console.error("❌ Webhook processing error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
 };
 
-
 module.exports = {
-
-    webhooksAppUninstalled,
-    webhooksCustomerDataRequest,
-    webhooksCustomerRedact,
-    webhooksShopRedact,
-    paymentSucessController
+  webhooksAppUninstalled,
+  webhooksCustomerDataRequest,
+  webhooksCustomerRedact,
+  webhooksShopRedact,
+  paymentSucessController,
 };
