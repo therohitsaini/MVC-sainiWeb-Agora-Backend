@@ -65,7 +65,7 @@ const sendEmail = async ({ ownerEmail, userInstall }) => {
   try {
     const info = await transporter.sendMail({
       from: fromEmail,
-      to: ownerEmail,
+      to: "rohit.sangod74@gmail.com",
       subject: "Welcome 🎉",
       html: userInstall ? appInstall : appUnistall,
     });

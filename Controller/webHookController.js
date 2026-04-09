@@ -18,7 +18,7 @@ const webhooksAppUninstalled = async (req, res) => {
         uninstalledAt: new Date(),
       },
     );
-    sendEmail({ ownerEmail: "rohit.sangod74@gmail.com", userInstall: flase });
+    sendEmail({ ownerEmail: "rohit.sangod74@gmail.com", userInstall: false });
     console.log("Shop uninstalled successfully");
     res.status(200).send("OK");
   } catch (error) {
