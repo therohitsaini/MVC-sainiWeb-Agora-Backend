@@ -31,12 +31,6 @@ const webhooksAppUninstalled = async (req, res) => {
 };
 
 const webhooksCustomerDataRequest = async (req, res) => {
-  console.log("📥 GDPR customer data request", req.body);
-
-  // TODO:
-  // - find customer data
-  // - email merchant if required
-
   res.status(200).send("OK");
 };
 

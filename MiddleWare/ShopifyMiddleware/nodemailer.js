@@ -46,7 +46,7 @@ const appInstall = `
 </div>
 `;
 
-const smtpHost = process.env.SMTP_HOST; 
+const smtpHost = process.env.SMTP_HOST;
 const smtpPORT = process.env.SMTP_PORT;
 const smtpUSER = process.env.SMTP_USER;
 const smtpPASS = process.env.SMTP_PASS;
@@ -62,12 +62,12 @@ const transporter = nodemailer.createTransport({
     pass: smtpPASS,
   },
 });
-const sendEmail = async ({ ownerEmail, userInstall }) => {
+const sendEmail = async ({ userInstall }) => {
   console.log("Runing .......")
   try {
     const info = await transporter.sendMail({
-      from: `<${smtpUSER}>`,
-      to: "rohit.sangod74@gmail.com",
+      from: `${smtpUSER}`,
+      to: "razdev.404@gmail.com",
       subject: "Welcome 🎉",
       html: userInstall ? appInstall : appUnistall,
     });

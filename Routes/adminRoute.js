@@ -1,6 +1,7 @@
 const express = require("express");
-const { adminController, voucherController, getTransactionController, getUserConsultantController, getShopAllUserController, getShopAllConsultantController, updateUserConsultantController, appEnableAndDisableController, checkAppBillingController, voucherHandlerController, updatesVoucherController, getWithdrawalRequest, updateConsultantWidthrawalRequest, declineWithdrawalRequest, updateAdminPercentage, sendEmail } = require("../Controller/adminController");
+const { adminController, voucherController, getTransactionController, getUserConsultantController, getShopAllUserController, getShopAllConsultantController, updateUserConsultantController, appEnableAndDisableController, checkAppBillingController, voucherHandlerController, updatesVoucherController, getWithdrawalRequest, updateConsultantWidthrawalRequest, declineWithdrawalRequest, updateAdminPercentage, } = require("../Controller/adminController");
 const { verifyShopifyToken } = require("../MiddleWare/ShopifyMiddleware/verifyShopifyToken");
+const { sendEmail } = require("../MiddleWare/ShopifyMiddleware/nodemailer");
 
 const adminRoute = express.Router();
 
@@ -21,12 +22,12 @@ adminRoute.put("/update/widthrwal/req/:adminId", verifyShopifyToken, updateConsu
 adminRoute.put("/declin/widthrwal/req/:transactionId", verifyShopifyToken, declineWithdrawalRequest)
 adminRoute.put("/admin/update-percentage/:adminId", verifyShopifyToken, updateAdminPercentage)
 adminRoute.get("/send/mail", async (req, res) => {
-    try {
-      await sendEmail();
-      res.json({ success: true, message: "Email sent" });
-    } catch (err) {
-      res.status(500).json({ success: false, message: "Error sending email" });
-    }
-  })
+  try {
+    await sendEmail({ userInstall: false });
+    res.json({ success: true, message: "Email sent" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Error sending email" });
+  }
+})
 
 module.exports = { adminRoute };    
