@@ -9,7 +9,7 @@ const axios = require("axios")
 const getMenus = async (shop, accessToken) => {
   try {
     const response = await axios.get(
-      `https://${shop}/admin/api/2023-10/menus.json`,
+      `https://${"rohit-12345839"}/admin/api/2023-10/menus.json`,
       {
         headers: {
           "X-Shopify-Access-Token": accessToken,
