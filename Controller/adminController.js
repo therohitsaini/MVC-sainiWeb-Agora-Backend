@@ -63,9 +63,24 @@ const adminController = async (req, res) => {
       .findOne({ _id: adminId })
   
 
-    const test= await getMenus({shop:"rohit-12345839.myshopify.com",accessToken:adminTest.accessToken})
-    // console.log("Teset ", test)
-    console.log("___________",JSON.stringify(test, null, 2))
+      const test = await getMenus({
+        shop: adminTest.shop,
+        accessToken: adminTest.accessToken
+      });
+      
+      // safe access
+      const menus = test; // ya test.data.menus (depending on your response)
+      
+      // main menu find
+      const mainMenu = menus.find(
+        (m) => m.node.handle === "main-menu"
+      );
+      
+      if (mainMenu) {
+        console.log(mainMenu.node.items);
+      } else {
+        console.log("Main menu not found");
+      }
 
     const admin = await shopModel
       .findOne({ _id: adminId })
