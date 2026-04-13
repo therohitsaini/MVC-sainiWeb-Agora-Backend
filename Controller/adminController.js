@@ -69,7 +69,33 @@ const adminController = async (req, res) => {
       });
       
       const allMenuItems = test.flatMap(menu => menu.node.items);
-      console.log("allMenuItems",allMenuItems)
+
+      // required paths
+      const requiredMenus = [
+        "/apps/consultant-theme",
+        "/apps/consultant-theme/login",
+        "/apps/consultant-theme/profile"
+      ];
+      
+      // function to get path only
+      const getPath = (url) => {
+        try {
+          return new URL(url).pathname;
+        } catch {
+          return "";
+        }
+      };
+      
+      // check missing
+      const missingMenus = requiredMenus.filter(required =>
+        !allMenuItems.some(item => getPath(item.url) === required)
+      );
+      
+      // final flag
+      const isMenuSetupComplete = missingMenus.length === 0;
+      
+      console.log("Missing Menus:", missingMenus);
+      console.log("Setup Complete:", isMenuSetupComplete);
 
     const admin = await shopModel
       .findOne({ _id: adminId })
