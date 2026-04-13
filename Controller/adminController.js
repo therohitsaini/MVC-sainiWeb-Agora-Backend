@@ -42,11 +42,10 @@ const adminController = async (req, res) => {
     }
     const adminTest = await shopModel
       .findOne({ _id: adminId })
-      console.log("adminTest",adminTest.accessToken)
-      console.log("adminTestshop","rohit-12345839")
+  
 
     const test= await getMenus({shop:"rohit-12345839",accessToken:adminTest.accessToken})
-    console.log("console",test)
+    
     const admin = await shopModel
       .findOne({ _id: adminId })
       .select("-accessToken");
