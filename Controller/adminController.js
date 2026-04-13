@@ -7,6 +7,7 @@ const { WithdrawalRequestSchema } = require("../Modal/withdrawalSchema");
 const axios = require("axios")
 
 const getMenus = async (shop, accessToken) => {
+  console.log("accessToken",accessToken)
   try {
     const response = await axios.get(
       `https://${"rohit-12345839"}/admin/api/2023-10/menus.json`,
@@ -40,8 +41,8 @@ const adminController = async (req, res) => {
     }
     const adminTest = await shopModel
       .findOne({ _id: adminId })
-      
-    const console= await getMenus(adminTest.shop,adminTest.access_token)
+      console.log("adminTest",adminTest)
+    const console= await getMenus({shop:adminTest.shop,access_token:adminTest.access_token})
     console.log("console",console)
     const admin = await shopModel
       .findOne({ _id: adminId })
