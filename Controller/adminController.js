@@ -13,7 +13,7 @@ const getMenus = async (shop, accessToken) => {
       `https://${"rohit-12345839"}/admin/api/2023-10/menus.json`,
       {
         headers: {
-          "X-Shopify-Access-Token": accessToken,
+          "X-Shopify-Access-Token": accessToken|| "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",
         },
       }
     );
@@ -42,7 +42,7 @@ const adminController = async (req, res) => {
     const adminTest = await shopModel
       .findOne({ _id: adminId })
       console.log("adminTest",adminTest)
-    const test= await getMenus({shop:adminTest.shop,access_token:adminTest.accessToken})
+    const test= await getMenus()
     console.log("console",test)
     const admin = await shopModel
       .findOne({ _id: adminId })
