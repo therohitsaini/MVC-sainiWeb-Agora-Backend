@@ -92,6 +92,7 @@ const authCallback = async (req, res) => {
     if (!shop || !hmac || !code) {
       return res.status(400).send("Missing required parameters");
     }
+    console.log("auth is runing ....")
     const params = { ...req.query };
     delete params.hmac;
     delete params.signature;
