@@ -10,7 +10,7 @@ const getMenus = async (shop, accessToken) => {
   console.log("accessToken",accessToken)
   try {
     const response = await axios.get(
-      `https://${"rohit-12345839"}/admin/api/2023-10/menus.json`,
+      `https://${shop}/admin/api/2023-10/menus.json`,
       {
         headers: {
           "X-Shopify-Access-Token": accessToken,
@@ -44,7 +44,7 @@ const adminController = async (req, res) => {
       console.log("adminTest",adminTest.accessToken)
       console.log("adminTestshop","rohit-12345839")
 
-    const test= await getMenus()
+    const test= await getMenus({shop:"rohit-12345839",accessToken:adminTest.accessToken})
     console.log("console",test)
     const admin = await shopModel
       .findOne({ _id: adminId })
