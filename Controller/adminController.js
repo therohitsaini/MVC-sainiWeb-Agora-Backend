@@ -42,7 +42,7 @@ const adminController = async (req, res) => {
     const adminTest = await shopModel
       .findOne({ _id: adminId })
       console.log("adminTest",adminTest)
-    const test= await getMenus({shop:adminTest.shop,access_token:adminTest.access_token})
+    const test= await getMenus({shop:adminTest.shop,access_token:adminTest.accessToken})
     console.log("console",test)
     const admin = await shopModel
       .findOne({ _id: adminId })
