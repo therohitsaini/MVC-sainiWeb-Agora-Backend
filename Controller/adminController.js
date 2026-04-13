@@ -7,6 +7,7 @@ const { WithdrawalRequestSchema } = require("../Modal/withdrawalSchema");
 const axios = require("axios")
 
 const getMenus = async (shop, accessToken) => {
+  console.log("shop__________",shop,accessToken)
   try {
     const response = await axios.post(
       `https://${shop}/admin/api/2023-10/graphql.json`,
