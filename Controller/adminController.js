@@ -68,19 +68,8 @@ const adminController = async (req, res) => {
         accessToken: adminTest.accessToken
       });
       
-      // safe access
-      const menus = test; // ya test.data.menus (depending on your response)
-      
-      // main menu find
-      const mainMenu = menus.find(
-        (m) => m.node.handle === "main-menu"
-      );
-      
-      if (mainMenu) {
-        console.log(mainMenu.node.items);
-      } else {
-        console.log("Main menu not found");
-      }
+      const allMenuItems = test.flatMap(menu => menu.node.items);
+      console.log("allMenuItems",allMenuItems)
 
     const admin = await shopModel
       .findOne({ _id: adminId })
