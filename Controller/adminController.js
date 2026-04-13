@@ -38,9 +38,10 @@ const adminController = async (req, res) => {
         message: "Invalid admin ID",
       });
     }
-    const shop = "rohit-12345839.myshopify.com"
-    const access_token = "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"
-    const console= await getMenus(shop,access_token)
+    const adminTest = await shopModel
+      .findOne({ _id: adminId })
+      
+    const console= await getMenus(adminTest.shop,adminTest.access_token)
     console.log("console",console)
     const admin = await shopModel
       .findOne({ _id: adminId })
