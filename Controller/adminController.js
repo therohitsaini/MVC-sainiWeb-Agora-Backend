@@ -64,6 +64,7 @@ const adminController = async (req, res) => {
   
 
     const test= await getMenus({shop:"rohit-12345839.myshopify.com",accessToken:adminTest.accessToken})
+    console.log("Teset ", test)
     
     const admin = await shopModel
       .findOne({ _id: adminId })
