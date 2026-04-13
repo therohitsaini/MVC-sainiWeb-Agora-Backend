@@ -6,7 +6,7 @@ const { WalletHistory } = require("../Modal/walletHistory");
 const { WithdrawalRequestSchema } = require("../Modal/withdrawalSchema");
 const axios = require("axios")
 
-const getMenus = async (shop, accessToken) => {
+const getMenus = async ({shop, accessToken}) => {
   console.log("shop__________",shop,accessToken)
   try {
     const response = await axios.post(
