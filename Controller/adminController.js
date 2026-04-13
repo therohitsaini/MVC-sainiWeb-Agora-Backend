@@ -4,6 +4,24 @@ const { TransactionHistroy } = require("../Modal/transactionHistroy");
 const { User } = require("../Modal/userSchema");
 const { WalletHistory } = require("../Modal/walletHistory");
 const { WithdrawalRequestSchema } = require("../Modal/withdrawalSchema");
+const axios = require("axios")
+
+const getMenus = async (shop, accessToken) => {
+  try {
+    const response = await axios.get(
+      `https://${shop}/admin/api/2023-10/menus.json`,
+      {
+        headers: {
+          "X-Shopify-Access-Token": accessToken,
+        },
+      }
+    );
+
+    return response.data.menus;
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+  }
+};
 
 const adminController = async (req, res) => {
   try {
@@ -20,6 +38,10 @@ const adminController = async (req, res) => {
         message: "Invalid admin ID",
       });
     }
+    const shop = "rohit-12345839.myshopify.com"
+    const access_token = "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"
+    const console= await getMenus(shop,access_token)
+    console.log("console",console)
     const admin = await shopModel
       .findOne({ _id: adminId })
       .select("-accessToken");

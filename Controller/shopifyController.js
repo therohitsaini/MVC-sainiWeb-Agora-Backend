@@ -26,22 +26,7 @@ const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET;
 const SCOPES = process.env.SCOPES;
 const APP_URL = process.env.APP_URL;
 
-const getMenus = async (shop, accessToken) => {
-  try {
-    const response = await axios.get(
-      `https://${shop}/admin/api/2023-10/menus.json`,
-      {
-        headers: {
-          "X-Shopify-Access-Token": accessToken,
-        },
-      }
-    );
 
-    return response.data.menus;
-  } catch (err) {
-    console.error(err.response?.data || err.message);
-  }
-};
 
 const appIsInstalled = async (req, res) => {
   const { shop } = req.params;
@@ -173,8 +158,6 @@ const authCallback = async (req, res) => {
       }).save();
       sendEmail({ ownerEmail, userInstall: true });
     }
-    const getMenuConsole = await getMenus(shop,accessToken)
-    console.log("getMenuConsole________",getMenuConsole)
 
     const AdminUser = await shopModel.findOne({ shop: shop });
     if (!AdminUser) {
