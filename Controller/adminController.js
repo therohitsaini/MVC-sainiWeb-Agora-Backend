@@ -6,20 +6,38 @@ const { WalletHistory } = require("../Modal/walletHistory");
 const { WithdrawalRequestSchema } = require("../Modal/withdrawalSchema");
 const axios = require("axios")
 
-const getMenus = async ({shop, accessToken}) => {
-  console.log("accessToken",accessToken)
-  console.log("shop",shop)
+const getMenus = async (shop, accessToken) => {
   try {
-    const response = await axios.get(
-      `https://${shop}/admin/api/2023-10/menus.json`,
+    const response = await axios.post(
+      `https://${shop}/admin/api/2023-10/graphql.json`,
+      {
+        query: `
+        {
+          menus(first: 10) {
+            edges {
+              node {
+                id
+                handle
+                title
+                items {
+                  title
+                  url
+                }
+              }
+            }
+          }
+        }
+        `,
+      },
       {
         headers: {
           "X-Shopify-Access-Token": accessToken,
+          "Content-Type": "application/json",
         },
       }
     );
 
-    return response.data.menus;
+    return response.data.data.menus.edges;
   } catch (err) {
     console.error(err.response?.data || err.message);
   }
