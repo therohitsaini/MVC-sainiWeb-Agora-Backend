@@ -151,6 +151,7 @@ const authCallback = async (req, res) => {
         accessToken,
         shopId,
         email: ownerEmail,
+        menuSetupComplete: false,
         installedAt: new Date(),
         appEnabled: false,
         planStatus: "new",
