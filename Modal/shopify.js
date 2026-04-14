@@ -53,7 +53,7 @@ const shop = new mongoose.Schema({
     },
     menuSetupComplete: {
         type: Boolean,
-        default: false
+        required: true
     },
     installedAt: { type: Date, default: Date.now }
 });
