@@ -21,8 +21,8 @@ adminRoute.get("/withdrawal-requests/:adminId", verifyShopifyToken, getWithdrawa
 adminRoute.put("/update/widthrwal/req/:adminId", verifyShopifyToken, updateConsultantWidthrawalRequest)
 adminRoute.put("/declin/widthrwal/req/:transactionId", verifyShopifyToken, declineWithdrawalRequest)
 adminRoute.put("/admin/update-percentage/:adminId", verifyShopifyToken, updateAdminPercentage)
-adminRoute.get("/menu/:adminId", getMenuController)
-adminRoute.put("/close-setup-guide/:adminId", updateMenuController)
+adminRoute.get("/menu/:adminId", verifyShopifyToken, getMenuController)
+adminRoute.put("/close-setup-guide/:adminId",verifyShopifyToken, updateMenuController)
 adminRoute.get("/send/mail", async (req, res) => {
   try {
     await sendEmail({ userInstall: false });
