@@ -792,6 +792,7 @@ const getMenuController = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Menu setup complete",
+      missingMenus,
       data: isMenuSetupComplete,
     });
   } catch (error) {
