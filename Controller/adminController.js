@@ -728,8 +728,11 @@ const updateAdminPercentage = async (req, res) => {
 
 
 const getMenuController = async (req, res) => {
+  console.log("getMenuController");
   try {
-    const { adminId } = req.params;    
+    const { adminId } = req.params;  
+    console.log("adminId", adminId);
+    console.log("req.params", req.params);
     if (!mongoose.Types.ObjectId.isValid(adminId)) {
       return res.status(400).json({
         success: false,
