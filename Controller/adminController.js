@@ -740,19 +740,20 @@ const getMenuController = async (req, res) => {
         message: "Invalid admin ID",
       });
     }
-    if (admin.menuSetupComplete) {
-      return res.status(200).json({
-        success: true,
-        message: "Menu setup complete",
-        data: admin.menuSetupComplete,
-      });
-    }
+ 
     const admin = await shopModel
     .findOne({ _id: adminId })
     if (!admin) {
       return res.status(404).json({
         success: false,
         message: "Admin not found",
+      });
+    }
+    if (admin.menuSetupComplete) {
+      return res.status(200).json({
+        success: true,
+        message: "Menu setup complete",
+        data: admin.menuSetupComplete,
       });
     }
     const menus = await getMenus({
