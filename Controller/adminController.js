@@ -749,13 +749,7 @@ const getMenuController = async (req, res) => {
         message: "Admin not found",
       });
     }
-    if (admin.menuSetupComplete) {
-      return res.status(200).json({
-        success: true,
-        message: "Menu setup complete",
-        data: admin.menuSetupComplete,
-      });
-    }
+ 
     const menus = await getMenus({
       shop: admin.shop,
       accessToken: admin.accessToken
@@ -779,7 +773,7 @@ const getMenuController = async (req, res) => {
       "/apps/consultant-theme/login",
       "/apps/consultant-theme/profile"
     ];
-    
+ 
     const getPath = (url) => {
       try {
         return new URL(url).pathname;
@@ -797,11 +791,13 @@ const getMenuController = async (req, res) => {
     console.log("Missing Menus:", missingMenus);
     console.log("Setup Complete:", isMenuSetupComplete);
 
+
     return res.status(200).json({
       success: true,
       message: "Menu setup complete",
       missingMenus,
       data: isMenuSetupComplete,
+      menuSetupComplete: admin.menuSetupComplete,
     });
   } catch (error) {
     console.error("Error in getMenuController:", error);
