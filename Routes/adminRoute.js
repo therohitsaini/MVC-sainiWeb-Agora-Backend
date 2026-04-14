@@ -1,5 +1,5 @@
 const express = require("express");
-const { adminController, voucherController, getTransactionController, getUserConsultantController, getShopAllUserController, getShopAllConsultantController, updateUserConsultantController, appEnableAndDisableController, checkAppBillingController, voucherHandlerController, updatesVoucherController, getWithdrawalRequest, updateConsultantWidthrawalRequest, declineWithdrawalRequest, updateAdminPercentage, } = require("../Controller/adminController");
+const { adminController, voucherController, getTransactionController, getUserConsultantController, getShopAllUserController, getShopAllConsultantController, updateUserConsultantController, appEnableAndDisableController, checkAppBillingController, voucherHandlerController, updatesVoucherController, getWithdrawalRequest, updateConsultantWidthrawalRequest, declineWithdrawalRequest, updateAdminPercentage, updateMenuController, } = require("../Controller/adminController");
 const { verifyShopifyToken } = require("../MiddleWare/ShopifyMiddleware/verifyShopifyToken");
 const { sendEmail } = require("../MiddleWare/ShopifyMiddleware/nodemailer");
 const { getMenuController } = require("../Controller/adminController");
@@ -22,6 +22,7 @@ adminRoute.put("/update/widthrwal/req/:adminId", verifyShopifyToken, updateConsu
 adminRoute.put("/declin/widthrwal/req/:transactionId", verifyShopifyToken, declineWithdrawalRequest)
 adminRoute.put("/admin/update-percentage/:adminId", verifyShopifyToken, updateAdminPercentage)
 adminRoute.get("/menu/:adminId", getMenuController)
+adminRoute.put("/close-setup-guide/:adminId", updateMenuController)
 adminRoute.get("/send/mail", async (req, res) => {
   try {
     await sendEmail({ userInstall: false });

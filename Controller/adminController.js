@@ -7,8 +7,6 @@ const { WithdrawalRequestSchema } = require("../Modal/withdrawalSchema");
 const axios = require("axios");
 const { getMenus } = require("../MiddleWare/storeMenu");
 
-
-
 const adminController = async (req, res) => {
   try {
     const { adminId } = req.params;
@@ -24,7 +22,6 @@ const adminController = async (req, res) => {
         message: "Invalid admin ID",
       });
     }
-
 
     const admin = await shopModel
       .findOne({ _id: adminId })
@@ -727,29 +724,27 @@ const updateAdminPercentage = async (req, res) => {
   }
 };
 
-
 const getMenuController = async (req, res) => {
   try {
-    const { adminId } = req.params;  
+    const { adminId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(adminId)) {
       return res.status(400).json({
         success: false,
         message: "Invalid admin ID",
       });
     }
- 
-    const admin = await shopModel
-    .findOne({ _id: adminId })
+
+    const admin = await shopModel.findOne({ _id: adminId });
     if (!admin) {
       return res.status(404).json({
         success: false,
         message: "Admin not found",
       });
     }
- 
+
     const menus = await getMenus({
       shop: admin.shop,
-      accessToken: admin.accessToken
+      accessToken: admin.accessToken,
     });
     if (!menus) {
       return res.status(404).json({
@@ -757,8 +752,8 @@ const getMenuController = async (req, res) => {
         message: "Menu not fetched",
       });
     }
-    
-    const allMenuItems = menus.flatMap(menu => menu.node.items);
+
+    const allMenuItems = menus.flatMap((menu) => menu.node.items);
     if (!allMenuItems) {
       return res.status(404).json({
         success: false,
@@ -768,9 +763,9 @@ const getMenuController = async (req, res) => {
     const requiredMenus = [
       "/apps/consultant-theme",
       "/apps/consultant-theme/login",
-      "/apps/consultant-theme/profile"
+      "/apps/consultant-theme/profile",
     ];
- 
+
     const getPath = (url) => {
       try {
         return new URL(url).pathname;
@@ -778,16 +773,16 @@ const getMenuController = async (req, res) => {
         return "";
       }
     };
-    
-    const missingMenus = requiredMenus.filter(required =>
-      !allMenuItems.some(item => getPath(item.url) === required)
+
+    const missingMenus = requiredMenus.filter(
+      (required) =>
+        !allMenuItems.some((item) => getPath(item.url) === required),
     );
-    
+
     const isMenuSetupComplete = missingMenus.length === 0;
-    
+
     console.log("Missing Menus:", missingMenus);
     console.log("Setup Complete:", isMenuSetupComplete);
-
 
     return res.status(200).json({
       success: true,
@@ -803,9 +798,46 @@ const getMenuController = async (req, res) => {
       message: "Server error",
     });
   }
+};
+
+const updateMenuController = async (req, res) => {
+  try {
+    const { adminId } = req.params;
+    console.log("adminId", adminId);
+
+    if (!mongoose.Types.ObjectId.isValid(adminId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid admin ID",
+      });
+    }
+    console.log("adminId", adminId);
+    const admin = await shopModel.findById(adminId);
+
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: "Admin not found",
+      });
+    }
+    console.log("admin", admin);
+    admin.menuSetupComplete = !admin.menuSetupComplete;
+
+    await admin.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Menu setup status updated",
+      data: admin,
+    });
+  } catch (error) {
+    console.error("Error in updateMenuController:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
-
-
+};
 
 module.exports = {
   adminController,
@@ -825,4 +857,5 @@ module.exports = {
   declineWithdrawalRequest,
   updateAdminPercentage,
   getMenuController,
+  updateMenuController,
 };
