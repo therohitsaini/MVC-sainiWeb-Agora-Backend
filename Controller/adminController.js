@@ -6,43 +6,7 @@ const { WalletHistory } = require("../Modal/walletHistory");
 const { WithdrawalRequestSchema } = require("../Modal/withdrawalSchema");
 const axios = require("axios")
 
-const getMenus = async ({shop, accessToken}) => {
-  console.log("shop__________",shop,accessToken)
-  try {
-    const response = await axios.post(
-      `https://${shop}/admin/api/2023-10/graphql.json`,
-      {
-        query: `
-        {
-          menus(first: 10) {
-            edges {
-              node {
-                id
-                handle
-                title
-                items {
-                  title
-                  url
-                }
-              }
-            }
-          }
-        }
-        `,
-      },
-      {
-        headers: {
-          "X-Shopify-Access-Token": accessToken,
-          "Content-Type": "application/json",
-        },
-      }
-    );
 
-    return response.data.data.menus.edges;
-  } catch (err) {
-    console.error(err.response?.data || err.message);
-  }
-};
 
 const adminController = async (req, res) => {
   try {
@@ -59,43 +23,7 @@ const adminController = async (req, res) => {
         message: "Invalid admin ID",
       });
     }
-    const adminTest = await shopModel
-      .findOne({ _id: adminId })
-  
 
-      const test = await getMenus({
-        shop: adminTest.shop,
-        accessToken: adminTest.accessToken
-      });
-      
-      const allMenuItems = test.flatMap(menu => menu.node.items);
-
-      // required paths
-      const requiredMenus = [
-        "/apps/consultant-theme",
-        "/apps/consultant-theme/login",
-        "/apps/consultant-theme/profile"
-      ];
-      
-      // function to get path only
-      const getPath = (url) => {
-        try {
-          return new URL(url).pathname;
-        } catch {
-          return "";
-        }
-      };
-      
-      // check missing
-      const missingMenus = requiredMenus.filter(required =>
-        !allMenuItems.some(item => getPath(item.url) === required)
-      );
-      
-      // final flag
-      const isMenuSetupComplete = missingMenus.length === 0;
-      
-      console.log("Missing Menus:", missingMenus);
-      console.log("Setup Complete:", isMenuSetupComplete);
 
     const admin = await shopModel
       .findOne({ _id: adminId })
@@ -799,6 +727,80 @@ const updateAdminPercentage = async (req, res) => {
 };
 
 
+const getMenuController = async (req, res) => {
+  try {
+    const { adminId } = req.params;    
+    if (!mongoose.Types.ObjectId.isValid(adminId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid admin ID",
+      });
+    }
+    const admin = await shopModel
+    .findOne({ _id: adminId })
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: "Admin not found",
+      });
+    }
+    const menus = await getMenus({
+      shop: admin.shop,
+      accessToken: admin.accessToken
+    });
+    if (!menus) {
+      return res.status(404).json({
+        success: false,
+        message: "Menu not fetched",
+      });
+    }
+    
+    const allMenuItems = menus.flatMap(menu => menu.node.items);
+    if (!allMenuItems) {
+      return res.status(404).json({
+        success: false,
+        message: "All menu items not found",
+      });
+    }
+    const requiredMenus = [
+      "/apps/consultant-theme",
+      "/apps/consultant-theme/login",
+      "/apps/consultant-theme/profile"
+    ];
+    
+    const getPath = (url) => {
+      try {
+        return new URL(url).pathname;
+      } catch {
+        return "";
+      }
+    };
+    
+    const missingMenus = requiredMenus.filter(required =>
+      !allMenuItems.some(item => getPath(item.url) === required)
+    );
+    
+    const isMenuSetupComplete = missingMenus.length === 0;
+    
+    console.log("Missing Menus:", missingMenus);
+    console.log("Setup Complete:", isMenuSetupComplete);
+
+    return res.status(200).json({
+      success: true,
+      message: "Menu setup complete",
+      data: isMenuSetupComplete,
+    });
+  } catch (error) {
+    console.error("Error in getMenuController:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+  }
+
+
+
 module.exports = {
   adminController,
   voucherController,
@@ -816,5 +818,5 @@ module.exports = {
   updateConsultantWidthrawalRequest,
   declineWithdrawalRequest,
   updateAdminPercentage,
-
+  getMenuController,
 };
