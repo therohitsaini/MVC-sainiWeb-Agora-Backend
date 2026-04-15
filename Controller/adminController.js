@@ -724,6 +724,36 @@ const updateAdminPercentage = async (req, res) => {
   }
 };
 
+const getSetupGuideController = async (req, res) => {
+  try {
+    const { adminId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(adminId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid admin ID",
+      });
+    }
+
+    const admin = await shopModel.findOne({ _id: adminId });
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: "Admin not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Setup guide open",
+      data: admin.setupGuideOpen,
+    });
+  } catch (error) {
+    console.error("Error in getSetupGuideController:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    }); 
+  }
+};
 const getMenuController = async (req, res) => {
   try {
     const { adminId } = req.params;
@@ -789,17 +819,16 @@ const getMenuController = async (req, res) => {
       message: "Menu setup complete",
       missingMenus,
       data: isMenuSetupComplete,
-      menuSetupComplete: admin.menuSetupComplete,
+      appEnabled: admin.appEnabled,
     });
   } catch (error) {
-    console.error("Error in getMenuController:", error);
+    console.error("Error in updateMenuController:", error);
     return res.status(500).json({
       success: false,
       message: "Server error",
     }); 
   }
 };
-
 const updateMenuController = async (req, res) => {
   try {
     const { adminId } = req.params;
@@ -856,6 +885,7 @@ module.exports = {
   updateConsultantWidthrawalRequest,
   declineWithdrawalRequest,
   updateAdminPercentage,
-  getMenuController,
+  getSetupGuideController,
   updateMenuController,
+  getMenuController
 };
